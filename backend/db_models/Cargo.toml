@@ -1,0 +1,16 @@
+[package]
+name = "db"
+version = "0.1.0"
+authors = ["sabine"]
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1.0.110", features = ["derive"]}
+serde_json = "*"
+
+sqlx = { version = "0.6.*", default-features = false, features = ["json", "runtime-actix-rustls", "macros", "postgres", "chrono", "migrate", "uuid"] }
+uuid = { version = "1.1.2", features = ["v4"]}
+chrono = "0.4.19"

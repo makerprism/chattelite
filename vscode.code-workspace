@@ -1,0 +1,22 @@
+{
+	"folders": [
+        {
+            "path": "codegen"
+        },
+        {
+            "path": "backend"
+        },
+        {
+            "path": "sdks/Go/app"
+        },
+        {
+            "path": "sdks/Go/client"
+        },
+        {
+            "path": "sdks/TypeScript"
+        },
+        {
+            "path": "tests"
+        }
+    ]
+}

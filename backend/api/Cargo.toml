@@ -1,0 +1,50 @@
+[package]
+name = "rust_simple_chat_server"
+version = "0.1.0"
+authors = ["sabine"]
+edition = "2021"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "rust-simple-chat-server"
+path = "./src/main.rs"
+
+
+[dependencies]
+db = { path = "./../db_models" }
+
+#opengraph = { version = "0.2.4"}
+
+actix-web = { version = "4.0.0-beta.11" }
+#actix-files = { version = "0.6.0-beta.8" }
+
+base64 = "0.13.0"
+
+dotenv = "*"
+env_logger = { version = "0.8.3" }
+
+sqlx = { version = "0.6.*", default-features = false, features = ["runtime-actix-rustls", "macros", "postgres", "uuid", "chrono", "migrate"] }
+
+chrono = { version = "0.4.19", features = ["serde"]}
+uuid = { version = "1.1.2", features = ["v4"]}
+
+# petgraph = { version = "0.5.1" } # for building comment trees
+
+reqwest = { version = "0.11.8"}
+
+serde_json = "*"
+serde = "*"
+
+futures-util = { version = "0.3.25" }
+
+rand = "0.8.3"
+
+lazy_static = "1.4.0"
+
+jsonwebtoken = "7.2.0"
+#regex = "1.3.9"
+#regress = "0.4.1" # better regex crate that uses ECMAScript syntax
+
+#validator = { version = "0.12", features = ["derive"] }
+
+#nats = "0.16.0"
