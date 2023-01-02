@@ -153,8 +153,6 @@ function gen_handler_query_param_type(endpoint: Route): string {
                 return gen_input_type_declaration(Struct(query_param_type_name(endpoint), endpoint.query_param_type as Field[]));
             case "struct":
                 return gen_input_type_declaration(StructUnion(query_param_type_name(endpoint), endpoint.query_param_type as Struct[]));
-            case "nested_field":
-                return gen_input_type_declaration(NStruct(query_param_type_name(endpoint), endpoint.query_param_type as NestedField[]));
             default:
                 throw "not implemented!";
         }
@@ -258,8 +256,9 @@ function add_input_body_param(acc: HandlerParam[], input_body_type: Type | undef
     return acc;
 }
 
-function add_database_pool_param(acc: HandlerParam[]) {
+function add_default_params(acc: HandlerParam[]) {
     acc.push({ name: "pool", declaration: "web::Data<sqlx::PgPool>" });
+    acc.push({ name: "broadcaster", declaration: "web::Data<Broadcaster>" });
     return acc;
 }
 
@@ -273,7 +272,7 @@ function gen_handler_params(endpoint: Route): HandlerParam[] {
             if (query_param_type_name(endpoint) != "") {
                 params = add_query_param(params, T(query_param_type_name(endpoint)));
             }
-            params = add_database_pool_param(params);
+            params = add_default_params(params);
             break;
         case Method.Post:
             params = add_req_param(params, endpoint.server_req);
@@ -282,13 +281,13 @@ function gen_handler_params(endpoint: Route): HandlerParam[] {
             if (input_body_type_name(endpoint) != "") {
                 params = add_input_body_param(params, T(input_body_type_name(endpoint)));
             }
-            params = add_database_pool_param(params);
+            params = add_default_params(params);
             break;
         case Method.Delete:
             params = add_req_param(params, endpoint.server_req);
             params = add_session_param(params);
             params = add_url_params(params, endpoint);
-            params = add_database_pool_param(params);
+            params = add_default_params(params);
             break;
     }
     return params;
@@ -364,6 +363,7 @@ use crate::session::app::Session;
 use crate::errors::ApiError;
 use actix_web::{web, Responder, HttpResponse};
 use super::app_types::*;
+use crate::realtime::broadcast::Broadcaster;
 
 ${app_routes.map(gen_handler).join("\n\n")}
 
@@ -379,6 +379,7 @@ use crate::session::client::Session;
 use crate::errors::ApiError;
 use actix_web::{web, Responder, HttpResponse};
 use super::client_types::*;
+use crate::realtime::broadcast::Broadcaster;
 
 ${client_routes.map(gen_handler).join("\n\n")}
 

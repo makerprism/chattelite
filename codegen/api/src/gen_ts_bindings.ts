@@ -116,8 +116,6 @@ function gen_query_param_type(endpoint: Route): string {
                 return gen_type_declaration_for_api_type(Struct(query_param_type_name(endpoint), endpoint.query_param_type as Field[])) + ";\n\n";
             case "struct":
                 return gen_type_declaration_for_api_type(StructUnion(query_param_type_name(endpoint), endpoint.query_param_type as Struct[])) + ";\n\n";
-            case "nested_field":
-                return gen_type_declaration_for_api_type(NStruct(query_param_type_name(endpoint), endpoint.query_param_type as NestedField[])) + ";\n\n";
             default:
                 throw "not implemented!";
         }

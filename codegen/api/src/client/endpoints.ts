@@ -4,8 +4,19 @@ import { ot, t } from './type_names';
 
 export let routes: Route[] = [
     {
-        name: "get_messages",
-        url: "/conversation/{conversation_id}/messages",
+        name: "get_connection_events",
+        url: "/events",
+        method: Method.Get,
+        url_params: [
+        ],
+        output_body_type: [
+            Field("events", Vec(ot.ConnectionEvent)),
+        ],
+    },
+
+    {
+        name: "get_conversation_events",
+        url: "/conversation/{conversation_id}/events",
         method: Method.Get,
         url_params: [
             {
@@ -14,7 +25,7 @@ export let routes: Route[] = [
             },
         ],
         output_body_type: [
-            Field("messages", Vec(ot.Message)),
+            Field("events", Vec(ot.ConversationEvent)),
         ],
     },
 
@@ -34,7 +45,7 @@ export let routes: Route[] = [
     },
 
     {
-        name: "conversation_start_typing",
+        name: "start_typing",
         url: "/conversation/{conversation_id}/start-typing",
         method: Method.Post,
         url_params: [
@@ -46,7 +57,7 @@ export let routes: Route[] = [
         input_body_type: [ ],
     },
     {
-        name: "conversation_stop_typing",
+        name: "stop_typing",
         url: "/conversation/{conversation_id}/stop-typing",
         method: Method.Post,
         url_params: [
@@ -56,5 +67,14 @@ export let routes: Route[] = [
             },
         ],
         input_body_type: [ ],
+    },
+    {
+        name: "mark_read",
+        url: "/read",
+        method: Method.Post,
+        input_body_type: [ 
+            Field("conversation_id", t.ConversationId),
+            Field("line_id", t.LineId),
+        ],
     },
 ];

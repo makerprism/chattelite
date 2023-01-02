@@ -1,5 +1,5 @@
 {
-  "name": "rust-simple-chat-api",
+  "name": "rust-simple-chat-api-codegen",
   "version": "1.0.0",
   "description": "",
   "main": "index.ts",
@@ -10,7 +10,7 @@
   "author": "",
   "dependencies": {
     "@types/node": "^14.14.16",
-    "gen-types": "git+https://github.com/sabine/gen-types.git"
+    "gen-types": "file:../../../gen-types"
   },
   "devDependencies": {
     "typescript": "^4.1.3"

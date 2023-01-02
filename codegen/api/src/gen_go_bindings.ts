@@ -113,8 +113,6 @@ function gen_query_param_type(endpoint: Route): string {
                 return gen_type_declaration_for_api_type(Struct(query_param_type_name(endpoint), endpoint.query_param_type as Field[])) + "\n\n";
             case "struct":
                 return gen_type_declaration_for_api_type(StructUnion(query_param_type_name(endpoint), endpoint.query_param_type as Struct[])) + "\n\n";
-            case "nested_field":
-                return gen_type_declaration_for_api_type(NStruct(query_param_type_name(endpoint), endpoint.query_param_type as NestedField[])) + "\n\n";
             default:
                 throw "not implemented!";
         }
@@ -241,8 +239,10 @@ function gen_route(route: Route): {types: string, code: string} {
     }
 
     return {
-        types: `${gen_query_param_type(route)}${gen_input_type(route)}${gen_output_type(route)}${gen_error_type(route)}`,
-        code: `func ${to_pascal_case(route.name)} (
+        types: `// ${route.name}
+${gen_query_param_type(route)}${gen_input_type(route)}${gen_output_type(route)}${gen_error_type(route)}`,
+        code: `// ${route.name}
+func ${to_pascal_case(route.name)} (
     ${params.join("\n    ")}
 ) ${gen_response_type(route)} {
     ${gen_route_function_body(route, url)}

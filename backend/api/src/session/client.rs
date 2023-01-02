@@ -8,13 +8,13 @@ pub struct Session {
 }
 
 impl Session {
-    /*pub fn encode(
+    pub fn encode(
         self,
         secret: &[u8],
         duration_in_secs: u64,
     ) -> Result<String, jsonwebtoken::errors::Error> {
-        crate::ExpiringClaim::encode(self, secret, duration_in_secs)
-    }*/
+        super::ExpiringClaim::encode(self, secret, duration_in_secs)
+    }
 
     pub fn decode(token: &str, secret: &[u8]) -> Result<Session, jsonwebtoken::errors::Error> {
         super::ExpiringClaim::decode(token, secret)

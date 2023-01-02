@@ -12,7 +12,7 @@ pub struct ExpiringClaim<C> {
 }
 
 impl<C: Serialize + DeserializeOwned> ExpiringClaim<C> {
-/*    pub fn encode(
+    pub fn encode(
         content: C,
         secret: &[u8],
         duration_in_secs: u64,
@@ -29,7 +29,7 @@ impl<C: Serialize + DeserializeOwned> ExpiringClaim<C> {
             },
             &jsonwebtoken::EncodingKey::from_secret(secret),
         )
-    } */
+    }
 
     pub fn decode(token: &str, secret: &[u8]) -> Result<C, jsonwebtoken::errors::Error> {
         jsonwebtoken::decode::<ExpiringClaim<C>>(

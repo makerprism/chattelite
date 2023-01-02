@@ -37,8 +37,8 @@ export type GetRoute = {
     url: string,
 
     url_params?: UrlParam[],
-    query_param_type?: Field[] | NestedField[] | Struct[] | NestedStruct[],
-    output_body_type?: Field[] | Struct[],
+    query_param_type?: Field[] | Struct[],
+    output_body_type?: Field[] | NestedField[] | Struct[] | NestedStruct[],
     error_type?: ErrorVariant[],
 
     server_req?: boolean, // if true, on the server, the handler will be able to inspect the HttpRequest

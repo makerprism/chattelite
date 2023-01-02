@@ -5,21 +5,6 @@ use serde::{Serialize, Deserialize};
 pub struct Session {
 }
 
-impl Session {
-    /*pub fn encode(
-        self,
-        secret: &[u8],
-        duration_in_secs: u64,
-    ) -> Result<String, jsonwebtoken::errors::Error> {
-        crate::ExpiringClaim::encode(self, secret, duration_in_secs)
-    }*/
-
-    pub fn decode(token: &str, secret: &[u8]) -> Result<Session, jsonwebtoken::errors::Error> {
-        super::ExpiringClaim::decode(token, secret)
-    }
-}
-
-
 impl actix_web::FromRequest for Session {
     type Error = ApiError<()>;
     type Future = futures_util::future::Ready<Result<Self, Self::Error>>;
@@ -28,30 +13,25 @@ impl actix_web::FromRequest for Session {
         req: &actix_web::HttpRequest,
         _payload: &mut actix_web::dev::Payload,
     ) -> Self::Future {
-        let pool = req
+        /*let pool = req
             .app_data::<actix_web::web::Data<sqlx::PgPool>>()
             .unwrap()
             .as_ref()
-            .clone();
+            .clone();*/
 
-        let s = req.headers().get("X-Access-Token");
+        log::info!("{:?}", req.headers());
 
-        if s.is_none() {
-            return futures_util::future::err(ApiError::BadRequest {
-                detail: "failed to find session token".to_string(),
-            })
-        }
-
-        let jwt = match s.unwrap().to_str() {
-            Ok(token) => {
-                Session::decode(token, &crate::APP_JWT_SECRET)
+        match req.headers().get("X-Access-Token") {
+            None => return futures_util::future::err(ApiError::BadRequest {
+                detail: "failed to find API key".to_string(),
+            }),
+            Some(h) => {
+                if h.to_str().expect("X-Access-Token header couldn't be converted to string") == *crate::APP_API_KEY {
+                    futures_util::future::ok(Session {})
+                } else {
+                futures_util::future::err(ApiError::NotAuthenticated { detail: "provided API KEY is invalid".to_string() } )
+                }
             }
-            Err(_) => return futures_util::future::err(ApiError::BadRequest { detail: "failed to decode token".to_string() })
-        };
-
-        match jwt {
-            Err(e) => futures_util::future::err(ApiError::NotAuthenticated { detail: "token is invalid".to_string() } ),
-            Ok(session) => futures_util::future::ok(session)
         }
     }
 }

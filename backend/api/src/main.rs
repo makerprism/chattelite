@@ -7,6 +7,7 @@ extern crate uuid;
 #[macro_use]
 extern crate lazy_static;
 
+mod realtime;
 mod generated;
 mod errors;
 mod handlers;
@@ -30,20 +31,17 @@ lazy_static! {
 }
 
 lazy_static! {
-    pub static ref APP_JWT_SECRET: Vec<u8> = std::env::var("APP_JWT_SECRET")
-        .expect("APP_JWT_SECRET must be set")
-        .into_bytes();
+    pub static ref APP_API_KEY: String = std::env::var("APP_API_KEY")
+        .expect("APP_API_KEY must be set");
 }
-
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use crate::actix_web::dev::Service;
     use futures_util::future::FutureExt;
 
-    env_logger::init();
-
     dotenv::dotenv().ok();
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let bind = std::env::var("BIND").expect("BIND must be set");
 
@@ -54,8 +52,23 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to connect to Postgres.");
     println!("db_pool: {:?}", db_pool);
 
+    let broadcaster = realtime::broadcast::Broadcaster::create();
+
     HttpServer::new(move || {
+        let cors = actix_cors::Cors::default()
+        //.allowed_origin("127.0.0.1")
+        .allow_any_origin() 
+        .send_wildcard()
+        /*.allowed_methods(vec!["GET", "POST"])
+        .allowed_headers(vec![actix_web::http::header::AUTHORIZATION, actix_web::http::header::ACCEPT])
+        .allowed_header(actix_web::http::header::CONTENT_TYPE)
+         */
+        .max_age(3600);
+
         App::new()
+            .wrap(cors)
+            .wrap(actix_web::middleware::Logger::default())
+
             .app_data(actix_web::web::Data::new(db_pool.clone()))
             // https://stackoverflow.com/questions/64291039/how-to-return-the-error-description-in-a-invalid-json-request-body-to-the-client
             // make actix return our custom error when JSON deserialization fails
@@ -65,38 +78,13 @@ async fn main() -> std::io::Result<()> {
                 };
                 actix_web::Error::from(e)
             }))
-            .service(
-                web::scope("/api")
-                    .wrap_fn(|req, srv| {
-                        // check for HTTPS proxy header that nginx uses to tell us that the request came by https
-                        let is_https = req
-                            .headers()
-                            .get("SOMEONE_TRUSTWORTHY_HAS_CHECKED_HTTPS")
-                            .is_some();
+            .app_data(web::Data::from(std::sync::Arc::clone(&broadcaster)))
 
-                        if !is_https {
-                            let e: errors::ApiError<()> = errors::ApiError::BadRequest {
-                                detail: "not a https request!".to_string(),
-                            };
-                            return futures_util::future::Either::Right(futures_util::future::err(
-                                actix_web::Error::from(e),
-                            ));
-                        }
+            .configure(generated::app_endpoints::routes)
+            .configure(generated::client_endpoints::routes)
 
-                        futures_util::future::Either::Left(srv.call(req).map(move |res| res))
-                    })
-                    .wrap_fn(|req, srv| {
-                        println!("Request: {:?}", req);
+            .service(realtime::event_stream)
 
-                        srv.call(req).map(move |res| {
-                            println!("Response: {:?}", res);
-                            res
-                        })
-                    })
-                    .configure(generated::app_endpoints::routes)
-                    .configure(generated::client_endpoints::routes)
-                    .default_service(web::to(not_found)),
-            )
             .default_service(web::route().to(not_found))
     })
     .bind(bind.to_owned())?

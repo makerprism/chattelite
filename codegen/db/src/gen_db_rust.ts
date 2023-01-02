@@ -357,7 +357,6 @@ function gen_insert(table: t.Table): { insert_type_declaration: string, insert_f
     let primary_keys = t.primary_keys(table);
     let insert_columns = table.columns.filter(c => c.name != "id" && c.name != "deleted" && (c.type.default === undefined || !t.default_is_raw(c.type.default)));
     let insert_has_lifetime = insert_columns.some(c => gen_insert_type(c.type.type, insert_column_type_is_option(c)).includes("'a"));
-    let has_deleted: boolean = table.columns.find(c => c.name == "deleted") !== undefined;
 
     let insert_args = insert_columns.map((c, i) => {
         return {
@@ -366,14 +365,45 @@ function gen_insert(table: t.Table): { insert_type_declaration: string, insert_f
         }
     });
 
-    if (has_deleted) {
-        insert_args.push({ name: "deleted", value: "FALSE"});
-
+    if (insert_args.length == 0) {
+        let sql_partial = `INSERT INTO ${table.name}
+                        VALUES (DEFAULT)`
+        return {
+            insert_type_declaration: ``,
+            insert_function_declaration: `pub async fn insert_returning_pk(
+                    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+                ) -> Result<${primary_keys_type(table)}, sqlx::Error> {
+                    sqlx::query!(
+                        "
+                        ${sql_partial}
+                        RETURNING ${primary_keys.length == 1 ? primary_keys[0] : `${primary_keys.join(", ")}`}
+                        ",
+                        ${insert_columns.map(gen_insert_arg_for_column).join(",\n            ")}
+                    )
+                    .fetch_one(&mut *transaction)
+                    .await
+                    .map(|r| ${primary_keys.length == 1? `r.${primary_keys[0]}`: `(${primary_keys.map(k => `r.${k}`).join(", ")})`})
+                }
+                
+                pub async fn insert(
+                    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+                ) -> Result<${name}, sqlx::Error> {
+                    sqlx::query_as!(${name},
+                        r#"
+                        ${sql_partial}
+                        RETURNING ${table.columns.map(gen_select_arg_for_column).join(", ")}
+                        "#,
+                        ${insert_columns.map(gen_insert_arg_for_column).join(",\n            ")}
+                    )
+                    .fetch_one(&mut *transaction)
+                    .await
+                }`
+        }
     }
-    if (insert_args.length == 0) return {
-        insert_type_declaration: ``,
-        insert_function_declaration: ``
-    };
+
+    let sql_partial =  
+        `INSERT INTO ${table.name} (${insert_args.map(a => a.name).join(", ")})
+                VALUES (${insert_args.map(a => a.value).join(", ")})`;
 
     return {
         insert_type_declaration: `#[derive(Debug)]
@@ -385,9 +415,8 @@ pub struct Insert${name}${insert_has_lifetime ? "<'a>" : ""} {
     ) -> Result<${primary_keys_type(table)}, sqlx::Error> {
         sqlx::query!(
             "
-            INSERT INTO ${table.name} (${insert_args.map(a => a.name).join(", ")})
-                VALUES (${insert_args.map(a => a.value).join(", ")})
-                RETURNING ${primary_keys.length == 1 ? primary_keys[0] : `${primary_keys.join(", ")}`}
+            ${sql_partial}
+            RETURNING ${primary_keys.length == 1 ? primary_keys[0] : `${primary_keys.join(", ")}`}
             ",
             ${insert_columns.map(gen_insert_arg_for_column).join(",\n            ")}
         )
@@ -402,9 +431,8 @@ pub struct Insert${name}${insert_has_lifetime ? "<'a>" : ""} {
     ) -> Result<${name}, sqlx::Error> {
         sqlx::query_as!(${name},
             r#"
-            INSERT INTO ${table.name} (${insert_args.map(a => a.name).join(", ")})
-                VALUES (${insert_args.map(a => a.value).join(", ")})
-                RETURNING ${table.columns.map(gen_select_arg_for_column).join(", ")}
+            ${sql_partial}
+            RETURNING ${table.columns.map(gen_select_arg_for_column).join(", ")}
             "#,
             ${insert_columns.map(gen_insert_arg_for_column).join(",\n            ")}
         )
