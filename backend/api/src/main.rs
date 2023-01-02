@@ -37,9 +37,6 @@ lazy_static! {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    use crate::actix_web::dev::Service;
-    use futures_util::future::FutureExt;
-
     dotenv::dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
@@ -55,7 +52,10 @@ async fn main() -> std::io::Result<()> {
     let broadcaster = realtime::broadcast::Broadcaster::create();
 
     HttpServer::new(move || {
-        let cors = actix_cors::Cors::default()
+        let cors = actix_cors::Cors::permissive();
+
+        
+/*        actix_cors::Cors::default()
         //.allowed_origin("127.0.0.1")
         .allow_any_origin() 
         .send_wildcard()
@@ -64,6 +64,7 @@ async fn main() -> std::io::Result<()> {
         .allowed_header(actix_web::http::header::CONTENT_TYPE)
          */
         .max_age(3600);
+         */
 
         App::new()
             .wrap(cors)

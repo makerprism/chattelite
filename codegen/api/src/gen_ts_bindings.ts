@@ -250,19 +250,16 @@ function gen_bindings(path: string, types: {t: TypeDeclaration[], it: TypeDeclar
     let endpoint_fns = gen_endpoints(routes);
 
     let ts_types = `// AUTOMATICALLY GENERATED, DO NOT EDIT!!
-export namespace Types {
 ${gen_types(types.t, types.it, types.ot)}
 
 ${endpoint_fns.types}
-}
 `;
     let endpoints_ts_code = `// AUTOMATICALLY GENERATED, DO NOT EDIT!!
-import type { Types as T } from "@types";
+import * as T from "@types";
 import * as utils from "@utils";
 
-export namespace Endpoints {
 ${endpoint_fns.code}
-}`;
+`;
 
     if (!fs.existsSync(`${path}`)) fs.mkdirSync(`${path}`);
     fs.writeFileSync(`${path}/types.ts`, ts_types);

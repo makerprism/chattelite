@@ -57,6 +57,8 @@ pub async fn get_conversation_events(
         LEFT OUTER JOIN system_event ON system_event.line_id = line.id
         LEFT OUTER JOIN message ON message.line_id = line.id
         WHERE conversation_id = $1
+        ORDER BY line.created_at DESC
+        LIMIT 20
         "#,
         params.conversation_id.to_db_id(),
     )
@@ -85,7 +87,7 @@ pub async fn get_conversation_events(
                 }
             },
         })
-        .collect();
+        .rev().collect();
 
     Ok(GetConversationEventsOutput { events })
 }

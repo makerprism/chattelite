@@ -1,3 +1,5 @@
+import { API_URL } from "./config";
+
 export type ApiResponse<S, E> = S | ApiResponseError<E>;
 type BaseError = {
     error: true;
@@ -52,7 +54,7 @@ export type ApiResponseError<E> = BaseError &
         | (E extends Object ? { body: E } : {})
     );
 
-function maker_database_api_fetch(url: string, opts: any): Promise<ApiResponse<any, any>> {
+function api_fetch(url: string, opts: any): Promise<ApiResponse<any, any>> {
     let fetch_url = API_URL + url;
     console.log(['fetch_url', fetch_url]);
     const response = fetch(fetch_url, opts).then(async (res: Response) => {
@@ -89,7 +91,7 @@ export function get(url: string, opts: { session_token?: string }) {
     if (opts.session_token) {
         headers['X-Access-Token'] = opts.session_token;
     }
-    return maker_database_api_fetch(url, {
+    return api_fetch(url, {
         headers
     });
 }
@@ -103,7 +105,7 @@ export function post(url: string, opts: { session_token?: string }, body?: any) 
     if (opts.session_token) {
         headers['X-Access-Token'] = opts.session_token;
     }
-    return maker_database_api_fetch(url, {
+    return api_fetch(url, {
         method: 'POST',
         body: b,
         headers
@@ -118,7 +120,7 @@ export function del(url: string, opts: { session_token?: string }) {
     if (opts.session_token) {
         headers['X-Access-Token'] = opts.session_token;
     }
-    return maker_database_api_fetch(url, {
+    return api_fetch(url, {
         method: 'DELETE',
         headers
     });
@@ -138,7 +140,7 @@ export async function postFormData(
         headers['X-Access-Token'] = opts.session_token;
     }
 
-    return maker_database_api_fetch(url, {
+    return api_fetch(url, {
         method: 'POST',
         body: formData,
         headers

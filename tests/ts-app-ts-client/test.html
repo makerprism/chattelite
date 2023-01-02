@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Server-sent events</title>
+    <style>
+        p {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+    </style>
+
+    <script>
+"use strict";(()=>{var f=i=>decodeURIComponent(escape(i)),v=i=>i.replace(/\r\n|\r/g,`
+`),h=class extends EventTarget{constructor(t,e){super();this.CONNECTING=0;this.OPEN=1;this.CLOSED=2;this.withCredentials=!1;this.headers={};this.lastEventId="";this.reconnectionTime=2e3;this.responseTextCursor=0;this.eventTypeBuffer="";this.idBuffer="";this.dataBuffer="";this.canReconnect=!0;this.url=t,this.withCredentials=Boolean(e&&e.withCredentials),e&&e.headers&&(this.headers=e.headers),this.addEventListener("error",s=>{this.onerror&&this.onerror(s)}),this.addEventListener("message",s=>{this.onmessage&&this.onmessage(s)}),this.addEventListener("open",s=>{this.onopen&&this.onopen(s)}),this.connect()}announceConnection(){this.readyState=this.OPEN,this.dispatchEvent(new Event("open")),this.responseTextCursor=0}connect(t=this.url){this.readyState=this.CONNECTING;let e=this.xhr=new XMLHttpRequest;e.open("GET",t,!0);for(let s in this.headers)e.setRequestHeader(s,this.headers[s]);e.setRequestHeader("Accept","text/event-stream"),e.setRequestHeader("Cache-Control","no-cache"),this.lastEventId&&e.setRequestHeader("Last-Event-ID",this.lastEventId),e.onreadystatechange=()=>{if(!(e.readyState<=1||this.readyState===this.CLOSED)){if(e.readyState===4){this.reestablishConnection();return}switch(e.status){case 200:this.handleConnection(e),this.interpretStream(e);break;case 204:this.canReconnect=!1;break;case 301:case 307:let s=e.getResponseHeader("Location");this.failConnection(e,!0),s&&this.connect(s);break;default:this.failConnection(e)}}},e.send()}dispatchMessageEvent(t){if(this.lastEventId=this.idBuffer,this.dataBuffer===""){this.eventTypeBuffer="";return}this.dataBuffer[this.dataBuffer.length-1]===`
+`&&(this.dataBuffer=this.dataBuffer.slice(0,-1));let e=this.eventTypeBuffer||"message",s=new MessageEvent(e,{data:this.dataBuffer,origin:t,lastEventId:this.lastEventId});this.eventTypeBuffer="",this.dataBuffer="",this.dispatchEvent(s)}handleConnection(t){if(this.readyState===this.CONNECTING){let e=t.getResponseHeader("Content-Type");e&&e.toLowerCase()==="text/event-stream"?this.announceConnection():this.failConnection(t)}}failConnection(t,e=!1){this.readyState=this.CLOSED,e||this.dispatchEvent(new Event("error")),this.canReconnect=!1,t.abort()}interpretStream(t){if(this.readyState!==this.OPEN)return;let e="";try{e=t.responseText}catch(r){return}let s=e.substring(this.responseTextCursor);this.responseTextCursor=e.length;let d=v(f(s)).split(`
+`);for(let r=0;r<d.length;r++){let n=d[r];if(n==="")this.dispatchMessageEvent(t.responseURL);else{let a=n.indexOf(":");if(a!==0)if(a!==-1){let l=n.substring(0,a),o=n.substring(a+1),u=o.indexOf(" ")===0?o.slice(1):o;this.processField({field:l,value:u})}else this.processField({field:n,value:""})}}}processField(t){switch(t.field){case"event":this.eventTypeBuffer=t.value;break;case"data":this.dataBuffer+=`${t.value}
+`;break;case"id":t.value.indexOf("\0")===-1&&(this.idBuffer=t.value);break;case"retry":let e=+t.value;Number.isInteger(e)&&(this.reconnectionTime=e)}}reestablishConnection(){this.readyState===this.CLOSED||!this.canReconnect||(this.readyState=this.CONNECTING,this.dispatchEvent(new Event("error")),setTimeout(()=>{this.readyState===this.CONNECTING&&this.connect()},this.reconnectionTime))}close(){this.readyState=this.CLOSED,this.xhr&&this.xhr.abort()}},c=h;window.EventSourceWithHeaders=c;})();
+//# sourceMappingURL=index.js.map
+
+"use strict";(()=>{var k=Object.defineProperty;var v=(n,e)=>{for(var t in e)k(n,t,{get:e[t],enumerable:!0})};var g=(n,e,t)=>new Promise((o,s)=>{var p=r=>{try{c(t.next(r))}catch(d){s(d)}},R=r=>{try{c(t.throw(r))}catch(d){s(d)}},c=r=>r.done?o(r.value):Promise.resolve(r.value).then(p,R);c((t=t.apply(n,e)).next())});var y={};v(y,{default:()=>I,del:()=>A,get:()=>a,post:()=>i,postFormData:()=>E,stringify_query:()=>h});var m;function _(n){m=n}function u(n,e){let t=m+n;return console.log(["fetch_url",t]),fetch(t,e).then(s=>g(this,null,function*(){switch(console.log(s),s.status){case 200:return s.json();default:return s.json().then(p=>({error:!0,status:s.status,body:p}))}}))}function a(n,e){let t={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(t["X-Access-Token"]=e.session_token),u(n,{headers:t})}function i(n,e,t){let o=t?JSON.stringify(t):"null",s={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(s["X-Access-Token"]=e.session_token),u(n,{method:"POST",body:o,headers:s})}function A(n,e){let t={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(t["X-Access-Token"]=e.session_token),u(n,{method:"DELETE",headers:t})}function E(n,e,t){return g(this,null,function*(){let o={Accept:"application/json"};return e.session_token&&(o["X-Access-Token"]=e.session_token),u(n,{method:"POST",body:t,headers:o})})}function C(n,e,t){t!=null&&n.push([encodeURIComponent(e),encodeURIComponent(t)])}var l=class{constructor(e){this.params=e}url_encode(){let e=[];for(let t in this.params){let o=this.params[t];if(o!==null){if(typeof o=="string"||typeof o=="number"||typeof o=="boolean"){C(e,t,o.toString());continue}if(Array.isArray(o)){if(o.length>0&&(typeof o[0]=="string"||typeof o[0]=="number"||typeof o[0]=="boolean")){C(e,t,o.join(","));continue}throw"url_encode not implemented for "+typeof o+" "+JSON.stringify(o)}if(typeof o=="object"&&o.hasOwnProperty("url_encode"))for(let[s,p]of o.url_encode())e.push([`${t}.${s}`,p]);throw"url_encode not implemented for "+typeof o+" "+JSON.stringify(o)}}return e}};function h(n){let e=new l(n).url_encode();return console.log(["stringify_query",e]),e.length>0?`?${e.map(([t,o])=>`${t}=${o}`).join("&")}`:""}var I={get:a,post:i,postFormData:E};var x={};var f={};v(f,{get_connection_events:()=>b,get_conversation_events:()=>S,mark_read:()=>j,send_message:()=>P,start_typing:()=>U,stop_typing:()=>M});function b(n){return a("/events",n)}function S(n,e){return a(`/conversation/${e}/events`,n)}function P(n,e,t){return i(`/conversation/${e}`,n,t)}function U(n,e,t){return i(`/conversation/${e}/start-typing`,n,t)}function M(n,e,t){return i(`/conversation/${e}/stop-typing`,n,t)}function j(n,e){return i("/read",n,e)}var D={init:_,Types:x,Endpoints:f,Utils:y},T=D;window.RustSimpleChatClient=T;})();
+//# sourceMappingURL=index.js.map
+
+
+
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script defer>
+        const JWT = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NzI2ODE4NDIsImNvbnRlbnQiOnsiYWNjb3VudF9pZCI6MSwidXNlcm5hbWUiOiJ0ZXN0In19.fj2kXjx_sKJzYBp88BePopD8VrlYmK6hu386AkIZuO0";
+        const CONVERSATION_ID = "CON-AAAAAAAAAAI";
+        
+        RustSimpleChatClient.init("http://127.0.0.1:8000");
+
+        async function fetch_previous_events() {
+
+            let previous_events = await RustSimpleChatClient.Endpoints.get_conversation_events({session_token: JWT}, CONVERSATION_ID);
+            console.log(previous_events);
+
+            for (let e of previous_events.events) {
+                let data = document.createElement("p");
+                data.innerText = "old: " + JSON.stringify(e);
+                root.appendChild(data);    
+            }
+        }
+
+        fetch_previous_events();
+
+        let root = document.getElementById("root");
+        let events = new EventSourceWithHeaders("http://127.0.0.1:8000/realtime", {headers: {"X-Access-Token": JWT}});
+        events.onmessage = (event) => {
+            let data = document.createElement("p");
+            let time = new Date().toLocaleTimeString();
+            data.innerText = time + ": " + event.data;
+            root.appendChild(data);
+        }
+
+        function send(e) {
+            RustSimpleChatClient.Endpoints.send_message({session_token: JWT}, CONVERSATION_ID, {
+                content: message
+            });
+            message = "";
+            document.getElementById("message").value = "";
+        }
+
+        let message = "";
+    </script>
+
+    <input type="text" id="message" oninput="message = event.target.value">
+    <button onclick="send(event)">send</button>
+</body>
+</html>
