@@ -2,7 +2,7 @@ use actix_web::web;
 
 use crate::errors::ApiError;
 use crate::generated::client_types::*;
-use crate::realtime::broadcast::Broadcaster;
+use crate::realtime::broadcast::{Broadcaster, BroadcastConversationEvent};
 use crate::session::client::Session;
 
 pub async fn get_connection_events(
@@ -51,11 +51,15 @@ pub async fn get_conversation_events(
             line.reply_to_line_id,
             system_event.kind as "kind?: db::SystemEventKind",
             system_event.account_id as "account_id?: db::AccountId",
+            p1.username as "username1?: String",
             message.created_by as "created_by?: db::AccountId",
+            p2.username as "username2?: String",
             message.content as "content?: String"
         FROM line
         LEFT OUTER JOIN system_event ON system_event.line_id = line.id
         LEFT OUTER JOIN message ON message.line_id = line.id
+        LEFT OUTER JOIN account p1 ON p1.id = system_event.account_id
+        LEFT OUTER JOIN account p2 ON p2.id = message.created_by
         WHERE conversation_id = $1
         ORDER BY line.created_at DESC
         LIMIT 20
@@ -70,16 +74,16 @@ pub async fn get_conversation_events(
         .map(|row| match row.kind {
             Some(db::SystemEventKind::Join) => ConversationEvent::Join {
                 timestamp: row.created_at.to_string(),
-                from: row.account_id.expect("missing account_id").to_string(),
+                from: row.username1.expect("missing username"),
             },
             Some(db::SystemEventKind::Leave) => ConversationEvent::Leave {
                 timestamp: row.created_at.to_string(),
-                from: row.account_id.expect("missing account_id").to_string(),
+                from: row.username1.expect("missing username"),
             },
             None => match row.content {
                 Some(content) => ConversationEvent::Message {
                     timestamp: row.created_at.to_string(),
-                    from: row.created_by.expect("impossible").to_string(),
+                    from: row.username2.expect("missing username"),
                     content: content,
                 },
                 None => {
@@ -136,11 +140,10 @@ pub async fn send_message(
 
     transaction.commit().await?;
 
-    // TODO: broadcast to the conversation, not globally
     broadcaster
-        .broadcast(&ConversationEvent::Message {
-            timestamp: line.created_at.to_string(),
-            from: session.username,
+        .broadcast_to_conversation(params.conversation_id.to_db_id(), BroadcastConversationEvent::Message {
+            timestamp: line.created_at,
+            username: session.username,
             content: json.content.to_string(),
         })
         .await;
@@ -150,16 +153,15 @@ pub async fn send_message(
 
 pub async fn start_typing(
     session: Session,
-    params: web::Path<StartTypingParams>, // TODO: broadcast to this conversation, not globally
+    params: web::Path<StartTypingParams>,
     _pool: web::Data<sqlx::PgPool>,
     broadcaster: web::Data<Broadcaster>,
 ) -> Result<NoOutput, ApiError<()>> {
     broadcaster
-        .broadcast(&ConversationEvent::StartTyping {
-            timestamp: "TODO".to_string(),
-            from: session.username,
-        })
-        .await;
+    .broadcast_to_conversation(params.conversation_id.to_db_id(), BroadcastConversationEvent::StartTyping {
+        account_id: session.account_id,
+    })
+    .await;
 
     Ok(NoOutput {})
 }
@@ -171,11 +173,10 @@ pub async fn stop_typing(
     broadcaster: web::Data<Broadcaster>,
 ) -> Result<NoOutput, ApiError<()>> {
     broadcaster
-        .broadcast(&ConversationEvent::EndTyping {
-            timestamp: "TODO".to_string(),
-            from: session.username,
-        })
-        .await;
+    .broadcast_to_conversation(params.conversation_id.to_db_id(), BroadcastConversationEvent::EndTyping {
+        account_id: session.account_id,
+    })
+    .await;
 
     Ok(NoOutput {})
 }

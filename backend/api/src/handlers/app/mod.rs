@@ -2,7 +2,8 @@ use actix_web::web;
 
 use crate::errors::ApiError;
 use crate::generated::app_types::*;
-use crate::realtime::broadcast::Broadcaster;
+use crate::generated::client_types::ConversationEvent;
+use crate::realtime::broadcast::{BroadcastConversationEvent, Broadcaster};
 use crate::session::app::Session;
 
 pub async fn create_user(
@@ -80,7 +81,7 @@ pub async fn create_conversation(
     _session: Session,
     json: web::Json<CreateConversationInput>,
     pool: web::Data<sqlx::PgPool>,
-    broadcaster: web::Data<Broadcaster>,
+    _broadcaster: web::Data<Broadcaster>,
 ) -> Result<CreateConversationOutput, ApiError<()>> {
     let mut transaction = pool.begin().await?;
 
@@ -150,7 +151,7 @@ pub async fn add_users_to_conversation(
 
     let participants = sqlx::query!(
         r#"
-        SELECT id FROM account WHERE username = ANY ($1)
+        SELECT id, username FROM account WHERE username = ANY ($1)
         "#,
         &json.users
     )
@@ -166,6 +167,8 @@ pub async fn add_users_to_conversation(
     let conversation =
         db::Conversation::get_by_pk(&mut transaction, params.conversation_id.to_db_id()).await?;
 
+    let mut join_lines: Vec<(db::Line, String)> = vec![];
+
     for participant in participants {
         db::ConversationParticipant::insert_returning_pk(
             &mut transaction,
@@ -178,7 +181,7 @@ pub async fn add_users_to_conversation(
         /* IMPROVE: it would be ok if we add users that are already in the conversation,
         but then we don't need to add a line of them being added.  */
 
-        let line_id = db::Line::insert_returning_pk(
+        let line = db::Line::insert(
             &mut transaction,
             db::InsertLine {
                 conversation_id: conversation.id,
@@ -191,12 +194,14 @@ pub async fn add_users_to_conversation(
         db::SystemEvent::insert(
             &mut transaction,
             db::InsertSystemEvent {
-                line_id,
+                line_id: line.id,
                 kind: db::SystemEventKind::Join,
                 account_id: Some(participant.id),
             },
         )
         .await?;
+
+        join_lines.push((line, participant.username));
     }
 
     db::Conversation::update(
@@ -208,6 +213,18 @@ pub async fn add_users_to_conversation(
     .await?;
 
     transaction.commit().await?;
+
+    for (line, username) in join_lines {
+        broadcaster
+            .broadcast_to_conversation(
+                params.conversation_id.to_db_id(),
+                BroadcastConversationEvent::Join {
+                    timestamp: line.created_at,
+                    username: username,
+                },
+            )
+            .await;
+    }
 
     Ok(NoOutput {})
 }
@@ -223,7 +240,7 @@ pub async fn remove_users_from_conversation(
 
     let participants = sqlx::query!(
         r#"
-        SELECT account.id
+        SELECT account.id, account.username
         FROM account 
         INNER JOIN conversation_participant ON conversation_participant.account_id = account.id
         WHERE username = ANY ($1)
@@ -241,7 +258,7 @@ pub async fn remove_users_from_conversation(
         });
     }
 
-    let account_ids: Vec<db::AccountId> = participants.into_iter().map(|r| r.id).collect();
+    let account_ids: Vec<db::AccountId> = participants.iter().map(|r| r.id).collect();
 
     sqlx::query!(
         r#"
@@ -258,8 +275,10 @@ pub async fn remove_users_from_conversation(
     let conversation =
         db::Conversation::get_by_pk(&mut transaction, params.conversation_id.to_db_id()).await?;
 
-    for account_id in account_ids {
-        let line_id = db::Line::insert_returning_pk(
+    let mut leave_lines: Vec<(db::Line, String)> = vec![];
+
+    for participant in participants {
+        let line = db::Line::insert(
             &mut transaction,
             db::InsertLine {
                 conversation_id: conversation.id,
@@ -272,12 +291,14 @@ pub async fn remove_users_from_conversation(
         db::SystemEvent::insert(
             &mut transaction,
             db::InsertSystemEvent {
-                line_id,
+                line_id: line.id,
                 kind: db::SystemEventKind::Leave,
-                account_id: Some(account_id),
+                account_id: Some(participant.id),
             },
         )
         .await?;
+
+        leave_lines.push((line, participant.username));
     }
 
     db::Conversation::update(
@@ -289,6 +310,18 @@ pub async fn remove_users_from_conversation(
     .await?;
 
     transaction.commit().await?;
+
+    for (line, username) in leave_lines {
+        broadcaster
+            .broadcast_to_conversation(
+                params.conversation_id.to_db_id(),
+                BroadcastConversationEvent::Leave {
+                    timestamp: line.created_at,
+                    username,
+                },
+            )
+            .await;
+    }
 
     Ok(NoOutput {})
 }

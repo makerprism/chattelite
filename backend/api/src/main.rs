@@ -84,7 +84,8 @@ async fn main() -> std::io::Result<()> {
             .configure(generated::app_endpoints::routes)
             .configure(generated::client_endpoints::routes)
 
-            .service(realtime::event_stream)
+            //.service(realtime::sse)
+            .service(realtime::sse_conversation_events)
 
             .default_service(web::route().to(not_found))
     })

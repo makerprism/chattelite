@@ -1,3 +1,5 @@
+import { API_URL } from "./config";
+
 export type ApiResponse<S, E> = S | ApiResponseError<E>;
 type BaseError = {
     error: true;

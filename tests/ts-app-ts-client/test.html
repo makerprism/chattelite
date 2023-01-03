@@ -24,19 +24,30 @@
 //# sourceMappingURL=index.js.map
 
 
+"use strict";(()=>{var v=Object.defineProperty;var R=(t,e)=>{for(var n in e)v(t,n,{get:e[n],enumerable:!0})};var d=(t,e,n)=>new Promise((i,s)=>{var p=o=>{try{a(n.next(o))}catch(u){s(u)}},C=o=>{try{a(n.throw(o))}catch(u){s(u)}},a=o=>o.done?i(o.value):Promise.resolve(o.value).then(p,C);a((n=n.apply(t,e)).next())});var y={};var l={};R(l,{add_users_to_conversation:()=>I,create_conversation:()=>T,create_user:()=>x,delete_user:()=>h,generate_client_jwt:()=>k,remove_users_from_conversation:()=>b});var c;function m(t){c=t}function g(t,e){let n=c+t;return console.log(["fetch_url",n]),fetch(n,e).then(s=>d(this,null,function*(){switch(console.log(s),s.status){case 200:return s.json();default:return s.json().then(p=>({error:!0,status:s.status,body:p}))}}))}function r(t,e,n){let i=n?JSON.stringify(n):"null",s={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(s["X-Access-Token"]=e.session_token),g(t,{method:"POST",body:i,headers:s})}function f(t,e){let n={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(n["X-Access-Token"]=e.session_token),g(t,{method:"DELETE",headers:n})}function x(t,e){return r("/users",t,e)}function h(t,e){return f(`/user/${e}`,t)}function k(t,e){return r("/gen-client-jwt",t,e)}function T(t,e){return r("/conversations",t,e)}function I(t,e,n){return r(`/conversation/${e}/add-users`,t,n)}function b(t,e,n){return r(`/conversation/${e}/remove-users`,t,n)}var U={Types:y,Endpoints:l,init:m},_=U;window.RustSimpleChat=_;})();
+//# sourceMappingURL=index.js.map
+
+
 
     </script>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root" style="max-height:90vh;overflow-y: auto;"></div>
     <script defer>
-        const JWT = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NzI2ODE4NDIsImNvbnRlbnQiOnsiYWNjb3VudF9pZCI6MSwidXNlcm5hbWUiOiJ0ZXN0In19.fj2kXjx_sKJzYBp88BePopD8VrlYmK6hu386AkIZuO0";
-        const CONVERSATION_ID = "CON-AAAAAAAAAAI";
-        
+        let API_KEY = "53whn530h8n530hietpg3oq5pmupq35mupi356mu";
+        const USERNAME = "test";
+
+        RustSimpleChat.init("http://127.0.0.1:8000");
+
         RustSimpleChatClient.init("http://127.0.0.1:8000");
 
-        async function fetch_previous_events() {
+        let JWT;
+        let CONVERSATION_ID = "CON-AAAAAAAAAAI";
+        let event_source;
+        let root = document.getElementById("root");
 
+
+        async function connect_to_conversation() {
             let previous_events = await RustSimpleChatClient.Endpoints.get_conversation_events({session_token: JWT}, CONVERSATION_ID);
             console.log(previous_events);
 
@@ -44,19 +55,26 @@
                 let data = document.createElement("p");
                 data.innerText = "old: " + JSON.stringify(e);
                 root.appendChild(data);    
+                data.scrollIntoView();
+            }
+
+            event_source = new EventSourceWithHeaders("http://127.0.0.1:8000/conversation/"+CONVERSATION_ID+"/sse", {headers: {"X-Access-Token": JWT}});
+            event_source.onmessage = (event) => {
+                let data = document.createElement("p");
+                let time = new Date().toLocaleTimeString();
+                data.innerText = time + ": " + event.data;
+                root.appendChild(data);
+                data.scrollIntoView();
             }
         }
 
-        fetch_previous_events();
+        async function start() {
+            JWT = (await RustSimpleChat.Endpoints.generate_client_jwt({ session_token: API_KEY }, {username: USERNAME})).jwt;
 
-        let root = document.getElementById("root");
-        let events = new EventSourceWithHeaders("http://127.0.0.1:8000/realtime", {headers: {"X-Access-Token": JWT}});
-        events.onmessage = (event) => {
-            let data = document.createElement("p");
-            let time = new Date().toLocaleTimeString();
-            data.innerText = time + ": " + event.data;
-            root.appendChild(data);
+            await connect_to_conversation();
         }
+
+        start();
 
         function send(e) {
             RustSimpleChatClient.Endpoints.send_message({session_token: JWT}, CONVERSATION_ID, {
@@ -66,10 +84,44 @@
             document.getElementById("message").value = "";
         }
 
+        async function join(e) {
+            RustSimpleChat.Endpoints.add_users_to_conversation({session_token: API_KEY}, CONVERSATION_ID, { users: [USERNAME]}).then(_ => {
+                connect_to_conversation();
+            })
+        }
+
+        function leave(e) {
+            RustSimpleChat.Endpoints.remove_users_from_conversation({session_token: API_KEY}, CONVERSATION_ID, { users: [USERNAME]})
+            if(event_source) {
+                event_source.close();
+            }
+            root.innerHTML = "";
+        }
+
+        let start_typing = null;
+        let stop_typing = null;
+
+        function input(e) {
+            message = e.target.value;
+            if (!start_typing) {
+                RustSimpleChatClient.Endpoints.start_typing({ session_token: JWT}, CONVERSATION_ID);
+                start_typing = setTimeout(_ => start_typing = null, 2000);
+            }
+            if(stop_typing) clearTimeout(stop_typing);
+            stop_typing = setTimeout(_ => {
+                RustSimpleChatClient.Endpoints.stop_typing({ session_token: JWT}, CONVERSATION_ID);
+            }, 1000);
+        }
+
         let message = "";
     </script>
 
-    <input type="text" id="message" oninput="message = event.target.value">
+    <input type="text" id="message" oninput="input(event)">
     <button onclick="send(event)">send</button>
+
+    <div>
+    <button onclick="join(event)">JOIN</button>    
+    <button onclick="leave(event)">LEAVE</button>    
+    </div>
 </body>
 </html>
