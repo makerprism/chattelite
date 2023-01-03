@@ -8,16 +8,17 @@ export let routes: Route[] = [
         url: "/users",
         method: Method.Post,
         input_body_type: [
-            Field("username", Str),
+            Field("id", Str),
+            Field("display_name", Str),
         ],
     },
     {
         name: "delete_user",
-        url: "/user/{username}",
+        url: "/user/{user_id}",
         method: Method.Delete,
         url_params: [
             {
-                name: "username",
+                name: "user_id",
                 type: Str,
             }
         ],
@@ -27,7 +28,7 @@ export let routes: Route[] = [
         url: "/gen-client-jwt",
         method: Method.Post,
         input_body_type: [
-            Field("username", Str),
+            Field("user_id", Str),
         ],
         output_body_type: [
             Field("jwt", Str),
@@ -39,7 +40,7 @@ export let routes: Route[] = [
         url: "/conversations",
         method: Method.Post,
         input_body_type: [
-            Field("users", Vec(t.Username)),
+            Field("user_ids", Vec(t.UserId)),
         ],
         output_body_type: [
             Field("conversation_id", t.ConversationId),
@@ -57,7 +58,7 @@ export let routes: Route[] = [
             }
         ],
         input_body_type: [
-            Field("users", Vec(t.Username)),
+            Field("user_ids", Vec(t.UserId)),
         ],
     },
 
@@ -72,7 +73,7 @@ export let routes: Route[] = [
             }
         ],
         input_body_type: [
-            Field("users", Vec(t.Username)),
+            Field("user_ids", Vec(t.UserId)),
         ],
     },
 ];

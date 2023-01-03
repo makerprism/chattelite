@@ -29,8 +29,8 @@ function create_user(opts, body) {
     return utils.post(`/users`, opts, body);
 }
 exports.create_user = create_user;
-function delete_user(opts, username) {
-    return utils.del(`/user/${username}`, opts);
+function delete_user(opts, user_id) {
+    return utils.del(`/user/${user_id}`, opts);
 }
 exports.delete_user = delete_user;
 function generate_client_jwt(opts, body) {

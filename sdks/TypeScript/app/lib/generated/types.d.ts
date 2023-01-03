@@ -1,24 +1,26 @@
+export type UserId = string;
 export type ConversationId = string;
-export type Username = string;
+export type user_id = string;
 export type DateTime = string;
 export type CreateUserInput = {
-    username: string;
+    id: string;
+    display_name: string;
 };
 export type GenerateClientJwtInput = {
-    username: string;
+    user_id: string;
 };
 export type GenerateClientJwtOutput = {
     jwt: string;
 };
 export type CreateConversationInput = {
-    users: Username[];
+    user_ids: UserId[];
 };
 export type CreateConversationOutput = {
     conversation_id: ConversationId;
 };
 export type AddUsersToConversationInput = {
-    users: Username[];
+    user_ids: UserId[];
 };
 export type RemoveUsersFromConversationInput = {
-    users: Username[];
+    user_ids: UserId[];
 };

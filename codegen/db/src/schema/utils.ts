@@ -9,19 +9,19 @@ export function NullableForeignKey(name: string, table: string, column: string, 
     return t.Column(name, t.Nullable(t.I64, default_value), { foreign_key: t.CForeignKey(table, column) });    
 }
 
-export function AccountForeignKey(name: string, opts?: { primary_key?: boolean; }) {
+export function UserForeignKey(name: string, opts?: { primary_key?: boolean; }) {
     if (opts === undefined) opts = {};
-    return NonNullableForeignKey(name, "account", "id", opts);
+    return NonNullableForeignKey(name, "users", "id", opts);
 }
 export const CreatedAt = t.Column("created_at", t.NonNullable(t.Timestamp, { raw: "NOW()" }));
 export const UpdatedAt = t.Column("updated_at", t.NonNullable(t.Timestamp, { raw: "NOW()" }));
 export const Deleted = t.Column("deleted", t.NonNullable(t.Bool, false));
 
 export function CreatedBy(opts?: { primary_key?: boolean; }) {
-    return AccountForeignKey("created_by", opts );
+    return UserForeignKey("created_by", opts );
 }
 export function UpdatedBy(opts?: { primary_key?: boolean; }) {
-    return AccountForeignKey("updated_by", opts );
+    return UserForeignKey("updated_by", opts );
 }
 export const CRUD: t.Column<any>[] = [
     CreatedBy({}),

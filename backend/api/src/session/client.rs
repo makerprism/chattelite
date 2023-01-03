@@ -3,8 +3,8 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Session {
-    pub account_id: db::AccountId,
-    pub username: String,
+    pub user_id: String,
+    pub display_name: String,
 }
 
 impl Session {
@@ -20,7 +20,6 @@ impl Session {
         super::ExpiringClaim::decode(token, secret)
     }
 }
-
 
 impl actix_web::FromRequest for Session {
     type Error = ApiError<()>;

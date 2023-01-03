@@ -7,7 +7,7 @@ export declare function create_user(opts: {
 export type DeleteUserResponse = utils.ApiResponse<{}, void>;
 export declare function delete_user(opts: {
     session_token: string;
-}, username: String): Promise<DeleteUserResponse>;
+}, user_id: String): Promise<DeleteUserResponse>;
 export type GenerateClientJwtResponse = utils.ApiResponse<T.GenerateClientJwtOutput, void>;
 export declare function generate_client_jwt(opts: {
     session_token: string;

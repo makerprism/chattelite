@@ -7,7 +7,7 @@ use futures_util::future;
 use parking_lot::Mutex;
 use serde::Serialize;
 
-use crate::generated::client_types::ConversationEvent;
+use crate::generated::client_types::{ConversationEvent, User};
 
 pub struct Broadcaster {
     inner: Mutex<BroadcasterInner>,
@@ -15,7 +15,7 @@ pub struct Broadcaster {
 
 #[derive(Debug, Clone, Default)]
 struct Conversation {
-    currently_typing: std::collections::HashMap<db::AccountId, DateTime<Utc>>,
+    currently_typing: std::collections::HashMap<String, DateTime<Utc>>,
     clients: Vec<sse::Sender>,
 }
 
@@ -38,21 +38,21 @@ async fn broadcast<Data: Serialize>(clients: &[sse::Sender], data: &Data) {
 
 pub enum BroadcastConversationEvent {
     StartTyping {
-        account_id: db::AccountId,
+        user: User,
     },
     EndTyping {
-        account_id: db::AccountId,
+        user: User,
     },
     Join {
-        username: String,
+        user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
     },
     Leave {
-        username: String,
+        user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
     },
     Message {
-        username: String,
+        user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
         content: String,
     },
@@ -95,10 +95,10 @@ impl Broadcaster {
                     let ok_conversation = ok_conversations.entry(id).or_insert_with(|| {
                         let currently_typing = std::collections::HashMap::from_iter(
                             conversation.currently_typing.iter().filter_map(
-                                |(username, timestamp)| {
+                                |(user_id, timestamp)| {
                                     if chrono::Utc::now().timestamp_millis() - timestamp.timestamp_millis() < 15000
                                     {
-                                        Some((username.clone(), timestamp.clone()))
+                                        Some((user_id.clone(), timestamp.clone()))
                                     } else {
                                         None
                                     }
@@ -158,15 +158,15 @@ impl Broadcaster {
             let conversation: &mut Conversation = maybe_conversation.expect("impossible");
 
             let conversation_event = match data {
-                BroadcastConversationEvent::StartTyping { account_id } => {
+                BroadcastConversationEvent::StartTyping { user } => {
                     let now = chrono::Utc::now();
 
                     log::info!("1 start typing, currently_typing: {:?}", conversation.currently_typing);
 
-                    let ce = match conversation.currently_typing.insert(account_id, now) {
+                    let ce = match conversation.currently_typing.insert(user.id.clone(), now) {
                         None => {
                             ConversationEvent::StartTyping {
-                                from: account_id.to_string(), // TODO
+                                from: user,
                                 timestamp: now.to_string(),
                             }
                         }
@@ -183,7 +183,7 @@ impl Broadcaster {
                                 return;
                             } else {
                                 ConversationEvent::StartTyping {
-                                    from: account_id.to_string(), //TODO
+                                    from: user,
                                     timestamp: now.to_string(),
                                 }
                             }
@@ -193,35 +193,35 @@ impl Broadcaster {
                     ce
 
                 }
-                BroadcastConversationEvent::EndTyping { account_id } => {
+                BroadcastConversationEvent::EndTyping { user } => {
                     let now = chrono::Utc::now();
 
-                    conversation.currently_typing.remove(&account_id);
+                    conversation.currently_typing.remove(&user.id);
                     ConversationEvent::EndTyping {
-                        from: account_id.to_string(), //TODO
+                        from: user,
                         timestamp: now.to_string(),
                     }
                 }
                 BroadcastConversationEvent::Join {
-                    username,
+                    user,
                     timestamp,
                 } => ConversationEvent::Join {
-                    from: username,
+                    from: user,
                     timestamp: timestamp.to_string(),
                 },
                 BroadcastConversationEvent::Leave {
-                    username,
+                    user,
                     timestamp,
                 } => ConversationEvent::Leave {
-                    from: username,
+                    from: user,
                     timestamp: timestamp.to_string(),
                 },
                 BroadcastConversationEvent::Message {
-                    username,
+                    user,
                     timestamp,
                     content,
                 } => ConversationEvent::Message {
-                    from: username,
+                    from: user,
                     timestamp: timestamp.to_string(),
                     content,
                 },

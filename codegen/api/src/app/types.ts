@@ -4,9 +4,10 @@ import { TypeDeclaration } from '../types';
 import { it, ot, t } from './type_names';
 
 export let shared_types: TypeDeclaration[] = [
+    TypeAlias(t.UserId, Str),
     IdType(t.ConversationId, "CON"),
 
-    TypeAlias(t.Username, Str),
+    TypeAlias(t.user_id, Str),
     TypeAlias(t.DateTime, Str),
 
 ];

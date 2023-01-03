@@ -1,7 +1,7 @@
 import * as t from '../types';
 import * as u from './utils';
 
-const account: t.TableName = "account";
+const users: t.TableName = "users";
 
 const conversation: t.TableName = "conversation";
 const line: t.TableName = "line";
@@ -28,15 +28,16 @@ CREATE SEQUENCE id_seq;`,
         tables: [],
     },
     {
-        name: "account",
+        name: "users",
         tables: [
-            t.Table(account, [
+            t.Table(users, [
                 u.AutoIncrementPrimaryKey,
                 u.CreatedAt,
                 u.UpdatedAt,
                 u.Deleted,
 
-                t.Column("username", t.NonNullable(t.Str), { unique: true }),
+                t.Column("public_facing_id", t.NonNullable(t.Str), { unique: true }),
+                t.Column("display_name", t.NonNullable(t.Str)),
             ]),
         ],
         enums: [
@@ -52,13 +53,13 @@ CREATE SEQUENCE id_seq;`,
             ]),
 
             t.Table("conversation_participant", [
-                u.NonNullableForeignKey("account_id", account, "id"),
+                u.NonNullableForeignKey("user_id", users, "id"),
                 u.NonNullableForeignKey("conversation_id", conversation, "id"),
 
                 t.Column("lines_seen_until", t.NonNullable(t.Timestamp, { raw: "NOW()" })),
             ], {
                 constraints: [
-                    t.TPrimaryKey(["account_id", "conversation_id"]),
+                    t.TPrimaryKey(["user_id", "conversation_id"]),
                 ]
             }),
         ],
@@ -94,7 +95,7 @@ CREATE SEQUENCE id_seq;`,
                 t.Column("kind", t.NonNullable(SystemEventKind)),
 
                 // join / leave
-                u.NullableForeignKey("account_id", account, "id"),
+                u.NullableForeignKey("user_id", users, "id"),
             ]),
 
             t.Table(reaction, [

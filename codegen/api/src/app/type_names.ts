@@ -1,9 +1,10 @@
 import { T } from 'gen-types';
 
 export const t = {
+    UserId: T("UserId"),
     ConversationId: T("ConversationId"),
 
-    Username: T("Username"),
+    user_id: T("user_id"),
     DateTime: T("DateTime"),
 
 };

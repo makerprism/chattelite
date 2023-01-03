@@ -20,11 +20,10 @@
 `;break;case"id":t.value.indexOf("\0")===-1&&(this.idBuffer=t.value);break;case"retry":let e=+t.value;Number.isInteger(e)&&(this.reconnectionTime=e)}}reestablishConnection(){this.readyState===this.CLOSED||!this.canReconnect||(this.readyState=this.CONNECTING,this.dispatchEvent(new Event("error")),setTimeout(()=>{this.readyState===this.CONNECTING&&this.connect()},this.reconnectionTime))}close(){this.readyState=this.CLOSED,this.xhr&&this.xhr.abort()}},c=h;window.EventSourceWithHeaders=c;})();
 //# sourceMappingURL=index.js.map
 
-"use strict";(()=>{var k=Object.defineProperty;var v=(n,e)=>{for(var t in e)k(n,t,{get:e[t],enumerable:!0})};var g=(n,e,t)=>new Promise((o,s)=>{var p=r=>{try{c(t.next(r))}catch(d){s(d)}},R=r=>{try{c(t.throw(r))}catch(d){s(d)}},c=r=>r.done?o(r.value):Promise.resolve(r.value).then(p,R);c((t=t.apply(n,e)).next())});var y={};v(y,{default:()=>I,del:()=>A,get:()=>a,post:()=>i,postFormData:()=>E,stringify_query:()=>h});var m;function _(n){m=n}function u(n,e){let t=m+n;return console.log(["fetch_url",t]),fetch(t,e).then(s=>g(this,null,function*(){switch(console.log(s),s.status){case 200:return s.json();default:return s.json().then(p=>({error:!0,status:s.status,body:p}))}}))}function a(n,e){let t={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(t["X-Access-Token"]=e.session_token),u(n,{headers:t})}function i(n,e,t){let o=t?JSON.stringify(t):"null",s={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(s["X-Access-Token"]=e.session_token),u(n,{method:"POST",body:o,headers:s})}function A(n,e){let t={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(t["X-Access-Token"]=e.session_token),u(n,{method:"DELETE",headers:t})}function E(n,e,t){return g(this,null,function*(){let o={Accept:"application/json"};return e.session_token&&(o["X-Access-Token"]=e.session_token),u(n,{method:"POST",body:t,headers:o})})}function C(n,e,t){t!=null&&n.push([encodeURIComponent(e),encodeURIComponent(t)])}var l=class{constructor(e){this.params=e}url_encode(){let e=[];for(let t in this.params){let o=this.params[t];if(o!==null){if(typeof o=="string"||typeof o=="number"||typeof o=="boolean"){C(e,t,o.toString());continue}if(Array.isArray(o)){if(o.length>0&&(typeof o[0]=="string"||typeof o[0]=="number"||typeof o[0]=="boolean")){C(e,t,o.join(","));continue}throw"url_encode not implemented for "+typeof o+" "+JSON.stringify(o)}if(typeof o=="object"&&o.hasOwnProperty("url_encode"))for(let[s,p]of o.url_encode())e.push([`${t}.${s}`,p]);throw"url_encode not implemented for "+typeof o+" "+JSON.stringify(o)}}return e}};function h(n){let e=new l(n).url_encode();return console.log(["stringify_query",e]),e.length>0?`?${e.map(([t,o])=>`${t}=${o}`).join("&")}`:""}var I={get:a,post:i,postFormData:E};var x={};var f={};v(f,{get_connection_events:()=>b,get_conversation_events:()=>S,mark_read:()=>j,send_message:()=>P,start_typing:()=>U,stop_typing:()=>M});function b(n){return a("/events",n)}function S(n,e){return a(`/conversation/${e}/events`,n)}function P(n,e,t){return i(`/conversation/${e}`,n,t)}function U(n,e,t){return i(`/conversation/${e}/start-typing`,n,t)}function M(n,e,t){return i(`/conversation/${e}/stop-typing`,n,t)}function j(n,e){return i("/read",n,e)}var D={init:_,Types:x,Endpoints:f,Utils:y},T=D;window.RustSimpleChatClient=T;})();
+"use strict";(()=>{var k=Object.defineProperty;var v=(n,e)=>{for(var t in e)k(n,t,{get:e[t],enumerable:!0})};var g=(n,e,t)=>new Promise((s,o)=>{var p=r=>{try{d(t.next(r))}catch(c){o(c)}},R=r=>{try{d(t.throw(r))}catch(c){o(c)}},d=r=>r.done?s(r.value):Promise.resolve(r.value).then(p,R);d((t=t.apply(n,e)).next())});var y={};v(y,{default:()=>I,del:()=>A,get:()=>a,post:()=>i,postFormData:()=>E,stringify_query:()=>h});var m;function _(n){m=n}function u(n,e){let t=m+n;return console.log(["fetch_url",t]),fetch(t,e).then(o=>g(this,null,function*(){switch(console.log(o),o.status){case 200:return o.json();default:return o.json().then(p=>({error:!0,status:o.status,body:p}))}}))}function a(n,e){let t={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(t["X-Access-Token"]=e.session_token),u(n,{headers:t})}function i(n,e,t){let s=t?JSON.stringify(t):"null",o={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(o["X-Access-Token"]=e.session_token),u(n,{method:"POST",body:s,headers:o})}function A(n,e){let t={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(t["X-Access-Token"]=e.session_token),u(n,{method:"DELETE",headers:t})}function E(n,e,t){return g(this,null,function*(){let s={Accept:"application/json"};return e.session_token&&(s["X-Access-Token"]=e.session_token),u(n,{method:"POST",body:t,headers:s})})}function C(n,e,t){t!=null&&n.push([encodeURIComponent(e),encodeURIComponent(t)])}var l=class{constructor(e){this.params=e}url_encode(){let e=[];for(let t in this.params){let s=this.params[t];if(s!==null){if(typeof s=="string"||typeof s=="number"||typeof s=="boolean"){C(e,t,s.toString());continue}if(Array.isArray(s)){if(s.length>0&&(typeof s[0]=="string"||typeof s[0]=="number"||typeof s[0]=="boolean")){C(e,t,s.join(","));continue}throw"url_encode not implemented for "+typeof s+" "+JSON.stringify(s)}if(typeof s=="object"&&s.hasOwnProperty("url_encode"))for(let[o,p]of s.url_encode())e.push([`${t}.${o}`,p]);throw"url_encode not implemented for "+typeof s+" "+JSON.stringify(s)}}return e}};function h(n){let e=new l(n).url_encode();return console.log(["stringify_query",e]),e.length>0?`?${e.map(([t,s])=>`${t}=${s}`).join("&")}`:""}var I={get:a,post:i,postFormData:E};var x={};var f={};v(f,{get_connection_events:()=>b,get_conversation_events:()=>S,mark_read:()=>j,send_message:()=>U,start_typing:()=>P,stop_typing:()=>M});function b(n){return a("/events",n)}function S(n,e){return a(`/conversation/${e}/events`,n)}function U(n,e,t){return i(`/conversation/${e}`,n,t)}function P(n,e,t){return i(`/conversation/${e}/start-typing`,n,t)}function M(n,e,t){return i(`/conversation/${e}/stop-typing`,n,t)}function j(n,e){return i("/read",n,e)}var D={init:_,Types:x,Endpoints:f,Utils:y},T=D;window.RustSimpleChatClient=T;})();
 //# sourceMappingURL=index.js.map
 
-
-"use strict";(()=>{var v=Object.defineProperty;var R=(t,e)=>{for(var n in e)v(t,n,{get:e[n],enumerable:!0})};var d=(t,e,n)=>new Promise((i,s)=>{var p=o=>{try{a(n.next(o))}catch(u){s(u)}},C=o=>{try{a(n.throw(o))}catch(u){s(u)}},a=o=>o.done?i(o.value):Promise.resolve(o.value).then(p,C);a((n=n.apply(t,e)).next())});var y={};var l={};R(l,{add_users_to_conversation:()=>I,create_conversation:()=>T,create_user:()=>x,delete_user:()=>h,generate_client_jwt:()=>k,remove_users_from_conversation:()=>b});var c;function m(t){c=t}function g(t,e){let n=c+t;return console.log(["fetch_url",n]),fetch(n,e).then(s=>d(this,null,function*(){switch(console.log(s),s.status){case 200:return s.json();default:return s.json().then(p=>({error:!0,status:s.status,body:p}))}}))}function r(t,e,n){let i=n?JSON.stringify(n):"null",s={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(s["X-Access-Token"]=e.session_token),g(t,{method:"POST",body:i,headers:s})}function f(t,e){let n={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(n["X-Access-Token"]=e.session_token),g(t,{method:"DELETE",headers:n})}function x(t,e){return r("/users",t,e)}function h(t,e){return f(`/user/${e}`,t)}function k(t,e){return r("/gen-client-jwt",t,e)}function T(t,e){return r("/conversations",t,e)}function I(t,e,n){return r(`/conversation/${e}/add-users`,t,n)}function b(t,e,n){return r(`/conversation/${e}/remove-users`,t,n)}var U={Types:y,Endpoints:l,init:m},_=U;window.RustSimpleChat=_;})();
+"use strict";(()=>{var v=Object.defineProperty;var R=(t,e)=>{for(var n in e)v(t,n,{get:e[n],enumerable:!0})};var l=(t,e,n)=>new Promise((i,s)=>{var p=o=>{try{a(n.next(o))}catch(u){s(u)}},C=o=>{try{a(n.throw(o))}catch(u){s(u)}},a=o=>o.done?i(o.value):Promise.resolve(o.value).then(p,C);a((n=n.apply(t,e)).next())});var y={};var c={};R(c,{add_users_to_conversation:()=>T,create_conversation:()=>I,create_user:()=>x,delete_user:()=>h,generate_client_jwt:()=>k,remove_users_from_conversation:()=>b});var d;function g(t){d=t}function m(t,e){let n=d+t;return console.log(["fetch_url",n]),fetch(n,e).then(s=>l(this,null,function*(){switch(console.log(s),s.status){case 200:return s.json();default:return s.json().then(p=>({error:!0,status:s.status,body:p}))}}))}function r(t,e,n){let i=n?JSON.stringify(n):"null",s={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(s["X-Access-Token"]=e.session_token),m(t,{method:"POST",body:i,headers:s})}function f(t,e){let n={Accept:"application/json","Content-Type":"application/json"};return e.session_token&&(n["X-Access-Token"]=e.session_token),m(t,{method:"DELETE",headers:n})}function x(t,e){return r("/users",t,e)}function h(t,e){return f(`/user/${e}`,t)}function k(t,e){return r("/gen-client-jwt",t,e)}function I(t,e){return r("/conversations",t,e)}function T(t,e,n){return r(`/conversation/${e}/add-users`,t,n)}function b(t,e,n){return r(`/conversation/${e}/remove-users`,t,n)}var U={Types:y,Endpoints:c,init:g},_=U;window.RustSimpleChat=_;})();
 //# sourceMappingURL=index.js.map
 
 
@@ -35,14 +34,14 @@
     <div id="root" style="max-height:90vh;overflow-y: auto;"></div>
     <script defer>
         let API_KEY = "53whn530h8n530hietpg3oq5pmupq35mupi356mu";
-        const USERNAME = "test";
+        const USER_ID = "test";
 
         RustSimpleChat.init("http://127.0.0.1:8000");
 
         RustSimpleChatClient.init("http://127.0.0.1:8000");
 
         let JWT;
-        let CONVERSATION_ID = "CON-AAAAAAAAAAI";
+        let CONVERSATION_ID = "CON-AAAAAAAAAAk";
         let event_source;
         let root = document.getElementById("root");
 
@@ -69,7 +68,12 @@
         }
 
         async function start() {
-            JWT = (await RustSimpleChat.Endpoints.generate_client_jwt({ session_token: API_KEY }, {username: USERNAME})).jwt;
+            await RustSimpleChat.Endpoints.create_user({ session_token: API_KEY}, { id: USER_ID, display_name: USER_ID });
+
+            //let c = await RustSimpleChat.Endpoints.create_conversation({ session_token: API_KEY}, { user_ids: [USER_ID] });
+            //CONVERSATION_ID = c.conversation_id;
+
+            JWT = (await RustSimpleChat.Endpoints.generate_client_jwt({ session_token: API_KEY }, {user_id: USER_ID})).jwt;
 
             await connect_to_conversation();
         }
@@ -85,13 +89,13 @@
         }
 
         async function join(e) {
-            RustSimpleChat.Endpoints.add_users_to_conversation({session_token: API_KEY}, CONVERSATION_ID, { users: [USERNAME]}).then(_ => {
+            RustSimpleChat.Endpoints.add_users_to_conversation({session_token: API_KEY}, CONVERSATION_ID, { users: [USER_ID]}).then(_ => {
                 connect_to_conversation();
             })
         }
 
         function leave(e) {
-            RustSimpleChat.Endpoints.remove_users_from_conversation({session_token: API_KEY}, CONVERSATION_ID, { users: [USERNAME]})
+            RustSimpleChat.Endpoints.remove_users_from_conversation({session_token: API_KEY}, CONVERSATION_ID, { users: [USER_ID]})
             if(event_source) {
                 event_source.close();
             }

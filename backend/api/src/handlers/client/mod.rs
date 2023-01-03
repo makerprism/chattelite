@@ -2,7 +2,7 @@ use actix_web::web;
 
 use crate::errors::ApiError;
 use crate::generated::client_types::*;
-use crate::realtime::broadcast::{Broadcaster, BroadcastConversationEvent};
+use crate::realtime::broadcast::{BroadcastConversationEvent, Broadcaster};
 use crate::session::client::Session;
 
 pub async fn get_connection_events(
@@ -24,11 +24,12 @@ pub async fn get_conversation_events(
         SELECT 
             EXISTS(
                 SELECT * FROM conversation_participant
-                WHERE conversation_id = $1 AND account_id = $2)
+                INNER JOIN users ON users.id = conversation_participant.user_id
+                WHERE conversation_id = $1 AND users.public_facing_id = $2)
             as "is_participant!: bool"
         "#,
         params.conversation_id.to_db_id(),
-        session.account_id
+        session.user_id
     )
     .fetch_one(pool.get_ref())
     .await?;
@@ -50,16 +51,18 @@ pub async fn get_conversation_events(
             line.thread_line_id,
             line.reply_to_line_id,
             system_event.kind as "kind?: db::SystemEventKind",
-            system_event.account_id as "account_id?: db::AccountId",
-            p1.username as "username1?: String",
-            message.created_by as "created_by?: db::AccountId",
-            p2.username as "username2?: String",
+
+            u1.public_facing_id as "user_id1?: String",
+            u1.display_name as "display_name1?: String",
+
+            u2.public_facing_id as "user_id2?: String",
+            u2.display_name as "display_name2?: String",
             message.content as "content?: String"
         FROM line
         LEFT OUTER JOIN system_event ON system_event.line_id = line.id
         LEFT OUTER JOIN message ON message.line_id = line.id
-        LEFT OUTER JOIN account p1 ON p1.id = system_event.account_id
-        LEFT OUTER JOIN account p2 ON p2.id = message.created_by
+        LEFT OUTER JOIN users u1 ON u1.id = system_event.user_id
+        LEFT OUTER JOIN users u2 ON u2.id = message.created_by
         WHERE conversation_id = $1
         ORDER BY line.created_at DESC
         LIMIT 20
@@ -74,16 +77,25 @@ pub async fn get_conversation_events(
         .map(|row| match row.kind {
             Some(db::SystemEventKind::Join) => ConversationEvent::Join {
                 timestamp: row.created_at.to_string(),
-                from: row.username1.expect("missing username"),
+                from: User {
+                    id: row.user_id1.expect("missing user_id"),
+                    display_name: row.display_name1.expect("missing display_name"),
+                },
             },
             Some(db::SystemEventKind::Leave) => ConversationEvent::Leave {
                 timestamp: row.created_at.to_string(),
-                from: row.username1.expect("missing username"),
+                from: User {
+                    id: row.user_id1.expect("missing user_id"),
+                    display_name: row.display_name1.expect("missing display_name"),
+                },
             },
             None => match row.content {
                 Some(content) => ConversationEvent::Message {
                     timestamp: row.created_at.to_string(),
-                    from: row.username2.expect("missing username"),
+                    from: User {
+                        id: row.user_id2.expect("missing user_id"),
+                        display_name: row.display_name2.expect("missing display_name"),
+                    },
                     content: content,
                 },
                 None => {
@@ -91,7 +103,8 @@ pub async fn get_conversation_events(
                 }
             },
         })
-        .rev().collect();
+        .rev()
+        .collect();
 
     Ok(GetConversationEventsOutput { events })
 }
@@ -105,17 +118,18 @@ pub async fn send_message(
 ) -> Result<NoOutput, ApiError<()>> {
     let mut transaction = pool.begin().await?;
 
-    let _ = sqlx::query!(
+    let row = sqlx::query!(
         r#"
-        SELECT conversation.id
+        SELECT users.id as "user_id", conversation.id
         FROM conversation
         INNER JOIN conversation_participant ON conversation_participant.conversation_id = conversation.id
+        INNER JOIN users ON users.id = conversation_participant.user_id
         WHERE
             conversation.id = $1 
-            AND conversation_participant.account_id = $2
+            AND users.public_facing_id = $2
         "#,
         params.conversation_id.to_db_id(),
-        session.account_id,
+        session.user_id,
     ).fetch_one(&mut transaction).await?;
 
     let line = db::Line::insert(
@@ -132,7 +146,7 @@ pub async fn send_message(
         &mut transaction,
         db::InsertMessage {
             line_id: line.id,
-            created_by: session.account_id,
+            created_by: row.user_id,
             content: &json.content,
         },
     )
@@ -141,11 +155,17 @@ pub async fn send_message(
     transaction.commit().await?;
 
     broadcaster
-        .broadcast_to_conversation(params.conversation_id.to_db_id(), BroadcastConversationEvent::Message {
-            timestamp: line.created_at,
-            username: session.username,
-            content: json.content.to_string(),
-        })
+        .broadcast_to_conversation(
+            params.conversation_id.to_db_id(),
+            BroadcastConversationEvent::Message {
+                timestamp: line.created_at,
+                user: User {
+                    id: session.user_id,
+                    display_name: session.display_name,
+                },
+                content: json.content.to_string(),
+            },
+        )
         .await;
 
     Ok(NoOutput {})
@@ -158,10 +178,16 @@ pub async fn start_typing(
     broadcaster: web::Data<Broadcaster>,
 ) -> Result<NoOutput, ApiError<()>> {
     broadcaster
-    .broadcast_to_conversation(params.conversation_id.to_db_id(), BroadcastConversationEvent::StartTyping {
-        account_id: session.account_id,
-    })
-    .await;
+        .broadcast_to_conversation(
+            params.conversation_id.to_db_id(),
+            BroadcastConversationEvent::StartTyping {
+                user: User {
+                    id: session.user_id,
+                    display_name: session.display_name,
+                },
+            },
+        )
+        .await;
 
     Ok(NoOutput {})
 }
@@ -173,10 +199,16 @@ pub async fn stop_typing(
     broadcaster: web::Data<Broadcaster>,
 ) -> Result<NoOutput, ApiError<()>> {
     broadcaster
-    .broadcast_to_conversation(params.conversation_id.to_db_id(), BroadcastConversationEvent::EndTyping {
-        account_id: session.account_id,
-    })
-    .await;
+        .broadcast_to_conversation(
+            params.conversation_id.to_db_id(),
+            BroadcastConversationEvent::EndTyping {
+                user: User {
+                    id: session.user_id,
+                    display_name: session.display_name,
+                },
+            },
+        )
+        .await;
 
     Ok(NoOutput {})
 }
@@ -191,25 +223,28 @@ pub async fn mark_read(
 
     let r = sqlx::query!(
         r#"
-        SELECT conversation.id,
+        SELECT 
+            users.id as "user_id",
+            conversation.id,
             line.created_at
         FROM conversation
         INNER JOIN conversation_participant ON conversation_participant.conversation_id = conversation.id
         INNER JOIN line ON line.conversation_id = conversation.id
+        INNER JOIN users ON users.id = conversation_participant.user_id
         WHERE
             conversation.id = $1 
-            AND conversation_participant.account_id = $2
+            AND users.public_facing_id = $2
             AND line.id = $3
         "#,
         json.conversation_id.to_db_id(),
-        session.account_id,
+        session.user_id,
         json.line_id.to_db_id(),
     ).fetch_one(&mut transaction).await?;
 
     db::ConversationParticipant::update(
         &mut transaction,
         db::UpdateConversationParticipant {
-            account_id: session.account_id,
+            user_id: r.user_id,
             conversation_id: json.conversation_id.to_db_id(),
             lines_seen_until: Some(&r.created_at),
         },
