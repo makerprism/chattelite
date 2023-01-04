@@ -96,7 +96,9 @@ impl Broadcaster {
                         let currently_typing = std::collections::HashMap::from_iter(
                             conversation.currently_typing.iter().filter_map(
                                 |(user_id, timestamp)| {
-                                    if chrono::Utc::now().timestamp_millis() - timestamp.timestamp_millis() < 15000
+                                    if chrono::Utc::now().timestamp_millis()
+                                        - timestamp.timestamp_millis()
+                                        < 15000
                                     {
                                         Some((user_id.clone(), timestamp.clone()))
                                     } else {
@@ -161,22 +163,25 @@ impl Broadcaster {
                 BroadcastConversationEvent::StartTyping { user } => {
                     let now = chrono::Utc::now();
 
-                    log::info!("1 start typing, currently_typing: {:?}", conversation.currently_typing);
+                    log::info!(
+                        "1 start typing, currently_typing: {:?}",
+                        conversation.currently_typing
+                    );
 
                     let ce = match conversation.currently_typing.insert(user.id.clone(), now) {
-                        None => {
-                            ConversationEvent::StartTyping {
-                                from: user,
-                                timestamp: now.to_string(),
-                            }
-                        }
+                        None => ConversationEvent::StartTyping {
+                            from: user,
+                            timestamp: now.to_string(),
+                        },
 
                         Some(started_typing_timestamp) => {
-                            log::info!("started_typing_timestamp: {:?}, now: {:?}, now-then:{:?}",
-                            started_typing_timestamp.timestamp_millis(),
-                            now.timestamp_millis(), 
-                            now.timestamp_millis() - started_typing_timestamp.timestamp_millis()
-                         );
+                            log::info!(
+                                "started_typing_timestamp: {:?}, now: {:?}, now-then:{:?}",
+                                started_typing_timestamp.timestamp_millis(),
+                                now.timestamp_millis(),
+                                now.timestamp_millis()
+                                    - started_typing_timestamp.timestamp_millis()
+                            );
                             if now.timestamp_millis() - started_typing_timestamp.timestamp_millis()
                                 < 5000
                             {
@@ -189,30 +194,29 @@ impl Broadcaster {
                             }
                         }
                     };
-                    log::info!("2 start typing, currently_typing: {:?}", conversation.currently_typing);
+                    log::info!(
+                        "2 start typing, currently_typing: {:?}",
+                        conversation.currently_typing
+                    );
                     ce
-
                 }
                 BroadcastConversationEvent::EndTyping { user } => {
                     let now = chrono::Utc::now();
 
-                    conversation.currently_typing.remove(&user.id);
+                    let removed = conversation.currently_typing.remove(&user.id);
+                    if removed.is_none() {
+                        return;
+                    }
                     ConversationEvent::EndTyping {
                         from: user,
                         timestamp: now.to_string(),
                     }
                 }
-                BroadcastConversationEvent::Join {
-                    user,
-                    timestamp,
-                } => ConversationEvent::Join {
+                BroadcastConversationEvent::Join { user, timestamp } => ConversationEvent::Join {
                     from: user,
                     timestamp: timestamp.to_string(),
                 },
-                BroadcastConversationEvent::Leave {
-                    user,
-                    timestamp,
-                } => ConversationEvent::Leave {
+                BroadcastConversationEvent::Leave { user, timestamp } => ConversationEvent::Leave {
                     from: user,
                     timestamp: timestamp.to_string(),
                 },

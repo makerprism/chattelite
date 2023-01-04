@@ -89,13 +89,13 @@
         }
 
         async function join(e) {
-            RustSimpleChat.Endpoints.add_users_to_conversation({session_token: API_KEY}, CONVERSATION_ID, { users: [USER_ID]}).then(_ => {
+            RustSimpleChat.Endpoints.add_users_to_conversation({session_token: API_KEY}, CONVERSATION_ID, { user_ids: [USER_ID]}).then(_ => {
                 connect_to_conversation();
             })
         }
 
         function leave(e) {
-            RustSimpleChat.Endpoints.remove_users_from_conversation({session_token: API_KEY}, CONVERSATION_ID, { users: [USER_ID]})
+            RustSimpleChat.Endpoints.remove_users_from_conversation({session_token: API_KEY}, CONVERSATION_ID, { user_ids: [USER_ID]})
             if(event_source) {
                 event_source.close();
             }

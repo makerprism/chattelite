@@ -21,7 +21,7 @@ struct SseConversationEventsParams {
 
 #[get("/conversation/{conversation_id}/sse")]
 async fn sse_conversation_events(
-    session: crate::session::client::Session,
+    _session: crate::session::client::Session,
     params: web::Path<SseConversationEventsParams>,
     broadcaster: web::Data<Broadcaster>
 ) -> impl Responder {

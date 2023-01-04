@@ -29,7 +29,7 @@ pub async fn get_conversation_events(
             as "is_participant!: bool"
         "#,
         params.conversation_id.to_db_id(),
-        session.user_id
+        session.public_facing_id
     )
     .fetch_one(pool.get_ref())
     .await?;
@@ -129,7 +129,7 @@ pub async fn send_message(
             AND users.public_facing_id = $2
         "#,
         params.conversation_id.to_db_id(),
-        session.user_id,
+        session.public_facing_id,
     ).fetch_one(&mut transaction).await?;
 
     let line = db::Line::insert(
@@ -160,7 +160,7 @@ pub async fn send_message(
             BroadcastConversationEvent::Message {
                 timestamp: line.created_at,
                 user: User {
-                    id: session.user_id,
+                    id: session.public_facing_id,
                     display_name: session.display_name,
                 },
                 content: json.content.to_string(),
@@ -174,15 +174,22 @@ pub async fn send_message(
 pub async fn start_typing(
     session: Session,
     params: web::Path<StartTypingParams>,
-    _pool: web::Data<sqlx::PgPool>,
+    pool: web::Data<sqlx::PgPool>,
     broadcaster: web::Data<Broadcaster>,
 ) -> Result<NoOutput, ApiError<()>> {
+    // check that the user is a participant of the conversation
+    let _ = db::ConversationParticipant::get_by_pk(
+        pool.get_ref(),
+        (session.id, params.conversation_id.to_db_id()),
+    )
+    .await?;
+
     broadcaster
         .broadcast_to_conversation(
             params.conversation_id.to_db_id(),
             BroadcastConversationEvent::StartTyping {
                 user: User {
-                    id: session.user_id,
+                    id: session.public_facing_id,
                     display_name: session.display_name,
                 },
             },
@@ -198,12 +205,19 @@ pub async fn stop_typing(
     pool: web::Data<sqlx::PgPool>,
     broadcaster: web::Data<Broadcaster>,
 ) -> Result<NoOutput, ApiError<()>> {
+    // check that the user is a participant of the conversation
+    let _ = db::ConversationParticipant::get_by_pk(
+        pool.get_ref(),
+        (session.id, params.conversation_id.to_db_id()),
+    )
+    .await?;
+
     broadcaster
         .broadcast_to_conversation(
             params.conversation_id.to_db_id(),
             BroadcastConversationEvent::EndTyping {
                 user: User {
-                    id: session.user_id,
+                    id: session.public_facing_id,
                     display_name: session.display_name,
                 },
             },
@@ -237,7 +251,7 @@ pub async fn mark_read(
             AND line.id = $3
         "#,
         json.conversation_id.to_db_id(),
-        session.user_id,
+        session.public_facing_id,
         json.line_id.to_db_id(),
     ).fetch_one(&mut transaction).await?;
 

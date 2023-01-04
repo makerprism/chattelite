@@ -66,7 +66,7 @@ pub async fn generate_client_jwt(
     .fetch_one(pool.get_ref())
     .await?;
 
-    let jwt = crate::session::client::Session {
+    let jwt = crate::session::client::JWTSession {
         user_id: user.public_facing_id,
         display_name: user.display_name,
     }

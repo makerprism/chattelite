@@ -342,9 +342,15 @@ function gen_model_field<T extends t.Type>(table: t.Table, column: t.Column<T>):
 
 function primary_keys_type(table: t.Table): string {
     let primary_keys = t.primary_keys(table);
+
+    function id_type_or_gen_type(c: t.Column<any> | undefined): string {
+        if (c === undefined) throw "primary key column not found!";
+        return gen_type(c.type.type as t.Type);
+    }
+
     return primary_keys.length == 1 ?
-    gen_type(table.columns.find(c => c.name == primary_keys[0])?.type.type as t.Type) :
-    `(${primary_keys.map(k => gen_type(table.columns.find(c => c.name == k)?.type.type as t.Type))})`
+        id_type_or_gen_type(table.columns.find(c => c.name == primary_keys[0])) :
+    `(${primary_keys.map(k => id_type_or_gen_type(table.columns.find(c => c.name == k)))})`
     ;
 }
 
