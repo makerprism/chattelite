@@ -345,7 +345,7 @@ function primary_keys_type(table: t.Table): string {
 
     function id_type_or_gen_type(c: t.Column<any> | undefined): string {
         if (c === undefined) throw "primary key column not found!";
-        return gen_type(c.type.type as t.Type);
+        return gen_column_type(table, c);
     }
 
     return primary_keys.length == 1 ?
