@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "rust-simple-chat-client-sdk": "file:../../sdks/TypeScript/client",
-    "rust-simple-chat-sdk": "file:../../sdks/TypeScript/app"
+    "chattelite-client": "file:../../sdks/TypeScript/client",
+    "chattelite": "file:../../sdks/TypeScript/app"
   }
 }

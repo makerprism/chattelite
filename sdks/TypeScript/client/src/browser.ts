@@ -1,4 +1,4 @@
-import RustSimpleChatClient from ".";
+import ChatteliteClient from ".";
 
 //@ts-ignore
-window["RustSimpleChatClient"] = RustSimpleChatClient;
+window["ChatteliteClient"] = ChatteliteClient;

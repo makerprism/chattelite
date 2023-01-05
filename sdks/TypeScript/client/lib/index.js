@@ -28,11 +28,11 @@ const Utils = __importStar(require("./utils"));
 const Types = __importStar(require("./generated/types"));
 const Endpoints = __importStar(require("./generated/endpoints"));
 const config_1 = require("./config");
-const RustSimpleChatClient = {
+const ChatteliteClient = {
     //EventSourceWithHeaders,
     init: config_1.init,
     Types,
     Endpoints,
     Utils,
 };
-exports.default = RustSimpleChatClient;
+exports.default = ChatteliteClient;

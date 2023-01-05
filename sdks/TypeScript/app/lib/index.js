@@ -26,9 +26,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Types = __importStar(require("./generated/types"));
 const Endpoints = __importStar(require("./generated/endpoints"));
 const config_1 = require("./config");
-const RustSimpleChat = {
+const Chattelite = {
     Types,
     Endpoints,
     init: config_1.init,
 };
-exports.default = RustSimpleChat;
+exports.default = Chattelite;

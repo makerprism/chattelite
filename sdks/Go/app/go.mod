@@ -1,3 +1,3 @@
-module rust-simple-chat-sdk
+module chattelite
 
 go 1.19

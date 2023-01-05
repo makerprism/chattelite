@@ -5,4 +5,4 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const _1 = __importDefault(require("."));
 //@ts-ignore
-window["RustSimpleChat"] = _1.default;
+window["Chattelite"] = _1.default;

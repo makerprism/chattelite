@@ -278,8 +278,8 @@ ${client_endpoint_fns.types}
 package endpoints
 
 import (
-    "rust-simple-chat-client-sdk/generated/types"
-    "rust-simple-chat-client-sdk/utils"
+    "chattelite-client/generated/types"
+    "chattelite-client/utils"
     "fmt"
 )
 

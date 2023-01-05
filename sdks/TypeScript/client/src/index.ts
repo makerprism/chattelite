@@ -6,7 +6,7 @@ import * as Endpoints from "./generated/endpoints";
 import { init } from "./config";
 
 
-const RustSimpleChatClient = {
+const ChatteliteClient = {
     //EventSourceWithHeaders,
     init,
     Types,
@@ -14,4 +14,4 @@ const RustSimpleChatClient = {
     Utils,
 }
 
-export default RustSimpleChatClient;
+export default ChatteliteClient;
