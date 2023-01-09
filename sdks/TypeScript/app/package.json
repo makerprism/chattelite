@@ -2,7 +2,8 @@
   "name": "chattelite",
   "version": "0.1.0",
   "description": "",
-  "main": "index.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc && node esbuild.config.js"
   },

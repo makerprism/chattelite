@@ -255,8 +255,8 @@ ${gen_types(types.t, types.it, types.ot)}
 ${endpoint_fns.types}
 `;
     let endpoints_ts_code = `// AUTOMATICALLY GENERATED, DO NOT EDIT!!
-import * as T from "@types";
-import * as utils from "@utils";
+import * as T from "./types";
+import * as utils from "../utils";
 
 ${endpoint_fns.code}
 `;

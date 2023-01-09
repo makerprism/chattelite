@@ -24,7 +24,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mark_read = exports.stop_typing = exports.start_typing = exports.send_message = exports.get_conversation_events = exports.get_connection_events = void 0;
-const utils = __importStar(require("@utils"));
+const utils = __importStar(require("../utils"));
 function get_connection_events(opts) {
     return utils.get(`/events`, opts);
 }

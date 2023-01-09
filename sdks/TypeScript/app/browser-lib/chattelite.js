@@ -42,8 +42,10 @@
 
   // src/config.ts
   var API_URL = void 0;
-  function init(api_url) {
-    API_URL = api_url;
+  var fetch;
+  function init(opts) {
+    API_URL = opts.api_url;
+    fetch = opts.fetch;
   }
 
   // src/utils.ts

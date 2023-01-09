@@ -1,4 +1,4 @@
-import { API_URL } from "./config";
+import { API_URL, fetch } from "./config";
 
 export type ApiResponse<S, E> = S | ApiResponseError<E>;
 type BaseError = {

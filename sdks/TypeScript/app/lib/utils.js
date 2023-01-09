@@ -14,7 +14,7 @@ const config_1 = require("./config");
 function maker_database_api_fetch(url, opts) {
     let fetch_url = config_1.API_URL + url;
     console.log(['fetch_url', fetch_url]);
-    const response = fetch(fetch_url, opts).then((res) => __awaiter(this, void 0, void 0, function* () {
+    const response = (0, config_1.fetch)(fetch_url, opts).then((res) => __awaiter(this, void 0, void 0, function* () {
         console.log(res);
         switch (res.status) {
             case 200:

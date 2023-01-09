@@ -24,7 +24,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.remove_users_from_conversation = exports.add_users_to_conversation = exports.create_conversation = exports.generate_client_jwt = exports.delete_user = exports.create_user = void 0;
-const utils = __importStar(require("@utils"));
+const utils = __importStar(require("../utils"));
 function create_user(opts, body) {
     return utils.post(`/users`, opts, body);
 }

@@ -1,5 +1,5 @@
-import * as T from "@types";
-import * as utils from "@utils";
+import * as T from "./types";
+import * as utils from "../utils";
 export type CreateUserResponse = utils.ApiResponse<{}, void>;
 export declare function create_user(opts: {
     session_token: string;

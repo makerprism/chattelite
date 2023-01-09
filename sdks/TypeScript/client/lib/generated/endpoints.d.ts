@@ -1,5 +1,5 @@
-import * as T from "@types";
-import * as utils from "@utils";
+import * as T from "./types";
+import * as utils from "../utils";
 export type GetConnectionEventsResponse = utils.ApiResponse<T.GetConnectionEventsOutput, void>;
 export declare function get_connection_events(opts: {
     session_token: string;
