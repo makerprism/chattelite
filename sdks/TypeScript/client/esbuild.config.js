@@ -4,12 +4,23 @@ const esbuild = require('esbuild')
 const { nodeExternalsPlugin } = require('esbuild-node-externals')
 
 esbuild.build({
-  entryPoints: ['./src/browser.ts'],
-  outfile: 'browser-lib/index.js',
-  bundle: true,
-  minify: true,
-  platform: 'browser',
-  sourcemap: true,
-  target: 'es2015',
-  plugins: [nodeExternalsPlugin()]
+    entryPoints: ['./src/browser.ts'],
+    outfile: 'browser-lib/chattelite-client.js',
+    bundle: true,
+    minify: false,
+    platform: 'browser',
+    sourcemap: true,
+    target: 'es2015',
+    plugins: [nodeExternalsPlugin()]
+}).catch(() => process.exit(1))
+
+esbuild.build({
+    entryPoints: ['./src/browser.ts'],
+    outfile: 'browser-lib/chattelite-client.min.js',
+    bundle: true,
+    minify: true,
+    platform: 'browser',
+    sourcemap: true,
+    target: 'es2015',
+    plugins: [nodeExternalsPlugin()]
 }).catch(() => process.exit(1))
