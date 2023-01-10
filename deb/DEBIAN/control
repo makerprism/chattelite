@@ -1,0 +1,6 @@
+Package: chattelite
+Version: 1.0
+Architecture: amd64
+Maintainer: Sabine <info@sabineschmaltz.de>
+Description: chattelite self-hostable chat microservice/API
+

@@ -1,0 +1,14 @@
+[Unit]
+Description=chattelite server
+Documentation=https://chattelite.com
+Requires=network.target remote-fs.target
+After=network.target remote-fs.target
+
+[Service]
+ExecStart=/usr/bin/chattelite-server
+Restart=on-failure
+LimitNOFILE=64000
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target
