@@ -1,5 +1,5 @@
 [package]
-name = "rust_simple_chat_server"
+name = "chattelite-server"
 version = "0.1.0"
 authors = ["sabine"]
 edition = "2021"

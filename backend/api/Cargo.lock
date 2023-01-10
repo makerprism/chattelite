@@ -483,6 +483,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chattelite-server"
+version = "0.1.0"
+dependencies = [
+ "actix-cors",
+ "actix-web",
+ "actix-web-lab",
+ "base64 0.13.0",
+ "chrono",
+ "db",
+ "dotenv",
+ "env_logger",
+ "futures-util",
+ "jsonwebtoken",
+ "lazy_static",
+ "log",
+ "parking_lot 0.12.1",
+ "rand",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "uuid",
+]
+
+[[package]]
 name = "chrono"
 version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1630,31 +1655,6 @@ dependencies = [
  "untrusted",
  "web-sys",
  "winapi",
-]
-
-[[package]]
-name = "rust_simple_chat_server"
-version = "0.1.0"
-dependencies = [
- "actix-cors",
- "actix-web",
- "actix-web-lab",
- "base64 0.13.0",
- "chrono",
- "db",
- "dotenv",
- "env_logger",
- "futures-util",
- "jsonwebtoken",
- "lazy_static",
- "log",
- "parking_lot 0.12.1",
- "rand",
- "reqwest",
- "serde",
- "serde_json",
- "sqlx",
- "uuid",
 ]
 
 [[package]]

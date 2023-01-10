@@ -23,12 +23,12 @@ async function start() {
     CONVERSATION_ID = c.conversation_id;
     
     const static_html = sirv('static');
-    const chattelite_lib = sirv('node_modules/chattelite-client/browser-lib');
+    const chattelite_min_js = sirv('node_modules/chattelite-client/browser-lib');
     
     polka()
         .use(json())
         .use(static_html)
-        .use(chattelite_lib)
+        .use(chattelite_min_js)
         .get('/login', async (req, res) => {
             let jwt = await Chattelite.Endpoints.generate_client_jwt({ session_token: API_KEY }, { user_id: USER_ID });
             
