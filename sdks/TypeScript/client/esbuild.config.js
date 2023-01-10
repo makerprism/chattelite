@@ -1,7 +1,9 @@
 const esbuild = require('esbuild')
-
-// Automatically exclude all node_modules from the bundled version
 const { nodeExternalsPlugin } = require('esbuild-node-externals')
+
+const externals = nodeExternalsPlugin({
+    allowList: ["event-source-with-headers"]
+});
 
 esbuild.build({
     entryPoints: ['./src/browser.ts'],
@@ -11,7 +13,7 @@ esbuild.build({
     platform: 'browser',
     sourcemap: true,
     target: 'es2015',
-    plugins: [nodeExternalsPlugin()]
+    plugins: [externals]
 }).catch(() => process.exit(1))
 
 esbuild.build({
@@ -22,5 +24,5 @@ esbuild.build({
     platform: 'browser',
     sourcemap: true,
     target: 'es2015',
-    plugins: [nodeExternalsPlugin()]
+    plugins: [externals]
 }).catch(() => process.exit(1))

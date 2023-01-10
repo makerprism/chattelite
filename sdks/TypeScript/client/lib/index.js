@@ -23,13 +23,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const Utils = __importStar(require("./utils"));
 const Types = __importStar(require("./generated/types"));
 const Endpoints = __importStar(require("./generated/endpoints"));
 const config_1 = require("./config");
+const event_source_with_headers_1 = __importDefault(require("event-source-with-headers"));
 const ChatteliteClient = {
-    //EventSourceWithHeaders,
+    EventSourceWithHeaders: event_source_with_headers_1.default,
     init: config_1.init,
     Types,
     Endpoints,
