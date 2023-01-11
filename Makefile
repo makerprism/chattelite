@@ -18,9 +18,5 @@ go-sdks: api-codegen
 
 build: backend typescript-sdks go-sdks
 
-package: backend
-	mkdir -p build/deb/chattelite_0.1.0-1_amd64/DEBIAN
-	cp -r deb/* build/deb/chattelite_0.1.0-1_amd64/
-	mkdir -p build/deb/chattelite_0.1.0-1_amd64/usr/bin
-	cp backend/api/target/release/chattelite-server build/deb/chattelite_0.1.0-1_amd64/usr/bin
-	cd build/deb && dpkg-deb --build --root-owner-group chattelite_0.1.0-1_amd64 && cd ../..
+deb-package: backend
+	scripts/build-deb-package.sh
