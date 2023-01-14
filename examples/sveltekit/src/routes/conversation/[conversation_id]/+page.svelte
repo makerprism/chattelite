@@ -113,8 +113,8 @@
             }
         }
         let n = typing_people.length;
-        if (n > 2) {
-            return `${n} people are typing...`
+        if (n > 1) {
+            return `${typing_people.slice(0, n-1).join(", ")}${n > 2 ? ",":""} and ${typing_people[n-1]} are typing...`
         } else if (n == 1) {
             return `${typing_people[0]} is typing...`
         }
