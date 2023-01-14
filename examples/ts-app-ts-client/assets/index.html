@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Server-sent events</title>
+    <style>
+        p {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .message {
+            border-radius: 0.5em;
+            border-top-left-radius: 0;
+            background-color: gainsboro;
+            padding: 0.5em 0.75em;
+            display: inline-block;
+        }
+
+        .timestamp {
+            color: gray;
+            font-size:80%;
+            display:inline;
+        }
+
+        .username {
+            font-weight: bold;
+            display: inline;
+        }
+
+        #message_box {
+            display:grid;
+            gap:1em;
+        }
+    </style>
+
+    <script src="/chattelite-client.min.js"></script>
+    <script>
+        ChatteliteClient.init("http://127.0.0.1:8000");
+
+        let JWT;
+        let CONVERSATION_ID;
+        let event_source;
+        let message_box;
+        let typing;
+
+        window.onload = () => {
+            message_box = document.getElementById("message_box");
+            typing = document.getElementById("typing");
+
+            start();
+        }
+
+        function add_message(conversation_event) {
+            console.log("conversation_event", conversation_event);
+            let data = document.createElement("div");
+            switch (conversation_event.type) {
+                case "Join":
+                    data.innerHTML = `<div class="timestamp">${conversation_event.timestamp}</div><br><div class="username">${conversation_event.from.display_name}</div> joins the conversation.`;
+                    break;
+                case "Leave":
+                    data.innerHTML = `<div class="timestamp">${conversation_event.timestamp}</div><br><div class="username">${conversation_event.from.display_name}</div> leaves the conversation.`;
+                    break;
+                case "Message":
+                    data.innerHTML = `<div class="username">${conversation_event.from.display_name}</div> <div class="timestamp">${conversation_event.timestamp}</div><br><div class="message">${conversation_event.content}</div>`;
+                    break;
+                case "StartTyping":
+                    typing.innerText = "...";
+                    return;
+                case "EndTyping":
+                    typing.innerText = "";
+                    return;
+                default:
+                    throw "unrecognized ConversationEvent type: " + conversation_event.type;
+            }
+            message_box.appendChild(data);
+            data.scrollIntoView();
+        }
+
+        async function connect_to_conversation() {
+            console.log("CONVERSATION_ID", CONVERSATION_ID);
+
+            let previous_events = await ChatteliteClient.get_conversation_events({ session_token: JWT }, CONVERSATION_ID);
+            console.log(previous_events);
+
+            for (let e of previous_events.events) {
+                add_message(e);
+            }
+
+            event_source = new EventSourceWithHeaders("http://127.0.0.1:8000/conversation/" + CONVERSATION_ID + "/sse", { headers: { "X-Access-Token": JWT } });
+            event_source.onmessage = (event) => {
+                add_message(JSON.parse(event.data));
+            }
+        }
+
+        async function start() {
+            await fetch("/login").then(async r => {
+                if (r.status != 200) throw "error"
+
+                let data = await r.json();
+
+                console.log("login", data);
+
+                JWT = data.jwt;
+                CONVERSATION_ID = data.conversation_id;
+
+            }).then(connect_to_conversation);
+        }
+
+        function send(e) {
+            ChatteliteClient.send_message({ session_token: JWT }, CONVERSATION_ID, {
+                content: message
+            });
+            message = "";
+            document.getElementById("message").value = "";
+        }
+
+        async function join(e) {
+            fetch("/join", {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                method: "POST",
+                body: JSON.stringify({
+                    conversation_id: CONVERSATION_ID
+                })
+            }).then(_ => {
+                clear();
+                connect_to_conversation();
+            })
+        }
+
+        function leave(e) {
+            fetch("/leave", {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                method: "POST",
+                body: JSON.stringify({
+                    conversation_id: CONVERSATION_ID
+                })
+            }).then(() => {
+                clear();
+            })
+        }
+
+        function clear() {
+            if (event_source) {
+                event_source.close();
+            }
+            message_box.innerHTML = "";
+        }
+
+        let start_typing = null;
+        let stop_typing = null;
+
+        function input(e) {
+            message = e.target.value;
+            if (!start_typing) {
+                ChatteliteClient.start_typing({ session_token: JWT }, CONVERSATION_ID);
+                start_typing = setTimeout(_ => start_typing = null, 2000);
+            }
+            if (stop_typing) clearTimeout(stop_typing);
+            stop_typing = setTimeout(_ => {
+                ChatteliteClient.stop_typing({ session_token: JWT }, CONVERSATION_ID);
+            }, 1000);
+        }
+
+        function keypress(e) {
+            if (e.keyCode == 13) { // enter
+                send(e);
+            }
+        }
+
+        let message = "";
+    </script>
+</head>
+
+<body>
+    <div id="message_box" style="max-height:90vh;overflow-y: auto;"></div>
+    <input type="text" id="message" oninput="input(event)" onkeypress="keypress(event)">
+    <div id="typing"></div>
+    <button onclick="send(event)">send</button>
+
+    <div>
+        <button onclick="join(event)">JOIN</button>
+        <button onclick="leave(event)">LEAVE</button>
+    </div>
+
+</body>
+
+</html>

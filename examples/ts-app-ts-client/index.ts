@@ -44,12 +44,18 @@ async function start() {
         })
         .post('/join', async (req, res) => {
             console.log("body", req.body);
-            Chattelite.add_users_to_conversation({session_token: API_KEY}, req.body.conversation_id, { user_ids: [USER_ID] })
-            res.end("ok")
+            Chattelite.add_users_to_conversation({session_token: API_KEY}, req.body.conversation_id, { user_ids: [USER_ID] }).then(() => {
+                res.end("ok")
+            }).catch(() => {
+                res.end("ok")
+            })
         })
         .post('/leave', async (req, res) => {
-            Chattelite.remove_users_from_conversation({session_token: API_KEY}, req.body.conversation_id, { user_ids: [USER_ID] })
-            res.end("ok")
+            Chattelite.remove_users_from_conversation({session_token: API_KEY}, req.body.conversation_id, { user_ids: [USER_ID] }).then(() => {
+                res.end("ok")
+            }).catch(() => {
+                res.end("ok")
+            })
         })
         .listen(3000, (err: any) => {
             if (err) throw err;

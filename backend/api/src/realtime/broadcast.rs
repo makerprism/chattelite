@@ -127,7 +127,7 @@ impl Broadcaster {
     ) -> Sse<ChannelStream> {
         let (tx, rx) = sse::channel(10);
 
-        tx.send(sse::Data::new("connected")).await.unwrap();
+        //tx.send(sse::Data::new("connected")).await.unwrap();
 
         {
             let mut l = self.inner.lock();

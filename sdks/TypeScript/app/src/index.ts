@@ -4,7 +4,7 @@ import { init } from "./config";
 
 const Chattelite = {
     Types,
-    Endpoints,
+    ...Endpoints,
     init,
 };
 

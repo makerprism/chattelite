@@ -10,7 +10,7 @@ const ChatteliteClient = {
     EventSourceWithHeaders,
     init,
     Types,
-    Endpoints,
+    ...Endpoints,
     Utils,
 }
 

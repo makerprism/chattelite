@@ -16,7 +16,7 @@
             "path": "sdks/TypeScript"
         },
         {
-            "path": "tests"
+            "path": "examples"
         }
     ]
 }
