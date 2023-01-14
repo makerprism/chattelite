@@ -131,7 +131,7 @@
                 {line.timestamp} &nbsp;
             </span>
             <br>
-            <div class="message">
+            <div class="chat-bubble">
                 {line.content}
             </div>
         </div>
@@ -179,6 +179,7 @@
     .lines {
         display:grid;
         gap:1em;
+        overflow: hidden;
     }
 
     .display_name {
@@ -189,9 +190,16 @@
         font-size:75%;
     }
 
-    .message {
-        border-radius: 0.5em;
+    .my-message, .other-message {
+    }
+
+    .chat-bubble {
+        max-width:55vw;
         display:inline-block;
+        overflow: hidden;
+        word-wrap: break-word;
+        white-space:normal;
+        border-radius: 0.5em;
 
         padding: 0.5em 0.75em;
     }
@@ -201,14 +209,14 @@
         text-align: right;
     }
 
-    .my-message .message {
+    .my-message .chat-bubble {
         border-top-left-radius: 0;
 
         background-color:rgb(45, 91, 59);
         color: #eee;
     }
 
-    .other-message .message {
+    .other-message .chat-bubble {
         border-top-right-radius: 0;
         background-color:rgb(199, 224, 207);
         color: #333;
