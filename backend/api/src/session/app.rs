@@ -26,7 +26,7 @@ impl actix_web::FromRequest for Session {
                 detail: "failed to find API key".to_string(),
             }),
             Some(h) => {
-                if h.to_str().expect("X-Access-Token header couldn't be converted to string") == *crate::APP_API_KEY {
+                if h.to_str().expect("X-Access-Token header couldn't be converted to string") == crate::config::CONFIG.app_api_key {
                     futures_util::future::ok(Session {})
                 } else {
                 futures_util::future::err(ApiError::NotAuthenticated { detail: "provided API KEY is invalid".to_string() } )

@@ -1,0 +1,4 @@
+database_url="postgres://postgres:test@172.17.0.2:5432/rust_simple_chat"
+bind="127.0.0.1:8000"
+client_jwt_secret="3333wnh45u54yh03y234yq34y"
+app_api_key="53whn530h8n530hietpg3oq5pmupq35mupi356mu"

@@ -4,19 +4,19 @@ import { ot, t } from './type_names';
 
 export let routes: Route[] = [
     {
-        name: "get_connection_events",
-        url: "/events",
+        name: "get_conversations",
+        url: "/conversations",
         method: Method.Get,
         url_params: [
         ],
         output_body_type: [
-            Field("events", Vec(ot.ConnectionEvent)),
+            Field("conversations", Vec(ot.Conversation)),
         ],
     },
 
     {
-        name: "get_conversation_events",
-        url: "/conversation/{conversation_id}/events",
+        name: "get_conversation",
+        url: "/conversation/{conversation_id}",
         method: Method.Get,
         url_params: [
             {
@@ -25,7 +25,7 @@ export let routes: Route[] = [
             },
         ],
         output_body_type: [
-            Field("events", Vec(ot.ConversationEvent)),
+            Field("lines", Vec(ot.Line)),
         ],
     },
 

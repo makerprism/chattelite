@@ -1,6 +1,5 @@
 extern crate actix_web;
 extern crate chrono;
-extern crate dotenv;
 extern crate rand;
 extern crate uuid;
 
@@ -12,6 +11,7 @@ mod generated;
 mod errors;
 mod handlers;
 mod session;
+mod config;
 
 use actix_web::{web, App, HttpResponse, HttpServer};
 use errors::ApiError;
@@ -24,27 +24,11 @@ lazy_static! {
     pub static ref EMPTY_STRING: String = "".to_string();
 }
 
-lazy_static! {
-    pub static ref CLIENT_JWT_SECRET: Vec<u8> = std::env::var("CLIENT_JWT_SECRET")
-        .expect("CLIENT_JWT_SECRET must be set")
-        .into_bytes();
-}
-
-lazy_static! {
-    pub static ref APP_API_KEY: String = std::env::var("APP_API_KEY")
-        .expect("APP_API_KEY must be set");
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    let bind = std::env::var("BIND").expect("BIND must be set");
-
-    let database_url =
-        std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let db_pool = sqlx::PgPool::connect(&database_url)
+    let db_pool = sqlx::PgPool::connect(&config::CONFIG.database_url)
         .await
         .expect("Failed to connect to Postgres.");
     println!("db_pool: {:?}", db_pool);
@@ -89,7 +73,7 @@ async fn main() -> std::io::Result<()> {
 
             .default_service(web::route().to(not_found))
     })
-    .bind(bind.to_owned())?
+    .bind(config::CONFIG.bind.to_owned())?
     .run()
     .await
 }

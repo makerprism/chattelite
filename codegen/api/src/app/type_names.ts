@@ -4,8 +4,7 @@ export const t = {
     UserId: T("UserId"),
     ConversationId: T("ConversationId"),
 
-    user_id: T("user_id"),
-    DateTime: T("DateTime"),
+    //DateTime: T("DateTime"),
 
 };
 

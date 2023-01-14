@@ -23,7 +23,6 @@ parking_lot = { version = "0.12.1" }
 
 base64 = "0.13.0"
 
-dotenv = "*"
 log = { version = "0.4.17" }
 env_logger = { version = "0.8.3" }
 
@@ -42,6 +41,8 @@ serde = "*"
 futures-util = { version = "0.3.25" }
 
 rand = "0.8.3"
+
+toml = "0.5.*"
 
 lazy_static = "1.4.0"
 

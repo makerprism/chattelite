@@ -54,19 +54,30 @@
             start();
         }
 
-        function add_message(conversation_event) {
-            console.log("conversation_event", conversation_event);
+        function add_line(line) {
             let data = document.createElement("div");
-            switch (conversation_event.type) {
+            switch (line.type) {
                 case "Join":
-                    data.innerHTML = `<div class="timestamp">${conversation_event.timestamp}</div><br><div class="username">${conversation_event.from.display_name}</div> joins the conversation.`;
+                    data.innerHTML = `<div class="timestamp">${line.timestamp}</div><br><div class="username">${line.from.display_name}</div> joins the conversation.`;
                     break;
                 case "Leave":
-                    data.innerHTML = `<div class="timestamp">${conversation_event.timestamp}</div><br><div class="username">${conversation_event.from.display_name}</div> leaves the conversation.`;
+                    data.innerHTML = `<div class="timestamp">${line.timestamp}</div><br><div class="username">${line.from.display_name}</div> leaves the conversation.`;
                     break;
                 case "Message":
-                    data.innerHTML = `<div class="username">${conversation_event.from.display_name}</div> <div class="timestamp">${conversation_event.timestamp}</div><br><div class="message">${conversation_event.content}</div>`;
+                    data.innerHTML = `<div class="username">${line.from.display_name}</div> <div class="timestamp">${line.timestamp}</div><br><div class="message">${line.content}</div>`;
                     break;
+                default:
+                    throw "unrecognized Line type: " + line.type;
+            }
+            message_box.appendChild(data);
+            data.scrollIntoView();
+        }
+
+        function process_conversation_event(conversation_event) {
+            switch(conversation_event.type) {
+                case "NewLine":
+                    add_line(conversation_event.line);
+                    return;
                 case "StartTyping":
                     typing.innerText = "...";
                     return;
@@ -74,25 +85,23 @@
                     typing.innerText = "";
                     return;
                 default:
-                    throw "unrecognized ConversationEvent type: " + conversation_event.type;
+                    throw "unrecognized ConversationEvent type"
             }
-            message_box.appendChild(data);
-            data.scrollIntoView();
         }
 
         async function connect_to_conversation() {
             console.log("CONVERSATION_ID", CONVERSATION_ID);
 
-            let previous_events = await ChatteliteClient.get_conversation_events({ session_token: JWT }, CONVERSATION_ID);
-            console.log(previous_events);
+            let conversation = await ChatteliteClient.get_conversation({ session_token: JWT }, CONVERSATION_ID);
+            console.log(conversation);
 
-            for (let e of previous_events.events) {
-                add_message(e);
+            for (let e of conversation.lines) {
+                add_line(e);
             }
 
             event_source = new EventSourceWithHeaders("http://127.0.0.1:8000/conversation/" + CONVERSATION_ID + "/sse", { headers: { "X-Access-Token": JWT } });
             event_source.onmessage = (event) => {
-                add_message(JSON.parse(event.data));
+                process_conversation_event(JSON.parse(event.data));
             }
         }
 

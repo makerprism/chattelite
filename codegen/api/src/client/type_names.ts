@@ -5,7 +5,6 @@ export const t = {
     ConversationId: T("ConversationId"),
     LineId: T("LineId"),
 
-    user_id: T("user_id"),
     DateTime: T("DateTime"),
 };
 
@@ -17,6 +16,8 @@ export const it = {
 export const ot = {
     User: T("User"),
 
-    ConnectionEvent: T("ConnectionEvent"),
+    Conversation: T("Conversation"),
+
     ConversationEvent: T("ConversationEvent"),
+    Line: T("Line"),
 };

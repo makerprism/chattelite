@@ -1,7 +1,6 @@
 use crate::errors::ApiError;
 use serde::{Serialize, Deserialize};
 
-
 pub struct Session {
     pub id: db::UsersId,
     pub public_facing_id: String,
@@ -37,12 +36,6 @@ impl actix_web::FromRequest for Session {
         req: &actix_web::HttpRequest,
         _payload: &mut actix_web::dev::Payload,
     ) -> Self::Future {
-        let pool = req
-            .app_data::<actix_web::web::Data<sqlx::PgPool>>()
-            .unwrap()
-            .as_ref()
-            .clone();
-
         let s = req.headers().get("X-Access-Token");
 
         if s.is_none() {
@@ -53,13 +46,13 @@ impl actix_web::FromRequest for Session {
 
         let jwt = match s.unwrap().to_str() {
             Ok(token) => {
-                JWTSession::decode(token, &crate::CLIENT_JWT_SECRET)
+                JWTSession::decode(token, &crate::config::CONFIG.client_jwt_secret)
             }
             Err(_) => return Box::pin(futures_util::future::err(ApiError::BadRequest { detail: "failed to decode token".to_string() }))
         };
 
         match jwt {
-            Err(e) => Box::pin(futures_util::future::err(ApiError::NotAuthenticated { detail: "token is invalid".to_string() } )),
+            Err(_e) => Box::pin(futures_util::future::err(ApiError::NotAuthenticated { detail: "token is invalid".to_string() } )),
             Ok(session) => {
                 let pool = req
                 .app_data::<actix_web::web::Data<sqlx::PgPool>>()

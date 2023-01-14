@@ -1,4 +1,4 @@
-import { TypeAlias, Str, Struct, Field, NStruct, StructUnion } from 'gen-types';
+import { TypeAlias, Str, Struct, Field, NStruct, StructUnion, I32 } from 'gen-types';
 import { IdType } from '../id_types';
 import { TypeDeclaration } from '../types';
 import { it, ot, t } from './type_names';
@@ -8,7 +8,6 @@ export let shared_types: TypeDeclaration[] = [
     IdType(t.ConversationId, "CON"),
     IdType(t.LineId, "LINE"),
 
-    TypeAlias(t.user_id, Str),
     TypeAlias(t.DateTime, Str),
 ];
 
@@ -22,15 +21,15 @@ export let output_types: TypeDeclaration[] = [
         Field("display_name", Str),
     ]),
 
-    StructUnion(ot.ConnectionEvent, [
-        Struct("UnreadMessage", [
-            Field("timestamp", t.DateTime),
-            Field("conversation_id", t.ConversationId),
-            Field("from", ot.User),
-        ]),
+    Struct(ot.Conversation, [
+        Field("timestamp", t.DateTime),
+        Field("conversation_id", t.ConversationId),
+        Field("number_of_unread_messages", I32),
+        Field("newest_message_from", ot.User),
+        Field("newest_message_synopsis", Str),
     ]),
 
-    StructUnion(ot.ConversationEvent, [
+    StructUnion(ot.Line, [
         Struct("Message", [
             Field("timestamp", t.DateTime),
             Field("from", ot.User),
@@ -46,7 +45,13 @@ export let output_types: TypeDeclaration[] = [
             Field("timestamp", t.DateTime),
             Field("from", ot.User),
         ]),
-    
+    ]),
+
+    StructUnion(ot.ConversationEvent, [
+        Struct("NewLine", [
+            Field("line", ot.Line),
+        ]),
+
         Struct("StartTyping", [
             Field("timestamp", t.DateTime),
             Field("from", ot.User),

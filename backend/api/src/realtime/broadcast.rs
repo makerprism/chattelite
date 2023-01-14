@@ -7,7 +7,7 @@ use futures_util::future;
 use parking_lot::Mutex;
 use serde::Serialize;
 
-use crate::generated::client_types::{ConversationEvent, User};
+use crate::generated::client_types::{ConversationEvent, Line, User};
 
 pub struct Broadcaster {
     inner: Mutex<BroadcasterInner>,
@@ -212,22 +212,32 @@ impl Broadcaster {
                         timestamp: now.to_string(),
                     }
                 }
-                BroadcastConversationEvent::Join { user, timestamp } => ConversationEvent::Join {
-                    from: user,
-                    timestamp: timestamp.to_string(),
-                },
-                BroadcastConversationEvent::Leave { user, timestamp } => ConversationEvent::Leave {
-                    from: user,
-                    timestamp: timestamp.to_string(),
-                },
+                BroadcastConversationEvent::Join { user, timestamp } => {
+                    ConversationEvent::NewLine {
+                        line: Line::Join {
+                            from: user,
+                            timestamp: timestamp.to_string(),
+                        },
+                    }
+                }
+                BroadcastConversationEvent::Leave { user, timestamp } => {
+                    ConversationEvent::NewLine {
+                        line: Line::Leave {
+                            from: user,
+                            timestamp: timestamp.to_string(),
+                        },
+                    }
+                }
                 BroadcastConversationEvent::Message {
                     user,
                     timestamp,
                     content,
-                } => ConversationEvent::Message {
-                    from: user,
-                    timestamp: timestamp.to_string(),
-                    content,
+                } => ConversationEvent::NewLine {
+                    line: Line::Message {
+                        from: user,
+                        timestamp: timestamp.to_string(),
+                        content,
+                    },
                 },
             };
 

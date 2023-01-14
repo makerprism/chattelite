@@ -7,8 +7,7 @@ export let shared_types: TypeDeclaration[] = [
     TypeAlias(t.UserId, Str),
     IdType(t.ConversationId, "CON"),
 
-    TypeAlias(t.user_id, Str),
-    TypeAlias(t.DateTime, Str),
+    //TypeAlias(t.DateTime, Str),
 
 ];
 
