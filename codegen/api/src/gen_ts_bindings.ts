@@ -170,7 +170,6 @@ function opts_decl(opts: { name: string, type: string; }[]): { name: string, typ
 
 function route_opts(route: Route): { name: string, type: string; }[] {
     let opts: { name: string, type: string; }[] = [];
-    opts.push({ name: "session_token", type: "string" });
 
     return opts;
 }

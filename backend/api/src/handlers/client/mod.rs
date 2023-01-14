@@ -6,11 +6,42 @@ use crate::realtime::broadcast::{BroadcastConversationEvent, Broadcaster};
 use crate::session::client::Session;
 
 pub async fn get_conversations(
-    _session: Session,
-    _pool: web::Data<sqlx::PgPool>,
+    session: Session,
+    pool: web::Data<sqlx::PgPool>,
     _broadcaster: web::Data<Broadcaster>,
 ) -> Result<GetConversationsOutput, ApiError<()>> {
-    todo!()
+    let db_conversations = sqlx::query!(
+        r#"
+        SELECT 
+            conversation.id,
+            conversation.updated_at
+        FROM conversation_participant
+        INNER JOIN users ON users.id = conversation_participant.user_id
+        INNER JOIN conversation ON conversation.id = conversation_participant.conversation_id
+        WHERE users.public_facing_id = $1
+        ORDER BY conversation.updated_at DESC
+        LIMIT 20
+        "#,
+        session.public_facing_id
+    )
+    .fetch_all(pool.get_ref())
+    .await?;
+
+    let conversations = db_conversations
+        .iter()
+        .map(|c| Conversation {
+            conversation_id: c.id.into(),
+            timestamp: c.updated_at.to_string(),
+            number_of_unread_messages: 0, //TODO
+            newest_message_from: User {
+                id: "TODO".to_string(),
+                display_name: "TODO".to_string(),
+            },
+            newest_message_synopsis: "TODO".to_string(),
+        })
+        .collect();
+
+    Ok(GetConversationsOutput { conversations })
 }
 
 pub async fn get_conversation(
@@ -76,6 +107,7 @@ pub async fn get_conversation(
         .into_iter()
         .map(|row| match row.kind {
             Some(db::SystemEventKind::Join) => Line::Join {
+                line_id: row.id.into(),
                 timestamp: row.created_at.to_string(),
                 from: User {
                     id: row.user_id1.expect("missing user_id"),
@@ -84,6 +116,7 @@ pub async fn get_conversation(
             },
 
             Some(db::SystemEventKind::Leave) => Line::Leave {
+                line_id: row.id.into(),
                 timestamp: row.created_at.to_string(),
                 from: User {
                     id: row.user_id1.expect("missing user_id"),
@@ -93,6 +126,7 @@ pub async fn get_conversation(
 
             None => match row.content {
                 Some(content) => Line::Message {
+                    line_id: row.id.into(),
                     timestamp: row.created_at.to_string(),
                     from: User {
                         id: row.user_id2.expect("missing user_id"),
@@ -161,6 +195,7 @@ pub async fn send_message(
         .broadcast_to_conversation(
             params.conversation_id.to_db_id(),
             BroadcastConversationEvent::Message {
+                line_id: line.id,
                 timestamp: line.created_at,
                 user: User {
                     id: session.public_facing_id,

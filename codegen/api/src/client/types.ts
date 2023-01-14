@@ -22,8 +22,8 @@ export let output_types: TypeDeclaration[] = [
     ]),
 
     Struct(ot.Conversation, [
-        Field("timestamp", t.DateTime),
         Field("conversation_id", t.ConversationId),
+        Field("timestamp", t.DateTime),
         Field("number_of_unread_messages", I32),
         Field("newest_message_from", ot.User),
         Field("newest_message_synopsis", Str),
@@ -31,17 +31,20 @@ export let output_types: TypeDeclaration[] = [
 
     StructUnion(ot.Line, [
         Struct("Message", [
+            Field("line_id", t.LineId),
             Field("timestamp", t.DateTime),
             Field("from", ot.User),
             Field("content", Str),
         ]),
 
         Struct("Join", [
+            Field("line_id", t.LineId),
             Field("timestamp", t.DateTime),
             Field("from", ot.User),
         ]),
     
         Struct("Leave", [
+            Field("line_id", t.LineId),
             Field("timestamp", t.DateTime),
             Field("from", ot.User),
         ]),

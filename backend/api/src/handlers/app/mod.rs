@@ -220,6 +220,7 @@ pub async fn add_users_to_conversation(
             .broadcast_to_conversation(
                 params.conversation_id.to_db_id(),
                 BroadcastConversationEvent::Join {
+                    line_id: line.id,
                     timestamp: line.created_at,
                     user: User {
                         id,
@@ -320,6 +321,7 @@ pub async fn remove_users_from_conversation(
             .broadcast_to_conversation(
                 params.conversation_id.to_db_id(),
                 BroadcastConversationEvent::Leave {
+                    line_id: line.id,
                     timestamp: line.created_at,
                     user: User {
                         id: user_id,

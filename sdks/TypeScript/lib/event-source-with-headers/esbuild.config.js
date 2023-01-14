@@ -5,7 +5,7 @@ const { nodeExternalsPlugin } = require('esbuild-node-externals')
 
 esbuild.build({
   entryPoints: ['./src/browser.ts'],
-  outfile: 'lib/index.js',
+  outfile: 'browser-lib/index.js',
   bundle: true,
   minify: true,
   platform: 'browser',
@@ -13,3 +13,16 @@ esbuild.build({
   target: 'es2015',
   plugins: [nodeExternalsPlugin()]
 }).catch(() => process.exit(1))
+
+
+esbuild.build({
+    entryPoints: ['./src/index.ts'],
+    outfile: 'lib/index.js',
+    bundle: true,
+    minify: false,
+    platform: 'neutral',
+    sourcemap: true,
+    target: 'es2015',
+    plugins: [nodeExternalsPlugin()]
+  }).catch(() => process.exit(1))
+  

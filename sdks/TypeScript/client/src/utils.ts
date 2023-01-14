@@ -1,4 +1,4 @@
-import { API_URL } from "./config";
+import { API_URL, JWT } from "./config";
 
 export type ApiResponse<S, E> = S | ApiResponseError<E>;
 type BaseError = {
@@ -83,28 +83,26 @@ type ApiHeaders = {
     'X-Access-Token'?: string;
 };
 
-export function get(url: string, opts: { session_token?: string }) {
+export function get(url: string) {
     let headers: ApiHeaders = {
         Accept: 'application/json',
         'Content-Type': 'application/json'
     };
-    if (opts.session_token) {
-        headers['X-Access-Token'] = opts.session_token;
-    }
+    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
+    headers['X-Access-Token'] = JWT;
     return api_fetch(url, {
         headers
     });
 }
 
-export function post(url: string, opts: { session_token?: string }, body?: any) {
+export function post(url: string, body?: any) {
     let b = body ? JSON.stringify(body) : 'null';
     let headers: ApiHeaders = {
         Accept: 'application/json',
         'Content-Type': 'application/json'
     };
-    if (opts.session_token) {
-        headers['X-Access-Token'] = opts.session_token;
-    }
+    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
+    headers['X-Access-Token'] = JWT;
     return api_fetch(url, {
         method: 'POST',
         body: b,
@@ -112,14 +110,13 @@ export function post(url: string, opts: { session_token?: string }, body?: any) 
     });
 }
 
-export function del(url: string, opts: { session_token?: string }) {
+export function del(url: string) {
     let headers: ApiHeaders = {
         Accept: 'application/json',
         'Content-Type': 'application/json'
     };
-    if (opts.session_token) {
-        headers['X-Access-Token'] = opts.session_token;
-    }
+    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
+    headers['X-Access-Token'] = JWT;
     return api_fetch(url, {
         method: 'DELETE',
         headers
@@ -128,17 +125,13 @@ export function del(url: string, opts: { session_token?: string }) {
 
 export async function postFormData(
     url: string,
-    opts: {
-        session_token: string;
-    },
     formData: FormData
 ) {
     let headers: ApiHeaders = {
         Accept: 'application/json'
     };
-    if (opts.session_token) {
-        headers['X-Access-Token'] = opts.session_token;
-    }
+    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
+    headers['X-Access-Token'] = JWT;
 
     return api_fetch(url, {
         method: 'POST',

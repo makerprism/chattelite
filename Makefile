@@ -11,6 +11,7 @@ backend: api-codegen db-codegen
 	cd backend/api && cargo build --release && cd ../..
 
 typescript-sdks: api-codegen
+	cd sdks/TypeScript/lib/event-source-with-headers && npm install && npm run build && cd ../../../..
 	cd sdks/TypeScript/app && npm install && npm run build && cd ../../..
 	cd sdks/TypeScript/client && npm install && npm run build && cd ../../..
 

@@ -242,4 +242,4 @@ class EventSourceWithHeaders extends EventTarget implements EventSource {
     }
 }
 
-export default EventSourceWithHeaders
+export default EventSourceWithHeaders;

@@ -3,6 +3,7 @@ use std::{sync::Arc, time::Duration};
 use actix_web::rt::time::interval;
 use actix_web_lab::sse::{self, ChannelStream, Sse};
 use chrono::{DateTime, Utc};
+use db::LineId;
 use futures_util::future;
 use parking_lot::Mutex;
 use serde::Serialize;
@@ -44,14 +45,17 @@ pub enum BroadcastConversationEvent {
         user: User,
     },
     Join {
+        line_id: LineId,
         user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
     },
     Leave {
+        line_id: LineId,
         user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
     },
     Message {
+        line_id: LineId,
         user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
         content: String,
@@ -212,28 +216,32 @@ impl Broadcaster {
                         timestamp: now.to_string(),
                     }
                 }
-                BroadcastConversationEvent::Join { user, timestamp } => {
+                BroadcastConversationEvent::Join { line_id, user, timestamp } => {
                     ConversationEvent::NewLine {
                         line: Line::Join {
+                            line_id: line_id.into(),
                             from: user,
                             timestamp: timestamp.to_string(),
                         },
                     }
                 }
-                BroadcastConversationEvent::Leave { user, timestamp } => {
+                BroadcastConversationEvent::Leave { line_id,user, timestamp } => {
                     ConversationEvent::NewLine {
                         line: Line::Leave {
+                            line_id: line_id.into(),
                             from: user,
                             timestamp: timestamp.to_string(),
                         },
                     }
                 }
                 BroadcastConversationEvent::Message {
+                    line_id,
                     user,
                     timestamp,
                     content,
                 } => ConversationEvent::NewLine {
                     line: Line::Message {
+                        line_id: line_id.into(),
                         from: user,
                         timestamp: timestamp.to_string(),
                         content,
