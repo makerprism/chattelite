@@ -10,15 +10,22 @@ pub async fn get_conversations(
     pool: web::Data<sqlx::PgPool>,
     _broadcaster: web::Data<Broadcaster>,
 ) -> Result<GetConversationsOutput, ApiError<()>> {
+
     let db_conversations = sqlx::query!(
         r#"
         SELECT 
             conversation.id,
-            conversation.updated_at
+            conversation.updated_at,
+            COUNT (message.line_id) as unread
         FROM conversation_participant
         INNER JOIN users ON users.id = conversation_participant.user_id
         INNER JOIN conversation ON conversation.id = conversation_participant.conversation_id
+        LEFT JOIN line ON line.conversation_id = conversation.id
+        LEFT JOIN message ON
+            message.line_id = line.id
+            AND (line.created_at > conversation_participant.lines_seen_until)
         WHERE users.public_facing_id = $1
+        GROUP BY conversation.id
         ORDER BY conversation.updated_at DESC
         LIMIT 20
         "#,
@@ -27,17 +34,58 @@ pub async fn get_conversations(
     .fetch_all(pool.get_ref())
     .await?;
 
+    let newest_messages = sqlx::query!(
+        r#"
+        SELECT DISTINCT ON (line.conversation_id)
+            line.id,
+            line.conversation_id,
+            line.created_at,
+            line.updated_at,
+            users.public_facing_id,
+            users.display_name,
+            message.content
+        FROM line
+        INNER JOIN message ON message.line_id = line.id
+        INNER JOIN users ON message.created_by = users.id
+        WHERE line.conversation_id = ANY($1)
+        ORDER BY line.conversation_id, line.created_at DESC
+        "#,
+        &db_conversations
+            .iter()
+            .map(|c| c.id)
+            .collect::<Vec<db::ConversationId>>()
+    )
+    .fetch_all(pool.get_ref())
+    .await?;
+
+    let mut newest_message_lookup = std::collections::HashMap::new();
+    for m in newest_messages {
+        newest_message_lookup.insert(m.conversation_id, m);
+    }
+
     let conversations = db_conversations
         .iter()
-        .map(|c| Conversation {
-            conversation_id: c.id.into(),
-            timestamp: c.updated_at.to_string(),
-            number_of_unread_messages: 0, //TODO
-            newest_message_from: User {
-                id: "TODO".to_string(),
-                display_name: "TODO".to_string(),
-            },
-            newest_message_synopsis: "TODO".to_string(),
+        .map(|c| {
+            let m = newest_message_lookup.get(&c.id);
+
+            Conversation {
+                conversation_id: c.id.into(),
+                timestamp: c.updated_at.to_string(),
+                number_of_unread_messages: c.unread.unwrap_or(0) as i32,
+                newest_message: if let Some(m) = m {
+                    Some(Message {
+                        line_id: m.id.into(),
+                        timestamp: m.created_at.to_string(),
+                        from: User {
+                            id: m.public_facing_id.to_string(),
+                            display_name: m.display_name.to_string(),
+                        },
+                        content: m.content.to_string(),
+                    })
+                } else {
+                    None
+                },
+            }
         })
         .collect();
 
@@ -187,6 +235,18 @@ pub async fn send_message(
             content: &json.content,
         },
     )
+    .await?;
+
+    sqlx::query!(
+        r#"
+        UPDATE conversation
+        SET
+            updated_at = NOW()
+        WHERE conversation.id = $1 
+        "#,
+        params.conversation_id.to_db_id(),
+    )
+    .execute(&mut transaction)
     .await?;
 
     transaction.commit().await?;

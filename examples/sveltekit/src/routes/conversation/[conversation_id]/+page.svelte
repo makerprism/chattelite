@@ -2,7 +2,7 @@
     import ChatteliteClient from "chattelite-client";
 	import type { ConversationEvent, ConversationId, Line, UserId } from "chattelite-client/lib/generated/types";
 	import { session } from "./../../../session";
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { dateToStr } from "../../../human-readable-datetime";
 
     export let data: {
@@ -17,7 +17,7 @@
         }
     };
     let typing: Typing = {};
-    let event_source = null;
+    let event_source: typeof ChatteliteClient.EventSourceWithHeaders | null= null;
 
     async function connect_to_conversation(jwt: string, conversation_id: ConversationId) {
         let conversation = await ChatteliteClient.get_conversation(conversation_id);
@@ -60,6 +60,9 @@
         }
     });
 
+    onDestroy(() => {
+        if (event_source) event_source.close();
+    });
 
 
     let new_message = "";

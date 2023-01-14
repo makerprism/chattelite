@@ -17,6 +17,7 @@ export const ot = {
     User: T("User"),
 
     Conversation: T("Conversation"),
+    Message: T("Message"),
 
     ConversationEvent: T("ConversationEvent"),
     Line: T("Line"),

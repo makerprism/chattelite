@@ -2,6 +2,7 @@
 	import { goto } from "$app/navigation";
 	import ChatteliteClient from "chattelite-client";
 	import type { Conversation, ConversationId } from "chattelite-client/lib/generated/types";
+	import { dateToStr } from "../human-readable-datetime";
 	import { onMount } from "svelte";
 	import { session } from "../session";
 
@@ -79,7 +80,7 @@
 Username: <input bind:value={username} on:keypress={(e) => e.keyCode == 13? set_username() : null}>
 </label>
 {:else}
-Logged in as {JSON.stringify($session)}
+Logged in as {$session.display_name}#{$session.user_id}
 
 <div>
 <button on:click={create_conversation}>Create Conversation</button>
@@ -91,17 +92,60 @@ Logged in as {JSON.stringify($session)}
 </div>
 
 <h2>Existing Conversations:</h2>
+<div class="conversations">
 {#each conversations as conversation}
-<div>
-    <a href={"/conversation/"+conversation.conversation_id}>{conversation.conversation_id}</a>
-    {JSON.stringify(conversation)}
+<a href={"/conversation/"+conversation.conversation_id}>
+<div class="conversation">
+    {conversation.conversation_id}
+    <span class="timestamp">{dateToStr(conversation.timestamp)}</span> {#if conversation.number_of_unread_messages}<span class="unread">{conversation.number_of_unread_messages}</span>{/if}
+    <div>
+        {#if conversation.newest_message}
+        {conversation.newest_message?.from.display_name}#{conversation.newest_message?.from.id}: {conversation.newest_message?.content}
+        {:else }
+        No messages yet.
+        {/if}
+    </div>
 </div>
+</a>
 {/each}
+</div>
 {/if}
 
 <style>
     input {
         display:block;
         width:100%;
+    }
+
+    .conversations {
+        display:flex;
+        flex-direction: column;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    .conversation {
+        padding: 1em;
+        color:#333;
+
+        border-top: 1px solid gray;
+        word-break: break-word;
+    }
+
+    .timestamp {
+        color: gray;
+        font-size:75%;
+    }
+
+    .unread {
+        border-radius: 0.5em;
+        font-size:75%;
+        background-color: red;
+        font-weight:bold;
+        padding: 0em 0.5em;
+        padding-top:0.2em;
+        color:white;
     }
 </style>
