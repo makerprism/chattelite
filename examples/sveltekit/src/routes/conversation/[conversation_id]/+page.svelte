@@ -3,6 +3,7 @@
 	import type { ConversationEvent, ConversationId, Line, UserId } from "chattelite-client/lib/generated/types";
 	import { session } from "./../../../session";
 	import { onMount } from "svelte";
+	import { dateToStr } from "../../../human-readable-datetime";
 
     export let data: {
         conversation_id: ConversationId;
@@ -127,8 +128,8 @@
             <span class="display_name">
                 {line.from.display_name}
             </span>
-            <span class="timestamp">
-                {line.timestamp} &nbsp;
+            <span title={new Date(line.timestamp).toLocaleString()} class="timestamp">
+                {dateToStr(line.timestamp)} &nbsp;
             </span>
             <br>
             <div class="chat-bubble">
@@ -137,8 +138,8 @@
         </div>
         {:else if line.type == "Join"}
         <div class="system-message">
-            <span class="timestamp">
-                {line.timestamp}
+            <span title={new Date(line.timestamp).toLocaleString()} class="timestamp">
+                {dateToStr(line.timestamp)}
             </span>
             <span class="display_name">
                 {line.from.display_name}
@@ -146,8 +147,8 @@
         </div>
         {:else if line.type == "Leave"}
         <div class="system-message">
-            <span class="timestamp">
-                {line.timestamp}
+            <span title={new Date(line.timestamp).toLocaleString()} class="timestamp">
+                {dateToStr(line.timestamp)}
             </span>
             <span class="display_name">
                 {line.from.display_name}
@@ -204,27 +205,27 @@
         padding: 0.5em 0.75em;
     }
 
-    .other-message {
+    .my-message {
         margin-left: auto;
         text-align: right;
     }
 
-    .my-message .chat-bubble {
-        border-top-left-radius: 0;
+    .my-message .display_name {
+        float:right;
+    }
 
+    .my-message .chat-bubble {
+        border-top-right-radius: 0;
         background-color:rgb(45, 91, 59);
         color: #eee;
     }
 
     .other-message .chat-bubble {
-        border-top-right-radius: 0;
+        border-top-left-radius: 0;
         background-color:rgb(199, 224, 207);
         color: #333;
     }
 
-    .other-message .display_name {
-        float:right;
-    }
 
     .typing {
         color:#333;
