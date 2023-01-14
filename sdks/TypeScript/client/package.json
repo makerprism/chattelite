@@ -15,6 +15,6 @@
     "esbuild-node-externals": "^1.6.0"
   },
   "dependencies": {
-    "event-source-with-headers": "file:../../../../event-source-with-headers"
+    "event-source-with-headers": "file:../lib/event-source-with-headers"
   }
 }

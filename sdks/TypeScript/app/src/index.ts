@@ -3,7 +3,7 @@ import * as Endpoints from "./generated/endpoints";
 import { init } from "./config";
 
 const Chattelite = {
-    Types,
+    ...Types,
     ...Endpoints,
     init,
 };
