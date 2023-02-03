@@ -79,7 +79,6 @@ CREATE SEQUENCE id_seq;`,
 
                 u.NullableForeignKey("thread_line_id", line, "id"),
                 u.NullableForeignKey("reply_to_line_id", line, "id"),
-
             ]),
 
             t.Table(message, [

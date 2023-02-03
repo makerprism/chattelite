@@ -1,4 +1,4 @@
-import { Field, Str, Vec } from 'gen-types';
+import { Field, Optional, Str, Vec } from 'gen-types';
 import { Method, Route } from '../endpoint_types';
 import { ot, t } from './type_names';
 
@@ -15,7 +15,7 @@ export let routes: Route[] = [
     },
 
     {
-        name: "get_conversation",
+        name: "get_conversation_messages",
         url: "/conversation/{conversation_id}",
         method: Method.Get,
         url_params: [
@@ -26,6 +26,21 @@ export let routes: Route[] = [
         ],
         output_body_type: [
             Field("lines", Vec(ot.Line)),
+        ],
+    },
+
+    {
+        name: "get_conversation_threads",
+        url: "/conversation/{conversation_id}/threads",
+        method: Method.Get,
+        url_params: [
+            {
+                name: "conversation_id",
+                type: t.ConversationId,
+            },
+        ],
+        output_body_type: [
+            Field("threads", Vec(ot.Thread)),
         ],
     },
 
@@ -41,6 +56,7 @@ export let routes: Route[] = [
         ],
         input_body_type: [
             Field("content", Str),
+            Field("reply_to_line_id", Optional(t.LineId)),
         ],
     },
 

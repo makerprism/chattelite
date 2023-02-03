@@ -8,7 +8,7 @@ use futures_util::future;
 use parking_lot::Mutex;
 use serde::Serialize;
 
-use crate::generated::client_types::{ConversationEvent, Line, User};
+use crate::generated::client_types::{ConversationEvent, Line, User, self};
 
 pub struct Broadcaster {
     inner: Mutex<BroadcasterInner>,
@@ -59,6 +59,7 @@ pub enum BroadcastConversationEvent {
         user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
         content: String,
+        reply_to_line: Option<client_types::ParentLine>
     },
 }
 
@@ -239,12 +240,14 @@ impl Broadcaster {
                     user,
                     timestamp,
                     content,
+                    reply_to_line,
                 } => ConversationEvent::NewLine {
                     line: Line::Message {
                         line_id: line_id.into(),
                         from: user,
                         timestamp: timestamp.to_string(),
                         content,
+                        reply_to_line,
                     },
                 },
             };

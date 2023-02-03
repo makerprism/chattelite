@@ -10,7 +10,6 @@ pub async fn get_conversations(
     pool: web::Data<sqlx::PgPool>,
     _broadcaster: web::Data<Broadcaster>,
 ) -> Result<GetConversationsOutput, ApiError<()>> {
-
     let db_conversations = sqlx::query!(
         r#"
         SELECT 
@@ -81,6 +80,7 @@ pub async fn get_conversations(
                             display_name: m.display_name.to_string(),
                         },
                         content: m.content.to_string(),
+                        reply_to_line: None, // Note: intentionally empty, even if the message is a reply
                     })
                 } else {
                     None
@@ -92,12 +92,12 @@ pub async fn get_conversations(
     Ok(GetConversationsOutput { conversations })
 }
 
-pub async fn get_conversation(
+pub async fn get_conversation_messages(
     session: Session,
-    params: web::Path<GetConversationParams>,
+    params: web::Path<GetConversationMessagesParams>,
     pool: web::Data<sqlx::PgPool>,
     _broadcaster: web::Data<Broadcaster>,
-) -> Result<GetConversationOutput, ApiError<()>> {
+) -> Result<GetConversationMessagesOutput, ApiError<()>> {
     let row = sqlx::query!(
         r#"
         SELECT 
@@ -136,13 +136,26 @@ pub async fn get_conversation(
 
             u2.public_facing_id as "user_id2?: String",
             u2.display_name as "display_name2?: String",
-            message.content as "content?: String"
+            message.content as "content?: String",
+
+            parent.id as "parent_id?: db::LineId",
+            parent.updated_at as "parent_timestamp",
+            parent.deleted as "parent_deleted?: bool",
+            parent_user.public_facing_id as "parent_user_id?: String",
+            parent_user.display_name as "parent_user_display_name?: String",
+            parent_message.content as "parent_message_content?: String"
+
         FROM line
         LEFT OUTER JOIN system_event ON system_event.line_id = line.id
         LEFT OUTER JOIN message ON message.line_id = line.id
         LEFT OUTER JOIN users u1 ON u1.id = system_event.user_id
         LEFT OUTER JOIN users u2 ON u2.id = message.created_by
-        WHERE conversation_id = $1
+
+        LEFT OUTER JOIN line parent ON parent.id = line.reply_to_line_id
+        LEFT OUTER JOIN message parent_message ON parent_message.line_id = parent.id
+        LEFT OUTER JOIN users parent_user ON parent_user.id = parent_message.created_by
+
+        WHERE line.conversation_id = $1
         ORDER BY line.created_at DESC
         LIMIT 20
         "#,
@@ -150,6 +163,8 @@ pub async fn get_conversation(
     )
     .fetch_all(pool.get_ref())
     .await?;
+
+    // TODO MAKE USE OF PARENT MESSAGE
 
     let lines = db_lines
         .into_iter()
@@ -181,6 +196,19 @@ pub async fn get_conversation(
                         display_name: row.display_name2.expect("missing display_name"),
                     },
                     content: content,
+                    reply_to_line: if let Some(parent_id) = &row.parent_id {
+                        Some(ParentLine::Message {
+                            line_id: parent_id.into(),
+                            timestamp: row.parent_timestamp.to_string(),
+                            from: User {
+                                id: row.parent_user_id.expect("impossible"),
+                                display_name: row.parent_user_display_name.expect("impossible"),
+                            },
+                            content: row.parent_message_content.unwrap_or("".to_string()),
+                        })
+                    } else {
+                        None
+                    },
                 },
 
                 None => {
@@ -191,7 +219,16 @@ pub async fn get_conversation(
         .rev()
         .collect();
 
-    Ok(GetConversationOutput { lines })
+    Ok(GetConversationMessagesOutput { lines })
+}
+
+pub async fn get_conversation_threads(
+    session: Session,
+    params: web::Path<GetConversationThreadsParams>,
+    pool: web::Data<sqlx::PgPool>,
+    _broadcaster: web::Data<Broadcaster>,
+) -> Result<GetConversationThreadsOutput, ApiError<()>> {
+    todo!("not implemented")
 }
 
 pub async fn send_message(
@@ -201,6 +238,50 @@ pub async fn send_message(
     pool: web::Data<sqlx::PgPool>,
     broadcaster: web::Data<Broadcaster>,
 ) -> Result<NoOutput, ApiError<()>> {
+    if json.content.is_empty() {
+        return Err(ApiError::BadRequest {
+            detail: "'content' field cannot be empty".to_string(),
+        });
+    }
+
+    let parent: Option<(db::LineId, ParentLine)> = if let Some(reply_to_line_id) = &json.reply_to_line_id
+    {
+        let r = sqlx::query!(
+            r#"
+        SELECT
+            line.id,
+            line.updated_at,
+            line.thread_line_id,
+
+            message.content as "content?: String",
+
+            users.public_facing_id as "public_facing_id?: String",
+            users.display_name as "display_name?: String"
+        FROM line
+        LEFT OUTER JOIN message ON message.line_id = line.id
+        LEFT OUTER JOIN users ON users.id = created_by
+        WHERE line.id = $1
+        "#,
+            reply_to_line_id.to_db_id()
+        )
+        .fetch_one(pool.get_ref())
+        .await?;
+
+        let parent = ParentLine::Message { line_id: r.id.into(), timestamp: r.updated_at.to_string(), from: User {
+            id: r.public_facing_id.unwrap_or("ERROR".to_string()),
+            display_name: r.display_name.unwrap_or("ERROR".to_string()),
+        }, content: r.content.unwrap_or("".to_string()) };
+
+        Some((
+            r
+            .thread_line_id
+            .unwrap_or(reply_to_line_id.to_db_id()),
+            parent)
+        )
+    } else {
+        None
+    };
+
     let mut transaction = pool.begin().await?;
 
     let row = sqlx::query!(
@@ -221,8 +302,8 @@ pub async fn send_message(
         &mut transaction,
         db::InsertLine {
             conversation_id: params.conversation_id.to_db_id(),
-            thread_line_id: None, // TODO
-            reply_to_line_id: None,
+            thread_line_id: parent.as_ref().map(|p| p.0),
+            reply_to_line_id: json.reply_to_line_id.as_ref().map(|i| i.to_db_id()),
         },
     )
     .await?;
@@ -262,6 +343,7 @@ pub async fn send_message(
                     display_name: session.display_name,
                 },
                 content: json.content.to_string(),
+                reply_to_line: parent.as_ref().map(|p| p.1.clone())
             },
         )
         .await;

@@ -1,4 +1,4 @@
-import { TypeAlias, Str, Struct, Field, StructUnion, I32, Nullable } from 'gen-types';
+import { TypeAlias, Str, Struct, Field, StructUnion, I32, Nullable, Optional, Vec } from 'gen-types';
 import { IdType } from '../id_types';
 import { TypeDeclaration } from '../types';
 import { it, ot, t } from './type_names';
@@ -20,6 +20,19 @@ const Message = Struct(ot.Message, [
     Field("timestamp", t.DateTime),
     Field("from", ot.User),
     Field("content", Str),
+    Field("reply_to_line", Optional(ot.ParentLine)),
+]);
+
+const Join = Struct("Join", [
+    Field("line_id", t.LineId),
+    Field("timestamp", t.DateTime),
+    Field("from", ot.User),
+]);
+
+const Leave = Struct("Leave", [
+    Field("line_id", t.LineId),
+    Field("timestamp", t.DateTime),
+    Field("from", ot.User),
 ]);
 
 export let output_types: TypeDeclaration[] = [
@@ -37,20 +50,26 @@ export let output_types: TypeDeclaration[] = [
         Field("newest_message", Nullable(ot.Message)),
     ]),
 
+    StructUnion(ot.ParentLine, [
+        Struct("Message", [
+            Field("line_id", t.LineId),
+            Field("timestamp", t.DateTime),
+            Field("from", ot.User),
+            Field("content", Str),
+        ]),
+        Join,
+        Leave,
+    ]),
+
     StructUnion(ot.Line, [
         Message,
+        Join,
+        Leave,
+    ]),
 
-        Struct("Join", [
-            Field("line_id", t.LineId),
-            Field("timestamp", t.DateTime),
-            Field("from", ot.User),
-        ]),
-    
-        Struct("Leave", [
-            Field("line_id", t.LineId),
-            Field("timestamp", t.DateTime),
-            Field("from", ot.User),
-        ]),
+    Struct(ot.Thread, [
+        Field("line", ot.Line),
+        Field("replies", Vec(ot.Line)),
     ]),
 
     StructUnion(ot.ConversationEvent, [

@@ -21,4 +21,6 @@ export const ot = {
 
     ConversationEvent: T("ConversationEvent"),
     Line: T("Line"),
+    ParentLine: T("ParentLine"),
+    Thread: T("Thread"),
 };
