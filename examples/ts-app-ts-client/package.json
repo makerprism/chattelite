@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "chattelite": "file:../../sdks/TypeScript/app",
+    "chattelite": "file:../../sdks/TypeScript/server",
     "chattelite-client": "file:../../sdks/TypeScript/client",
     "node-fetch": "^2.6.7",
     "body-parser": "^1.20.1",

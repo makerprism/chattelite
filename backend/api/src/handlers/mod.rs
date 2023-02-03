@@ -1,5 +1,5 @@
-pub mod app;
+pub mod server;
 pub mod client;
 
-pub use app::*;
+pub use server::*;
 pub use client::*;

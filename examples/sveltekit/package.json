@@ -24,7 +24,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"chattelite": "file:../../sdks/TypeScript/app",
+		"chattelite": "file:../../sdks/TypeScript/server",
 		"chattelite-client": "file:../../sdks/TypeScript/client"
 	}
 }

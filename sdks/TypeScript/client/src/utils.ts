@@ -80,16 +80,16 @@ function api_fetch(url: string, opts: any): Promise<ApiResponse<any, any>> {
 type ApiHeaders = {
     Accept: string;
     'Content-Type'?: string;
-    'X-Access-Token'?: string;
+    'X-Access-Token': string;
 };
 
 export function get(url: string) {
+    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
     let headers: ApiHeaders = {
         Accept: 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Access-Token': JWT
     };
-    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
-    headers['X-Access-Token'] = JWT;
     return api_fetch(url, {
         headers
     });
@@ -97,12 +97,12 @@ export function get(url: string) {
 
 export function post(url: string, body?: any) {
     let b = body ? JSON.stringify(body) : 'null';
+    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
     let headers: ApiHeaders = {
         Accept: 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Access-Token': JWT
     };
-    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
-    headers['X-Access-Token'] = JWT;
     return api_fetch(url, {
         method: 'POST',
         body: b,
@@ -111,12 +111,12 @@ export function post(url: string, body?: any) {
 }
 
 export function del(url: string) {
+    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
     let headers: ApiHeaders = {
         Accept: 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Access-Token': JWT
     };
-    if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
-    headers['X-Access-Token'] = JWT;
     return api_fetch(url, {
         method: 'DELETE',
         headers
@@ -127,11 +127,11 @@ export async function postFormData(
     url: string,
     formData: FormData
 ) {
-    let headers: ApiHeaders = {
-        Accept: 'application/json'
-    };
     if (!JWT) throw "JWT needs to be set via ChatteliteClient.init or ChatteliteClient.set_jwt";
-    headers['X-Access-Token'] = JWT;
+    let headers: ApiHeaders = {
+        Accept: 'application/json',
+        'X-Access-Token': JWT
+    };
 
     return api_fetch(url, {
         method: 'POST',

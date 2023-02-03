@@ -65,10 +65,16 @@ async fn main() -> std::io::Result<()> {
             }))
             .app_data(web::Data::from(std::sync::Arc::clone(&broadcaster)))
 
-            .configure(generated::app_endpoints::routes)
-            .configure(generated::client_endpoints::routes)
+            .configure(generated::server_endpoints::routes)
 
+            .configure(generated::client_endpoints::routes)
+            // TODO: SSE endpoint for unread message updates
             //.service(realtime::sse)
+
+            // TODO: id generation via snowflake (or similar)
+            // TODO: unread-marker advancement
+            // TODO: SDKs
+
             .service(realtime::sse_conversation_events)
 
             .default_service(web::route().to(not_found))

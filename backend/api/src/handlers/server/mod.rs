@@ -70,7 +70,7 @@ pub async fn generate_client_jwt(
         user_id: user.public_facing_id,
         display_name: user.display_name,
     }
-    .encode(&crate::config::CONFIG.client_jwt_secret, 3600)
+    .encode(&crate::config::CONFIG.client_jwt_secret, 36000) // 10 hours
     .map_err(|_| ApiError::InternalError {
         detail: "failed to encode client JWT".to_string(),
     })?;

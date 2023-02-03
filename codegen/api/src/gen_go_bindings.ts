@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import { Method, Route } from './endpoint_types';
 import { TypeDeclaration } from './types';
 
-import { routes as app_routes } from './app/endpoints';
-import * as app from './app/types';
+import { routes as app_routes } from './server/endpoints';
+import * as app from './server/types';
 
 import { routes as client_routes } from './client/endpoints';
 import * as client from './client/types';
@@ -261,9 +261,9 @@ function gen_endpoints(routes: Route[]): {types:string,code:string} {
 
 // output ts files
 
-function gen_bindings(path: string, types: {t: TypeDeclaration[], it: TypeDeclaration[], ot: TypeDeclaration[]}, routes: Route[]) {
+function gen_bindings(path: string, module_name: string, types: {t: TypeDeclaration[], it: TypeDeclaration[], ot: TypeDeclaration[]}, routes: Route[]) {
 
-    let client_endpoint_fns = gen_endpoints(client_routes);
+    let endpoint_fns = gen_endpoints(routes);
 
     let client_go_types = `// AUTOMATICALLY GENERATED, DO NOT EDIT!!
 package types
@@ -272,20 +272,20 @@ ${gen_types(types.t, types.it, types.ot)}
 
 // endpoint input/output types
 
-${client_endpoint_fns.types}
+${endpoint_fns.types}
 `
     let client_endpoints_go_code = `// AUTOMATICALLY GENERATED, DO NOT EDIT!!
 package endpoints
 
 import (
-    "chattelite-client/generated/types"
-    "chattelite-client/utils"
+    "${module_name}/generated/types"
+    "${module_name}/utils"
     "fmt"
 )
 
 type NoOutput struct{}
 
-${client_endpoint_fns.code}
+${endpoint_fns.code}
 `;
 
     if (!fs.existsSync(`${path}`)) fs.mkdirSync(path);
@@ -297,13 +297,13 @@ ${client_endpoint_fns.code}
 
 
 export function gen() {
-    gen_bindings("./../../sdks/Go/app/generated", {
+    gen_bindings("./../../sdks/Go/server/generated", "chattelite", {
         t: app.shared_types,
         it: app.input_types,
         ot: app.output_types,
     }, app_routes);
 
-    gen_bindings("./../../sdks/Go/client/generated", {
+    gen_bindings("./../../sdks/Go/client/generated", "chattelite-client", {
         t: client.shared_types,
         it: client.input_types,
         ot: client.output_types,

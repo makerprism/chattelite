@@ -7,9 +7,6 @@
             "path": "backend"
         },
         {
-            "path": "sdks/Go/app"
-        },
-        {
             "path": "sdks/Go/client"
         },
         {
@@ -17,6 +14,9 @@
         },
         {
             "path": "examples"
+        },
+        {
+            "path": "sdks/Go/server"
         }
     ]
 }

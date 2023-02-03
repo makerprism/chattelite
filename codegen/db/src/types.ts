@@ -266,8 +266,8 @@ export function TPrimaryKey(columns: ColumnName[]): TableConstraintPrimaryKey {
     };
 }
 
-/*
-constraint check_group_user check (
+/* TODO
+Exmple: constraint check_group_user check (
       (receiver_user_id is null and receiver_group_id is not null) 
    or (receiver_user_id is not null and receiver_group_id is null) )
 
@@ -386,7 +386,6 @@ export function history_table(table: Table): Table {
     let primary_keys = [];
     for (let column of table.columns) {
         if (is_part_of_primary_key(table, column)) {
-            // TODO: check which table and column are being referenced
             let r = references(column);
             columns.push(
                 Column(column.name, column.type, r ? {foreign_key: CForeignKey(r.table, r.column)}: {})

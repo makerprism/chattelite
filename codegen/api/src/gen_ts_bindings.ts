@@ -5,8 +5,8 @@ import * as fs from 'fs';
 import { Method, Route } from './endpoint_types';
 import { TypeDeclaration } from './types';
 
-import { routes as app_routes } from './app/endpoints';
-import * as app from './app/types';
+import { routes as app_routes } from './server/endpoints';
+import * as app from './server/types';
 
 import { routes as client_routes } from './client/endpoints';
 import * as client from './client/types';
@@ -267,7 +267,7 @@ ${endpoint_fns.code}
 
 
 export function gen() {
-    gen_bindings("./../../sdks/TypeScript/app/src/generated", {
+    gen_bindings("./../../sdks/TypeScript/server/src/generated", {
         t: app.shared_types,
         it: app.input_types,
         ot: app.output_types,
