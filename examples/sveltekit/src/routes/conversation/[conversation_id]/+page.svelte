@@ -1,6 +1,6 @@
 <script lang="ts">
     import ChatteliteClient from "chattelite-client";
-	import type { ConversationEvent, ConversationId, Line, UserId } from "chattelite-client/lib/generated/types";
+	import type { ConversationId, Line, UserId } from "chattelite-client/lib/generated/types";
 	import { session } from "./../../../session";
 	import { onDestroy, onMount } from "svelte";
 	import { dateToStr } from "../../../human-readable-datetime";
@@ -76,7 +76,8 @@
 
     async function send_message() {
         ChatteliteClient.send_message(data.conversation_id, {
-            content: new_message,
+            message: new_message,
+            data: {},
             reply_to_line_id: null,
         }).then((r) => {
             if("error" in r) {
@@ -92,7 +93,7 @@
     let start_typing: number | null;
     let stop_typing: number | null;
 
-    async function input(e) {
+    async function input() {
         if (!start_typing) {
             ChatteliteClient.start_typing(data.conversation_id, {});
             start_typing = setTimeout(_ => start_typing = null, 2000);
@@ -156,7 +157,14 @@
 <div class="chat-window" bind:this={chat_window_el} use:scrollToBottom={lines}>
     <div class="lines">
     {#each lines as line (line.line_id)}
-        {#if line.type == "Message"}
+        {#if line.from == null}
+        <div class="system-message">
+            <span title={new Date(line.timestamp).toLocaleString()} class="timestamp">
+                {dateToStr(line.timestamp)}
+            </span>
+            {line.message}
+        </div>
+        {:else}
         <div class:my-message={$session?.user_id == line.from.id} class:other-message={$session?.user_id != line.from.id}>
             <span class="display_name">
                 {line.from.display_name}
@@ -166,26 +174,8 @@
             </span>
             <br>
             <div class="chat-bubble">
-                {line.content}
+                {line.message}
             </div>
-        </div>
-        {:else if line.type == "Join"}
-        <div class="system-message">
-            <span title={new Date(line.timestamp).toLocaleString()} class="timestamp">
-                {dateToStr(line.timestamp)}
-            </span>
-            <span class="display_name">
-                {line.from.display_name}
-            </span> joins.
-        </div>
-        {:else if line.type == "Leave"}
-        <div class="system-message">
-            <span title={new Date(line.timestamp).toLocaleString()} class="timestamp">
-                {dateToStr(line.timestamp)}
-            </span>
-            <span class="display_name">
-                {line.from.display_name}
-            </span> leaves.
         </div>
         {/if}
     {/each}

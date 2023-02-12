@@ -56,7 +56,8 @@ pub enum BroadcastConversationEvent {
         line_id: LineId,
         user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
-        content: String,
+        message: String,
+        data: serde_json::Value,
         reply_to_line: Option<client_types::ParentLine>,
     },
 }
@@ -227,14 +228,16 @@ impl Broadcaster {
                     line_id,
                     user,
                     timestamp,
-                    content,
+                    message,
+                    data,
                     reply_to_line,
                 } => ConversationEvent::NewLine {
-                    line: Line::Message {
+                    line: Line {
                         line_id: line_id.into(),
                         from: user,
                         timestamp: timestamp.to_string(),
-                        content,
+                        message,
+                        data,
                         reply_to_line,
                     },
                 },

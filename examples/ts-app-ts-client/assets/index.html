@@ -64,7 +64,7 @@
                     data.innerHTML = `<div class="timestamp">${line.timestamp}</div><br><div class="username">${line.from.display_name}</div> leaves the conversation.`;
                     break;
                 case "Message":
-                    data.innerHTML = `<div class="username">${line.from.display_name}</div> <div class="timestamp">${line.timestamp}</div><br><div class="message">${line.content}</div>`;
+                    data.innerHTML = `<div class="username">${line.from.display_name}</div> <div class="timestamp">${line.timestamp}</div><br><div class="message">${line.message}</div>`;
                     break;
                 default:
                     throw "unrecognized Line type: " + line.type;

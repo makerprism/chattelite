@@ -89,6 +89,7 @@ CREATE SEQUENCE id_seq;`,
                 // the server API can send messages without a sender
                 u.NullableForeignKey("sender_user_id", "users", "id"),
                 t.Column("message", t.NonNullable(t.Str)),
+                t.Column("data", t.NonNullable(t.Json, {})),
             ], {
                 with_history: true,
             }),

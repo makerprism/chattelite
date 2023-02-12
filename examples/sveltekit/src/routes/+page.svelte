@@ -99,8 +99,8 @@ Logged in as {$session.display_name}#{$session.user_id}
     {conversation.conversation_id}
     <span class="timestamp">{dateToStr(conversation.timestamp)}</span> {#if conversation.number_of_unread_messages}<span class="unread">{conversation.number_of_unread_messages}</span>{/if}
     <div>
-        {#if conversation.newest_message}
-        {conversation.newest_message?.from.display_name}#{conversation.newest_message?.from.id}: {conversation.newest_message?.content}
+        {#if conversation.newest_line}
+        {conversation.newest_line?.from.display_name}#{conversation.newest_line?.from.id}: {conversation.newest_line?.message}
         {:else }
         No messages yet.
         {/if}

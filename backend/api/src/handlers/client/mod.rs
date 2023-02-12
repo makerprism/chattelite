@@ -32,7 +32,7 @@ pub async fn get_conversations(
     .fetch_all(pool.get_ref())
     .await?;
 
-    let newest_messages = sqlx::query!(
+    let newest_lines = sqlx::query!(
         r#"
         SELECT DISTINCT ON (line.conversation_id)
             line.id,
@@ -40,6 +40,7 @@ pub async fn get_conversations(
             line.created_at,
             line.updated_at,
             line.message,
+            line.data,
             users.public_facing_id,
             users.display_name
         FROM line
@@ -55,29 +56,30 @@ pub async fn get_conversations(
     .fetch_all(pool.get_ref())
     .await?;
 
-    let mut newest_message_lookup = std::collections::HashMap::new();
-    for m in newest_messages {
-        newest_message_lookup.insert(m.conversation_id, m);
+    let mut newest_line_lookup = std::collections::HashMap::new();
+    for m in newest_lines {
+        newest_line_lookup.insert(m.conversation_id, m);
     }
 
     let conversations = db_conversations
         .iter()
         .map(|c| {
-            let m = newest_message_lookup.get(&c.id);
+            let m = newest_line_lookup.get(&c.id);
 
             Conversation {
                 conversation_id: c.id.into(),
                 timestamp: c.updated_at.to_string(),
                 number_of_unread_messages: c.unread.unwrap_or(0) as i32,
-                newest_message: if let Some(m) = m {
-                    Some(Message {
+                newest_line: if let Some(m) = m {
+                    Some(Line {
                         line_id: m.id.into(),
                         timestamp: m.created_at.to_string(),
                         from: User {
                             id: m.public_facing_id.to_string(),
                             display_name: m.display_name.to_string(),
                         },
-                        content: m.message.to_string(),
+                        message: m.message.to_string(),
+                        data: m.data.clone(),
                         reply_to_line: None, // Note: intentionally empty, even if the message is a reply
                     })
                 } else {
@@ -129,6 +131,7 @@ pub async fn get_conversation_messages(
             line.reply_to_line_id,
             line.sender_user_id as "sender_user_id?:db::UsersId",
             line.message,
+            line.data,
             u.public_facing_id as "user_id?: String",
             u.display_name as "display_name?: String",
 
@@ -136,6 +139,7 @@ pub async fn get_conversation_messages(
             parent.updated_at as "parent_timestamp?",
             parent.deleted as "parent_deleted?: bool",
             parent.message as "parent_message?: String",
+            parent.data as "parent_data?: serde_json::Value",
             parent_user.public_facing_id as "parent_user_id?: String",
             parent_user.display_name as "parent_user_display_name?: String"
 
@@ -160,23 +164,25 @@ pub async fn get_conversation_messages(
         .into_iter()
         .map(|row| 
             match row.sender_user_id {
-                Some(sender_user_id) => Line::Message {
+                Some(sender_user_id) => Line {
                     line_id: row.id.into(),
                     timestamp: row.created_at.to_string(),
                     from: User {
                         id: row.user_id.expect("missing user_id"),
                         display_name: row.display_name.expect("missing display_name"),
                     },
-                    content: row.message,
+                    message: row.message,
+                    data: row.data,
                     reply_to_line: if let Some(parent_id) = &row.parent_id {
-                        Some(ParentLine::Message {
+                        Some(ParentLine {
                             line_id: parent_id.into(),
                             timestamp: row.parent_timestamp.expect("impossible").to_string(),
                             from: User {
                                 id: row.parent_user_id.expect("impossible"),
                                 display_name: row.parent_user_display_name.expect("impossible"),
                             },
-                            content: row.parent_message.unwrap_or("".to_string()),
+                            message: row.parent_message.expect("impossible"),
+                            data: row.parent_data.expect("impossible"),
                         })
                     } else {
                         None
@@ -209,7 +215,7 @@ pub async fn send_message(
     pool: web::Data<sqlx::PgPool>,
     broadcaster: web::Data<Broadcaster>,
 ) -> Result<NoOutput, ApiError<()>> {
-    if json.content.is_empty() {
+    if json.message.is_empty() {
         return Err(ApiError::BadRequest {
             detail: "'content' field cannot be empty".to_string(),
         });
@@ -223,8 +229,8 @@ pub async fn send_message(
             line.id,
             line.updated_at,
             line.thread_line_id,
-
-            line.message as "content?: String",
+            line.message,
+            line.data,
 
             users.public_facing_id as "public_facing_id?: String",
             users.display_name as "display_name?: String"
@@ -237,10 +243,16 @@ pub async fn send_message(
         .fetch_one(pool.get_ref())
         .await?;
 
-        let parent = ParentLine::Message { line_id: r.id.into(), timestamp: r.updated_at.to_string(), from: User {
-            id: r.public_facing_id.unwrap_or("ERROR".to_string()),
-            display_name: r.display_name.unwrap_or("ERROR".to_string()),
-        }, content: r.content.unwrap_or("".to_string()) };
+        let parent = ParentLine {
+            line_id: r.id.into(),
+            timestamp: r.updated_at.to_string(),
+            from: User {
+                id: r.public_facing_id.unwrap_or("ERROR".to_string()),
+                display_name: r.display_name.unwrap_or("ERROR".to_string()),
+            },
+            message: r.message,
+            data: r.data
+        };
 
         Some((
             r
@@ -276,7 +288,8 @@ pub async fn send_message(
             reply_to_line_id: json.reply_to_line_id.as_ref().map(|i| i.to_db_id()),
 
             sender_user_id: Some(row.user_id),
-            message: &json.content,
+            message: &json.message,
+            data: json.data.clone(),
         },
     )
     .await?;
@@ -305,7 +318,8 @@ pub async fn send_message(
                     id: session.public_facing_id,
                     display_name: session.display_name,
                 },
-                content: json.content.to_string(),
+                message: json.message.to_string(),
+                data: json.data.clone(),
                 reply_to_line: parent.as_ref().map(|p| p.1.clone())
             },
         )
