@@ -29,7 +29,7 @@ impl actix_web::FromRequest for Session {
                 if h.to_str().expect("X-Access-Token header couldn't be converted to string") == crate::config::CONFIG.app_api_key {
                     futures_util::future::ok(Session {})
                 } else {
-                futures_util::future::err(ApiError::NotAuthenticated { detail: "provided API KEY is invalid".to_string() } )
+                futures_util::future::err(ApiError::NotAuthenticated { detail: format!("provided API KEY is invalid: {:?}", h) } )
                 }
             }
         }

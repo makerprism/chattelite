@@ -1,20 +1,37 @@
-import { Field, Str, Vec } from 'gen-types';
+import { Field, Json, Nullable, Str, Vec } from 'gen-types';
 import { Method, Route } from '../endpoint_types';
 import { t } from './type_names';
 
 export let routes: Route[] = [
     {
         name: "create_user",
-        url: "/users",
+        url: "/_/users",
         method: Method.Post,
         input_body_type: [
             Field("id", Str),
             Field("display_name", Str),
+            Field("data", Json),
+        ],
+    },
+    {
+        name: "update_user",
+        url: "/_/user/{user_id}",
+        method: Method.Post,
+        url_params: [
+            {
+                name: "user_id",
+                type: Str,
+            }
+        ],
+        input_body_type: [
+            Field("id", Nullable(Str)),
+            Field("display_name", Nullable(Str)),
+            Field("data", Nullable(Json)),
         ],
     },
     {
         name: "delete_user",
-        url: "/user/{user_id}",
+        url: "/_/user/{user_id}",
         method: Method.Delete,
         url_params: [
             {
@@ -25,7 +42,7 @@ export let routes: Route[] = [
     },
     {
         name: "generate_client_jwt",
-        url: "/gen-client-jwt",
+        url: "/_/gen-client-jwt",
         method: Method.Post,
         input_body_type: [
             Field("user_id", Str),
@@ -37,9 +54,10 @@ export let routes: Route[] = [
 
     {
         name: "create_conversation",
-        url: "/conversations",
+        url: "/_/conversations",
         method: Method.Post,
         input_body_type: [
+            Field("data", Json),
             Field("user_ids", Vec(t.UserId)),
         ],
         output_body_type: [
@@ -48,8 +66,23 @@ export let routes: Route[] = [
     },
 
     {
+        name: "update_conversation",
+        url: "/_/conversation/{conversation_id}",
+        method: Method.Post,
+        url_params: [
+            {
+                name: "conversation_id",
+                type: t.ConversationId,
+            }
+        ],
+        input_body_type: [
+            Field("data", Json),
+        ],
+    },
+
+    {
         name: "add_users_to_conversation",
-        url: "/conversation/{conversation_id}/add-users",
+        url: "/_/conversation/{conversation_id}/add-users",
         method: Method.Post,
         url_params: [
             {
@@ -64,7 +97,7 @@ export let routes: Route[] = [
 
     {
         name: "remove_users_from_conversation",
-        url: "/conversation/{conversation_id}/remove-users",
+        url: "/_/conversation/{conversation_id}/remove-users",
         method: Method.Post,
         url_params: [
             {

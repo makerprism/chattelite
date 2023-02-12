@@ -14,7 +14,7 @@ impl UpdateBuilder {
     pub fn new(table: &str) -> UpdateBuilder {
         UpdateBuilder {
             table: table.to_owned(),
-            updates: Vec::new(),
+            updates: vec!["updated_at = NOW()".to_string()],
             wheres: Vec::new(),
             args: sqlx::postgres::PgArguments::default(),
             next_arg: 1,
@@ -100,7 +100,6 @@ impl UpdateBuilder {
             UPDATE
                 {}
             SET 
-                updated_at = NOW(),
                 {}
             WHERE
                 {}

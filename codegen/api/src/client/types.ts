@@ -20,7 +20,7 @@ const Message = Struct(ot.Message, [
     Field("timestamp", t.DateTime),
     Field("from", ot.User),
     Field("content", Str),
-    Field("reply_to_line", Optional(ot.ParentLine)),
+    Field("reply_to_line", Nullable(ot.ParentLine)),
 ]);
 
 export let output_types: TypeDeclaration[] = [

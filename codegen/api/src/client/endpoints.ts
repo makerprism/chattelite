@@ -1,4 +1,4 @@
-import { Field, Optional, Str, Vec } from 'gen-types';
+import { Field, Nullable, Optional, Str, Vec } from 'gen-types';
 import { Method, Route } from '../endpoint_types';
 import { ot, t } from './type_names';
 
@@ -56,7 +56,7 @@ export let routes: Route[] = [
         ],
         input_body_type: [
             Field("content", Str),
-            Field("reply_to_line_id", Optional(t.LineId)),
+            Field("reply_to_line_id", Nullable(t.LineId)),
         ],
     },
 

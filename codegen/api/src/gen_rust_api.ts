@@ -362,7 +362,7 @@ export function gen_server_endpoints(): [string, string] {
 use crate::session::app::Session;
 use crate::errors::ApiError;
 use actix_web::{web, Responder, HttpResponse};
-use super::app_types::*;
+use super::server_types::*;
 use crate::realtime::broadcast::Broadcaster;
 
 ${app_routes.map(gen_handler).join("\n\n")}

@@ -1,7 +1,7 @@
 use actix_web::web;
 
 use crate::errors::ApiError;
-use crate::generated::app_types::*;
+use crate::generated::server_types::*;
 use crate::generated::client_types::{User};
 use crate::realtime::broadcast::{BroadcastConversationEvent, Broadcaster};
 use crate::session::app::Session;
@@ -19,10 +19,42 @@ pub async fn create_user(
         db::InsertUsers {
             public_facing_id: &json.id,
             display_name: &&json.display_name,
-            data: serde_json::json!("TODO"), // TODO
+            data: json.data.clone(),
         },
     )
     .await?;
+
+    transaction.commit().await?;
+
+    Ok(NoOutput {})
+}
+
+pub async fn update_user(
+    _session: Session,
+    params: web::Path<UpdateUserParams>,
+    json: web::Json<UpdateUserInput>,
+    pool: web::Data<sqlx::PgPool>,
+    _broadcaster: web::Data<Broadcaster>,
+) -> Result<NoOutput, ApiError<()>> {
+    let mut transaction = pool.begin().await?;
+
+    let user = sqlx::query!(
+        r#"
+        SELECT id FROM users
+        WHERE public_facing_id = $1"#,
+        params.user_id,
+    )
+    .fetch_one(&mut transaction)
+    .await?;
+
+    db::Users::update(&mut transaction, db::UpdateUsers {
+        id: user.id,
+        deleted: None,
+
+        public_facing_id: json.id.as_ref(),
+        display_name: json.display_name.as_ref(),
+        data: json.data.clone(),
+    }).await?;
 
     transaction.commit().await?;
 
@@ -37,14 +69,23 @@ pub async fn delete_user(
 ) -> Result<NoOutput, ApiError<()>> {
     let mut transaction = pool.begin().await?;
 
-    sqlx::query!(
+    let user = sqlx::query!(
         r#"
-        DELETE FROM users
+        SELECT id FROM users
         WHERE public_facing_id = $1"#,
         params.user_id,
     )
-    .execute(&mut transaction)
+    .fetch_one(&mut transaction)
     .await?;
+
+    db::Users::update(&mut transaction, db::UpdateUsers {
+        id: user.id,
+        deleted: Some(true),
+
+        public_facing_id: None,
+        display_name: None,
+        data: None,
+    }).await?;
 
     transaction.commit().await?;
 
@@ -105,7 +146,7 @@ pub async fn create_conversation(
     let conversation_id = db::Conversation::insert_returning_pk(
         &mut transaction, 
         db::InsertConversation {
-            data: serde_json::json!("todo") // TODO
+            data: json.data.clone(),
     }).await?;
 
     for participant in participants {
@@ -126,6 +167,25 @@ pub async fn create_conversation(
     Ok(CreateConversationOutput {
         conversation_id: conversation_id.into(),
     })
+}
+
+pub async fn update_conversation(
+    _session: Session,
+    params: web::Path<UpdateConversationParams>,
+    json: web::Json<UpdateConversationInput>,
+    pool: web::Data<sqlx::PgPool>,
+    _broadcaster: web::Data<Broadcaster>,
+) -> Result<NoOutput, ApiError<()>> {
+    let mut transaction = pool.begin().await?;
+
+    db::Conversation::update(&mut transaction, db::UpdateConversation {
+        id: params.conversation_id.to_db_id(),
+        data: Some(json.data.clone()),
+    }).await?;
+
+    transaction.commit().await?;
+
+    Ok(NoOutput {})
 }
 
 pub async fn add_users_to_conversation(

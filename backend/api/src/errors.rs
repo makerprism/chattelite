@@ -60,7 +60,7 @@ pub enum ErrorResponse<R> {
     },
 }
 
-impl<R: Clone + crate::generated::app_types::RouteError> ApiError<R> {
+impl<R: Clone + crate::generated::server_types::RouteError> ApiError<R> {
     fn title(&self) -> &'static str {
         match self {
             Self::NotFound { .. } => "Not found",
@@ -135,7 +135,7 @@ impl<R: Clone + crate::generated::app_types::RouteError> ApiError<R> {
     }
 }
 
-impl<R: Debug + Serialize + Clone + crate::generated::app_types::RouteError> ResponseError
+impl<R: Debug + Serialize + Clone + crate::generated::server_types::RouteError> ResponseError
     for ApiError<R>
 {
     fn error_response(&self) -> HttpResponse {

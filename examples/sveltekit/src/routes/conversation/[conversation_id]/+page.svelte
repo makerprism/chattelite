@@ -20,7 +20,7 @@
     let event_source: typeof ChatteliteClient.EventSourceWithHeaders | null= null;
 
     async function connect_to_conversation(jwt: string, conversation_id: ConversationId) {
-        let conversation = await ChatteliteClient.get_conversation(conversation_id);
+        let conversation = await ChatteliteClient.get_conversation_messages(conversation_id);
 
         if ("error" in conversation) {
             throw "failed to fetch conversation"
@@ -69,7 +69,8 @@
 
     async function send_message() {
         ChatteliteClient.send_message(data.conversation_id, {
-            content: new_message
+            content: new_message,
+            reply_to_line_id: null,
         }).then((r) => {
             if("error" in r) {
                 alert("failed to send message!") 
@@ -81,8 +82,8 @@
 
     let chat_window_el: HTMLDivElement;
 
-    let start_typing;
-    let stop_typing;
+    let start_typing: number | null;
+    let stop_typing: number | null;
 
     async function input(e) {
         if (!start_typing) {

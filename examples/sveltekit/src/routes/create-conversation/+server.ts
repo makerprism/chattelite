@@ -4,7 +4,10 @@ import Chattelite from 'chattelite';
 export const POST: RequestHandler = async ({ request }) => {
     let data = await request.json();
 
-    let conversation = await Chattelite.create_conversation({ user_ids: data.user_ids });
+    let conversation = await Chattelite.create_conversation({
+        data: {},
+        user_ids: data.user_ids
+    });
 
     if ("error" in conversation) {
         throw "failed to create conversation"
