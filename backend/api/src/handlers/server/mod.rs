@@ -1,8 +1,8 @@
 use actix_web::web;
 
 use crate::errors::ApiError;
+use crate::generated::client_types::User;
 use crate::generated::server_types::*;
-use crate::generated::client_types::{User};
 use crate::realtime::broadcast::{BroadcastConversationEvent, Broadcaster};
 use crate::session::app::Session;
 
@@ -47,14 +47,18 @@ pub async fn update_user(
     .fetch_one(&mut transaction)
     .await?;
 
-    db::Users::update(&mut transaction, db::UpdateUsers {
-        id: user.id,
-        deleted: None,
+    db::Users::update(
+        &mut transaction,
+        db::UpdateUsers {
+            id: user.id,
+            deleted: None,
 
-        public_facing_id: json.id.as_ref(),
-        display_name: json.display_name.as_ref(),
-        data: json.data.clone(),
-    }).await?;
+            public_facing_id: json.id.as_ref(),
+            display_name: json.display_name.as_ref(),
+            data: json.data.clone(),
+        },
+    )
+    .await?;
 
     transaction.commit().await?;
 
@@ -78,14 +82,18 @@ pub async fn delete_user(
     .fetch_one(&mut transaction)
     .await?;
 
-    db::Users::update(&mut transaction, db::UpdateUsers {
-        id: user.id,
-        deleted: Some(true),
+    db::Users::update(
+        &mut transaction,
+        db::UpdateUsers {
+            id: user.id,
+            deleted: Some(true),
 
-        public_facing_id: None,
-        display_name: None,
-        data: None,
-    }).await?;
+            public_facing_id: None,
+            display_name: None,
+            data: None,
+        },
+    )
+    .await?;
 
     transaction.commit().await?;
 
@@ -144,10 +152,12 @@ pub async fn create_conversation(
     }
 
     let conversation_id = db::Conversation::insert_returning_pk(
-        &mut transaction, 
+        &mut transaction,
         db::InsertConversation {
             data: json.data.clone(),
-    }).await?;
+        },
+    )
+    .await?;
 
     for participant in participants {
         db::ConversationParticipant::insert_returning_pk(
@@ -178,10 +188,14 @@ pub async fn update_conversation(
 ) -> Result<NoOutput, ApiError<()>> {
     let mut transaction = pool.begin().await?;
 
-    db::Conversation::update(&mut transaction, db::UpdateConversation {
-        id: params.conversation_id.to_db_id(),
-        data: Some(json.data.clone()),
-    }).await?;
+    db::Conversation::update(
+        &mut transaction,
+        db::UpdateConversation {
+            id: params.conversation_id.to_db_id(),
+            data: Some(json.data.clone()),
+        },
+    )
+    .await?;
 
     transaction.commit().await?;
 
@@ -206,6 +220,14 @@ pub async fn add_users_to_conversation(
     .fetch_all(&mut transaction)
     .await?;
 
+    let rejoining_participants: Vec<db::UsersId> = sqlx::query!(
+        r#"
+        SELECT user_id FROM conversation_participant WHERE conversation_id = $1 AND user_id = ANY ($2)
+        "#,
+        params.conversation_id.to_db_id(),
+        &participants.iter().map(|p| p.id).collect::<Vec<db::UsersId>>(),
+    ).fetch_all(&mut transaction).await?.iter().map(|r| r.user_id).collect();
+
     if participants.len() != json.user_ids.len() {
         return Err(ApiError::BadRequest {
             detail: format!("not all of these users seem to exist"),
@@ -215,20 +237,39 @@ pub async fn add_users_to_conversation(
     let conversation =
         db::Conversation::get_by_pk(&mut transaction, params.conversation_id.to_db_id()).await?;
 
-    let mut join_lines: Vec<(db::ConversationParticipant, String, String)> = vec![];
+    let mut join_lines: Vec<(chrono::DateTime<chrono::Utc>, String, String)> = vec![];
 
     for participant in participants {
-        let p = db::ConversationParticipant::insert(
-            &mut transaction,
-            db::InsertConversationParticipant {
-                conversation_id: conversation.id,
-                user_id: participant.id,
-            },
-        )
-        .await?;
+        let timestamp = if rejoining_participants.contains(&participant.id) {
+            db::ConversationParticipant::update(
+                &mut transaction,
+                db::UpdateConversationParticipant {
+                    conversation_id: conversation.id,
+                    user_id: participant.id,
+                    deleted: Some(false),
+                    lines_seen_until: None,
+                },
+            )
+            .await?
+        } else {
+            db::ConversationParticipant::insert(
+                &mut transaction,
+                db::InsertConversationParticipant {
+                    conversation_id: conversation.id,
+                    user_id: participant.id,
+                },
+            )
+            .await?.updated_at
+        };
+
+        // TODO: implement INSERT ON CONFLICT for history models
         /* TODO: allow posting a system message together with the adding of a user */
 
-        join_lines.push((p, participant.public_facing_id, participant.display_name));
+        join_lines.push((
+            timestamp,
+            participant.public_facing_id,
+            participant.display_name,
+        ));
     }
 
     db::Conversation::update(
@@ -242,16 +283,13 @@ pub async fn add_users_to_conversation(
 
     transaction.commit().await?;
 
-    for (participant, id, display_name) in join_lines {
+    for (timestamp, id, display_name) in join_lines {
         broadcaster
             .broadcast_to_conversation(
                 params.conversation_id.to_db_id(),
                 BroadcastConversationEvent::Join {
-                    timestamp: participant.updated_at,
-                    user: User {
-                        id,
-                        display_name
-                    },
+                    timestamp,
+                    user: User { id, display_name },
                 },
             )
             .await;
@@ -273,7 +311,7 @@ pub async fn remove_users_from_conversation(
         r#"
         SELECT users.id, users.public_facing_id, users.display_name
         FROM users 
-        INNER JOIN conversation_participant ON conversation_participant.user_id = users.id
+        INNER JOIN conversation_participant ON conversation_participant.user_id = users.id AND conversation_participant.deleted = FALSE
         WHERE public_facing_id = ANY ($1)
             AND conversation_participant.conversation_id = $2
         "#,
@@ -289,8 +327,6 @@ pub async fn remove_users_from_conversation(
         });
     }
 
-    let user_ids: Vec<db::UsersId> = participants.iter().map(|r| r.id).collect();
-
     let mut leavers: Vec<(String, String, chrono::DateTime<chrono::Utc>)> = vec![];
 
     for participant in participants {
@@ -298,14 +334,22 @@ pub async fn remove_users_from_conversation(
 
         /* TODO: allow system message on every leave? */
 
-        let timestamp = db::ConversationParticipant::update(&mut transaction, db::UpdateConversationParticipant {
-            user_id: participant.id,
-            conversation_id: params.conversation_id.to_db_id(),
-            lines_seen_until: None,
-            deleted: Some(true),
-        }).await?;
+        let timestamp = db::ConversationParticipant::update(
+            &mut transaction,
+            db::UpdateConversationParticipant {
+                user_id: participant.id,
+                conversation_id: params.conversation_id.to_db_id(),
+                lines_seen_until: None,
+                deleted: Some(true),
+            },
+        )
+        .await?;
 
-        leavers.push((participant.public_facing_id, participant.display_name, timestamp));
+        leavers.push((
+            participant.public_facing_id,
+            participant.display_name,
+            timestamp,
+        ));
     }
 
     let conversation =

@@ -4,6 +4,7 @@
 	import { session } from "./../../../session";
 	import { onDestroy, onMount } from "svelte";
 	import { dateToStr } from "../../../human-readable-datetime";
+	import { goto } from "$app/navigation";
 
     export let data: {
         conversation_id: ConversationId;
@@ -35,6 +36,12 @@
             switch(conversation_event.type) {
                 case "NewLine":
                     lines = [...lines, conversation_event.line];
+                    break;
+                case "Join":
+                    alert(conversation_event.from.id+" joins the conversation");
+                    break;
+                case "Leave":
+                    alert(conversation_event.from.id+" leaves the conversation");
                     break;
                 case "StartTyping":
                     typing[conversation_event.from.id] = {
@@ -129,6 +136,20 @@
             line_id: lines.slice(-1)[0].line_id,
         });
     }
+
+    async function leave_conversation() {
+        if ($session) {
+            let r = await fetch("/leave-conversation", { method: 'POST', body: JSON.stringify({
+                user_ids: [$session.user_id],
+                conversation_id: data.conversation_id,
+            })});
+            if (r.status != 200) throw "failed to join conversation!";
+
+            //let data = await r.json();
+
+            goto("/");
+        }
+    }
 </script>
 
 <h2>{data.conversation_id}</h2>
@@ -176,6 +197,7 @@
 <input bind:value={new_message} on:input={input} on:keypress={(e) => e.keyCode == 13? send_message() : null}>
 
 <button on:click={mark_read}>mark everything read</button>
+<button on:click={leave_conversation}>leave conversation</button>
 
 <style>
     .chat-window {
@@ -203,9 +225,6 @@
     .timestamp {
         color:gray;
         font-size:75%;
-    }
-
-    .my-message, .other-message {
     }
 
     .chat-bubble {

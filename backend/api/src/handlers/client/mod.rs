@@ -22,6 +22,7 @@ pub async fn get_conversations(
         LEFT JOIN line ON line.conversation_id = conversation.id
             AND (line.created_at > conversation_participant.lines_seen_until)
         WHERE users.public_facing_id = $1
+            AND conversation_participant.deleted = FALSE
         GROUP BY conversation.id
         ORDER BY conversation.updated_at DESC
         LIMIT 20
@@ -100,7 +101,7 @@ pub async fn get_conversation_messages(
         SELECT 
             EXISTS(
                 SELECT * FROM conversation_participant
-                INNER JOIN users ON users.id = conversation_participant.user_id
+                INNER JOIN users ON users.id = conversation_participant.user_id AND conversation_participant.deleted = FALSE
                 WHERE conversation_id = $1 AND users.public_facing_id = $2)
             as "is_participant!: bool"
         "#,
@@ -257,7 +258,7 @@ pub async fn send_message(
         r#"
         SELECT users.id as "user_id", conversation.id
         FROM conversation
-        INNER JOIN conversation_participant ON conversation_participant.conversation_id = conversation.id
+        INNER JOIN conversation_participant ON conversation_participant.conversation_id = conversation.id AND conversation_participant.deleted = FALSE
         INNER JOIN users ON users.id = conversation_participant.user_id
         WHERE
             conversation.id = $1 
@@ -384,7 +385,7 @@ pub async fn mark_read(
             conversation.id,
             line.created_at
         FROM conversation
-        INNER JOIN conversation_participant ON conversation_participant.conversation_id = conversation.id
+        INNER JOIN conversation_participant ON conversation_participant.conversation_id = conversation.id AND conversation_participant.deleted = FALSE
         INNER JOIN line ON line.conversation_id = conversation.id
         INNER JOIN users ON users.id = conversation_participant.user_id
         WHERE
