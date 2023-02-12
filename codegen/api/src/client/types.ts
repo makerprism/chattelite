@@ -23,18 +23,6 @@ const Message = Struct(ot.Message, [
     Field("reply_to_line", Optional(ot.ParentLine)),
 ]);
 
-const Join = Struct("Join", [
-    Field("line_id", t.LineId),
-    Field("timestamp", t.DateTime),
-    Field("from", ot.User),
-]);
-
-const Leave = Struct("Leave", [
-    Field("line_id", t.LineId),
-    Field("timestamp", t.DateTime),
-    Field("from", ot.User),
-]);
-
 export let output_types: TypeDeclaration[] = [
     Struct(ot.User, [
         Field("id", t.UserId),
@@ -57,14 +45,10 @@ export let output_types: TypeDeclaration[] = [
             Field("from", ot.User),
             Field("content", Str),
         ]),
-        Join,
-        Leave,
     ]),
 
     StructUnion(ot.Line, [
         Message,
-        Join,
-        Leave,
     ]),
 
     Struct(ot.Thread, [
@@ -75,6 +59,16 @@ export let output_types: TypeDeclaration[] = [
     StructUnion(ot.ConversationEvent, [
         Struct("NewLine", [
             Field("line", ot.Line),
+        ]),
+
+        Struct("Join", [
+            Field("timestamp", t.DateTime),
+            Field("from", ot.User),
+        ]),
+
+        Struct("Leave", [
+            Field("timestamp", t.DateTime),
+            Field("from", ot.User),
         ]),
 
         Struct("StartTyping", [

@@ -18,7 +18,8 @@ pub async fn create_user(
         &mut transaction,
         db::InsertUsers {
             public_facing_id: &json.id,
-            display_name: &&json.display_name
+            display_name: &&json.display_name,
+            data: serde_json::json!("TODO"), // TODO
         },
     )
     .await?;
@@ -101,7 +102,11 @@ pub async fn create_conversation(
         });
     }
 
-    let conversation_id = db::Conversation::insert_returning_pk(&mut transaction).await?;
+    let conversation_id = db::Conversation::insert_returning_pk(
+        &mut transaction, 
+        db::InsertConversation {
+            data: serde_json::json!("todo") // TODO
+    }).await?;
 
     for participant in participants {
         db::ConversationParticipant::insert_returning_pk(
@@ -113,25 +118,7 @@ pub async fn create_conversation(
         )
         .await?;
 
-        let line_id = db::Line::insert_returning_pk(
-            &mut transaction,
-            db::InsertLine {
-                conversation_id,
-                thread_line_id: None,
-                reply_to_line_id: None,
-            },
-        )
-        .await?;
-
-        db::SystemEvent::insert(
-            &mut transaction,
-            db::InsertSystemEvent {
-                line_id,
-                kind: db::SystemEventKind::Join,
-                user_id: Some(participant.id),
-            },
-        )
-        .await?;
+        // TODO: allow a system message to be posted together with adding someone to a Conversation
     }
 
     transaction.commit().await?;
@@ -168,10 +155,10 @@ pub async fn add_users_to_conversation(
     let conversation =
         db::Conversation::get_by_pk(&mut transaction, params.conversation_id.to_db_id()).await?;
 
-    let mut join_lines: Vec<(db::Line, String, String)> = vec![];
+    let mut join_lines: Vec<(db::ConversationParticipant, String, String)> = vec![];
 
     for participant in participants {
-        db::ConversationParticipant::insert_returning_pk(
+        let p = db::ConversationParticipant::insert(
             &mut transaction,
             db::InsertConversationParticipant {
                 conversation_id: conversation.id,
@@ -179,49 +166,28 @@ pub async fn add_users_to_conversation(
             },
         )
         .await?;
-        /* IMPROVE: it would be ok if we add users that are already in the conversation,
-        but then we don't need to add a line of them being added.  */
+        /* TODO: allow posting a system message together with the adding of a user */
 
-        let line = db::Line::insert(
-            &mut transaction,
-            db::InsertLine {
-                conversation_id: conversation.id,
-                thread_line_id: None,
-                reply_to_line_id: None,
-            },
-        )
-        .await?;
-
-        db::SystemEvent::insert(
-            &mut transaction,
-            db::InsertSystemEvent {
-                line_id: line.id,
-                kind: db::SystemEventKind::Join,
-                user_id: Some(participant.id),
-            },
-        )
-        .await?;
-
-        join_lines.push((line, participant.public_facing_id, participant.display_name));
+        join_lines.push((p, participant.public_facing_id, participant.display_name));
     }
 
     db::Conversation::update(
         &mut transaction,
         db::UpdateConversation {
             id: conversation.id,
+            data: None,
         },
     )
     .await?;
 
     transaction.commit().await?;
 
-    for (line, id, display_name) in join_lines {
+    for (participant, id, display_name) in join_lines {
         broadcaster
             .broadcast_to_conversation(
                 params.conversation_id.to_db_id(),
                 BroadcastConversationEvent::Join {
-                    line_id: line.id,
-                    timestamp: line.created_at,
+                    timestamp: participant.updated_at,
                     user: User {
                         id,
                         display_name
@@ -265,67 +231,46 @@ pub async fn remove_users_from_conversation(
 
     let user_ids: Vec<db::UsersId> = participants.iter().map(|r| r.id).collect();
 
-    sqlx::query!(
-        r#"
-        DELETE FROM conversation_participant
-        WHERE user_id = ANY ($1)
-            AND conversation_id = $2
-        "#,
-        &user_ids,
-        params.conversation_id.to_db_id()
-    )
-    .execute(&mut transaction)
-    .await?;
+    let mut leavers: Vec<(String, String, chrono::DateTime<chrono::Utc>)> = vec![];
+
+    for participant in participants {
+        // TODO: implement bulk update with history
+
+        /* TODO: allow system message on every leave? */
+
+        let timestamp = db::ConversationParticipant::update(&mut transaction, db::UpdateConversationParticipant {
+            user_id: participant.id,
+            conversation_id: params.conversation_id.to_db_id(),
+            lines_seen_until: None,
+            deleted: Some(true),
+        }).await?;
+
+        leavers.push((participant.public_facing_id, participant.display_name, timestamp));
+    }
 
     let conversation =
         db::Conversation::get_by_pk(&mut transaction, params.conversation_id.to_db_id()).await?;
-
-    let mut leave_lines: Vec<(db::Line, String, String)> = vec![];
-
-    for participant in participants {
-        let line = db::Line::insert(
-            &mut transaction,
-            db::InsertLine {
-                conversation_id: conversation.id,
-                thread_line_id: None,
-                reply_to_line_id: None,
-            },
-        )
-        .await?;
-
-        db::SystemEvent::insert(
-            &mut transaction,
-            db::InsertSystemEvent {
-                line_id: line.id,
-                kind: db::SystemEventKind::Leave,
-                user_id: Some(participant.id),
-            },
-        )
-        .await?;
-
-        leave_lines.push((line, participant.public_facing_id, participant.display_name));
-    }
 
     db::Conversation::update(
         &mut transaction,
         db::UpdateConversation {
             id: conversation.id,
+            data: None,
         },
     )
     .await?;
 
     transaction.commit().await?;
 
-    for (line, user_id, display_name) in leave_lines {
+    for (public_facing_id, display_name, timestamp) in leavers {
         broadcaster
             .broadcast_to_conversation(
                 params.conversation_id.to_db_id(),
                 BroadcastConversationEvent::Leave {
-                    line_id: line.id,
-                    timestamp: line.created_at,
+                    timestamp,
                     user: User {
-                        id: user_id,
-                        display_name
+                        id: public_facing_id,
+                        display_name,
                     },
                 },
             )

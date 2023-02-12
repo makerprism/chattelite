@@ -15,13 +15,11 @@ pub async fn get_conversations(
         SELECT 
             conversation.id,
             conversation.updated_at,
-            COUNT (message.line_id) as unread
+            COUNT (line.id) as unread
         FROM conversation_participant
         INNER JOIN users ON users.id = conversation_participant.user_id
         INNER JOIN conversation ON conversation.id = conversation_participant.conversation_id
         LEFT JOIN line ON line.conversation_id = conversation.id
-        LEFT JOIN message ON
-            message.line_id = line.id
             AND (line.created_at > conversation_participant.lines_seen_until)
         WHERE users.public_facing_id = $1
         GROUP BY conversation.id
@@ -40,12 +38,11 @@ pub async fn get_conversations(
             line.conversation_id,
             line.created_at,
             line.updated_at,
+            line.message,
             users.public_facing_id,
-            users.display_name,
-            message.content
+            users.display_name
         FROM line
-        INNER JOIN message ON message.line_id = line.id
-        INNER JOIN users ON message.created_by = users.id
+        LEFT OUTER JOIN users ON line.sender_user_id = users.id
         WHERE line.conversation_id = ANY($1)
         ORDER BY line.conversation_id, line.created_at DESC
         "#,
@@ -79,7 +76,7 @@ pub async fn get_conversations(
                             id: m.public_facing_id.to_string(),
                             display_name: m.display_name.to_string(),
                         },
-                        content: m.content.to_string(),
+                        content: m.message.to_string(),
                         reply_to_line: None, // Note: intentionally empty, even if the message is a reply
                     })
                 } else {
@@ -129,31 +126,23 @@ pub async fn get_conversation_messages(
             line.conversation_id,
             line.thread_line_id,
             line.reply_to_line_id,
-            system_event.kind as "kind?: db::SystemEventKind",
-
-            u1.public_facing_id as "user_id1?: String",
-            u1.display_name as "display_name1?: String",
-
-            u2.public_facing_id as "user_id2?: String",
-            u2.display_name as "display_name2?: String",
-            message.content as "content?: String",
+            line.sender_user_id as "sender_user_id?:db::UsersId",
+            line.message,
+            u.public_facing_id as "user_id?: String",
+            u.display_name as "display_name?: String",
 
             parent.id as "parent_id?: db::LineId",
-            parent.updated_at as "parent_timestamp",
+            parent.updated_at as "parent_timestamp?",
             parent.deleted as "parent_deleted?: bool",
+            parent.message as "parent_message?: String",
             parent_user.public_facing_id as "parent_user_id?: String",
-            parent_user.display_name as "parent_user_display_name?: String",
-            parent_message.content as "parent_message_content?: String"
+            parent_user.display_name as "parent_user_display_name?: String"
 
         FROM line
-        LEFT OUTER JOIN system_event ON system_event.line_id = line.id
-        LEFT OUTER JOIN message ON message.line_id = line.id
-        LEFT OUTER JOIN users u1 ON u1.id = system_event.user_id
-        LEFT OUTER JOIN users u2 ON u2.id = message.created_by
+        LEFT OUTER JOIN users u ON u.id = line.sender_user_id
 
         LEFT OUTER JOIN line parent ON parent.id = line.reply_to_line_id
-        LEFT OUTER JOIN message parent_message ON parent_message.line_id = parent.id
-        LEFT OUTER JOIN users parent_user ON parent_user.id = parent_message.created_by
+        LEFT OUTER JOIN users parent_user ON parent_user.id = parent.sender_user_id
 
         WHERE line.conversation_id = $1
         ORDER BY line.created_at DESC
@@ -168,43 +157,25 @@ pub async fn get_conversation_messages(
 
     let lines = db_lines
         .into_iter()
-        .map(|row| match row.kind {
-            Some(db::SystemEventKind::Join) => Line::Join {
-                line_id: row.id.into(),
-                timestamp: row.created_at.to_string(),
-                from: User {
-                    id: row.user_id1.expect("missing user_id"),
-                    display_name: row.display_name1.expect("missing display_name"),
-                },
-            },
-
-            Some(db::SystemEventKind::Leave) => Line::Leave {
-                line_id: row.id.into(),
-                timestamp: row.created_at.to_string(),
-                from: User {
-                    id: row.user_id1.expect("missing user_id"),
-                    display_name: row.display_name1.expect("missing display_name"),
-                },
-            },
-
-            None => match row.content {
-                Some(content) => Line::Message {
+        .map(|row| 
+            match row.sender_user_id {
+                Some(sender_user_id) => Line::Message {
                     line_id: row.id.into(),
                     timestamp: row.created_at.to_string(),
                     from: User {
-                        id: row.user_id2.expect("missing user_id"),
-                        display_name: row.display_name2.expect("missing display_name"),
+                        id: row.user_id.expect("missing user_id"),
+                        display_name: row.display_name.expect("missing display_name"),
                     },
-                    content: content,
+                    content: row.message,
                     reply_to_line: if let Some(parent_id) = &row.parent_id {
                         Some(ParentLine::Message {
                             line_id: parent_id.into(),
-                            timestamp: row.parent_timestamp.to_string(),
+                            timestamp: row.parent_timestamp.expect("impossible").to_string(),
                             from: User {
                                 id: row.parent_user_id.expect("impossible"),
                                 display_name: row.parent_user_display_name.expect("impossible"),
                             },
-                            content: row.parent_message_content.unwrap_or("".to_string()),
+                            content: row.parent_message.unwrap_or("".to_string()),
                         })
                     } else {
                         None
@@ -212,9 +183,8 @@ pub async fn get_conversation_messages(
                 },
 
                 None => {
-                    panic!("chat line is neither a system event nor a message")
+                    todo!("syste message")
                 }
-            },
         })
         .rev()
         .collect();
@@ -253,13 +223,12 @@ pub async fn send_message(
             line.updated_at,
             line.thread_line_id,
 
-            message.content as "content?: String",
+            line.message as "content?: String",
 
             users.public_facing_id as "public_facing_id?: String",
             users.display_name as "display_name?: String"
         FROM line
-        LEFT OUTER JOIN message ON message.line_id = line.id
-        LEFT OUTER JOIN users ON users.id = created_by
+        LEFT OUTER JOIN users ON users.id = line.sender_user_id
         WHERE line.id = $1
         "#,
             reply_to_line_id.to_db_id()
@@ -304,16 +273,9 @@ pub async fn send_message(
             conversation_id: params.conversation_id.to_db_id(),
             thread_line_id: parent.as_ref().map(|p| p.0),
             reply_to_line_id: json.reply_to_line_id.as_ref().map(|i| i.to_db_id()),
-        },
-    )
-    .await?;
 
-    db::Message::insert_returning_pk(
-        &mut transaction,
-        db::InsertMessage {
-            line_id: line.id,
-            created_by: row.user_id,
-            content: &json.content,
+            sender_user_id: Some(row.user_id),
+            message: &json.content,
         },
     )
     .await?;
@@ -441,6 +403,7 @@ pub async fn mark_read(
             user_id: r.user_id,
             conversation_id: json.conversation_id.to_db_id(),
             lines_seen_until: Some(&r.created_at),
+            deleted: None,
         },
     )
     .await?;

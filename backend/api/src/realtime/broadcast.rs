@@ -8,7 +8,7 @@ use futures_util::future;
 use parking_lot::Mutex;
 use serde::Serialize;
 
-use crate::generated::client_types::{ConversationEvent, Line, User, self};
+use crate::generated::client_types::{self, ConversationEvent, Line, User};
 
 pub struct Broadcaster {
     inner: Mutex<BroadcasterInner>,
@@ -45,12 +45,10 @@ pub enum BroadcastConversationEvent {
         user: User,
     },
     Join {
-        line_id: LineId,
         user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
     },
     Leave {
-        line_id: LineId,
         user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
     },
@@ -59,7 +57,7 @@ pub enum BroadcastConversationEvent {
         user: User,
         timestamp: chrono::DateTime<chrono::Utc>,
         content: String,
-        reply_to_line: Option<client_types::ParentLine>
+        reply_to_line: Option<client_types::ParentLine>,
     },
 }
 
@@ -217,24 +215,14 @@ impl Broadcaster {
                         timestamp: now.to_string(),
                     }
                 }
-                BroadcastConversationEvent::Join { line_id, user, timestamp } => {
-                    ConversationEvent::NewLine {
-                        line: Line::Join {
-                            line_id: line_id.into(),
-                            from: user,
-                            timestamp: timestamp.to_string(),
-                        },
-                    }
-                }
-                BroadcastConversationEvent::Leave { line_id,user, timestamp } => {
-                    ConversationEvent::NewLine {
-                        line: Line::Leave {
-                            line_id: line_id.into(),
-                            from: user,
-                            timestamp: timestamp.to_string(),
-                        },
-                    }
-                }
+                BroadcastConversationEvent::Join { user, timestamp } => ConversationEvent::Join {
+                    from: user,
+                    timestamp: timestamp.to_string(),
+                },
+                BroadcastConversationEvent::Leave { user, timestamp } => ConversationEvent::Leave {
+                    from: user,
+                    timestamp: timestamp.to_string(),
+                },
                 BroadcastConversationEvent::Message {
                     line_id,
                     user,

@@ -120,6 +120,14 @@
         }
         return "";
     }
+
+    function mark_read() {
+        console.log("mark_read");
+        ChatteliteClient.mark_read({
+            conversation_id: data.conversation_id,
+            line_id: lines.slice(-1)[0].line_id,
+        });
+    }
 </script>
 
 <h2>{data.conversation_id}</h2>
@@ -165,6 +173,8 @@
     {render_typing(typing)} &nbsp;
 </div>
 <input bind:value={new_message} on:input={input} on:keypress={(e) => e.keyCode == 13? send_message() : null}>
+
+<button on:click={mark_read}>mark everything read</button>
 
 <style>
     .chat-window {

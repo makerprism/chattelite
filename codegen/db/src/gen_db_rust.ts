@@ -486,7 +486,7 @@ pub struct Update${name}${update_has_lifetime ? "<'a>" : ""} {
 }`, update_function_declaration: `pub async fn update(
         transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
         update: Update${name}${update_has_lifetime ? "<'_>" : ""},
-    ) -> Result<(), sqlx::Error> {
+    ) -> Result<chrono::DateTime<chrono::Utc>, sqlx::Error> {
         ${table.with_history ? gen_history_update(table) : ""}
         let mut q = crate::update_builder::UpdateBuilder::new("${table.name}");
         ${update_columns.map(c => gen_column_update(table, c)).join("\n        ")}

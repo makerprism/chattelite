@@ -1,3 +1,4 @@
+use sqlx::Row;
 use sqlx::{postgres::PgArguments, Arguments, Encode};
 
 pub struct UpdateBuilder {
@@ -13,7 +14,7 @@ impl UpdateBuilder {
     pub fn new(table: &str) -> UpdateBuilder {
         UpdateBuilder {
             table: table.to_owned(),
-            updates: vec!["updated_at = NOW()".to_string()],
+            updates: Vec::new(),
             wheres: Vec::new(),
             args: sqlx::postgres::PgArguments::default(),
             next_arg: 1,
@@ -93,14 +94,18 @@ impl UpdateBuilder {
     pub async fn execute(
         self,
         transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    ) -> Result<(), sqlx::Error> {
+    ) -> Result<chrono::DateTime<chrono::Utc>, sqlx::Error> {
         let query = format!(
             r#"
-            UPDATE {}
+            UPDATE
+                {}
             SET 
+                updated_at = NOW(),
                 {}
             WHERE
                 {}
+            RETURNING
+                updated_at
             "#,
             &self.table,
             &self.updates.join(","),
@@ -109,10 +114,8 @@ impl UpdateBuilder {
 
         println!("query: {}\nargs: {:?}", query, &self.args_debug);
 
-        sqlx::query_with(&query, self.args)
-            .execute(&mut *transaction)
-            .await?;
-
-        Ok(())
+        Ok(sqlx::query_with(&query, self.args)
+            .fetch_one(&mut *transaction)
+            .await?.try_get(0)?)
     }
 }
