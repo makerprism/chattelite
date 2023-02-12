@@ -1,6 +1,6 @@
 <script lang="ts">
-    import ChatteliteClient from "chattelite-client";
-	import type { ConversationId, Line, LineId, UserId } from "chattelite-client/lib/generated/types";
+    import ChatteliteClient, { type ConversationEventSource } from "chattelite-client";
+	import type { ConversationId, Line, UserId } from "chattelite-client/lib/generated/types";
 	import { session } from "./../../../session";
 	import { onDestroy, onMount } from "svelte";
 	import { dateToStr } from "../../../human-readable-datetime";
@@ -18,9 +18,10 @@
         }
     };
     let typing: Typing = {};
-    let event_source: typeof ChatteliteClient.EventSourceWithHeaders | null= null;
 
-    async function connect_to_conversation(jwt: string, conversation_id: ConversationId) {
+    let event_source: ConversationEventSource | null = null;
+
+    async function connect_to_conversation(conversation_id: ConversationId) {
         let conversation = await ChatteliteClient.get_conversation_messages(conversation_id);
 
         if ("error" in conversation) {
@@ -29,7 +30,7 @@
 
         lines = conversation.lines;
 
-        event_source = new ChatteliteClient.EventSourceWithHeaders("http://127.0.0.1:8000/conversation/" + conversation_id + "/sse", { headers: { "X-Access-Token": jwt } });
+        event_source = ChatteliteClient.listen_to_conversation(conversation_id);
         event_source.onmessage = (e: MessageEvent<string>) => {
             let conversation_event = JSON.parse(e.data);
             console.log("event_source.onmessage", conversation_event);
@@ -61,7 +62,7 @@
 
     onMount(async () => {
         if ($session) {
-            connect_to_conversation($session.jwt, data.conversation_id)
+            connect_to_conversation(data.conversation_id)
         } else {
             throw "$session is null"
         }
