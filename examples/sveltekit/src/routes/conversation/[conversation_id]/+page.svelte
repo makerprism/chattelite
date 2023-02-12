@@ -1,6 +1,6 @@
 <script lang="ts">
     import ChatteliteClient from "chattelite-client";
-	import type { ConversationId, Line, UserId } from "chattelite-client/lib/generated/types";
+	import type { ConversationId, Line, LineId, UserId } from "chattelite-client/lib/generated/types";
 	import { session } from "./../../../session";
 	import { onDestroy, onMount } from "svelte";
 	import { dateToStr } from "../../../human-readable-datetime";
@@ -72,18 +72,21 @@
     });
 
 
+    let message_input_el: HTMLInputElement;
+    let reply_to_line: Line | null = null;
     let new_message = "";
 
     async function send_message() {
         ChatteliteClient.send_message(data.conversation_id, {
             message: new_message,
             data: {},
-            reply_to_line_id: null,
+            reply_to_line_id: reply_to_line?.line_id || null,
         }).then((r) => {
             if("error" in r) {
                 alert("failed to send message!") 
             } else {
                 new_message = "";
+                reply_to_line = null;
             }
         })
     }
@@ -174,8 +177,14 @@
             </span>
             <br>
             <div class="chat-bubble">
+                {#if line.reply_to_line }
+                <blockquote class="reply_to_line">
+                    {line.reply_to_line.message}
+                </blockquote>
+                {/if}
                 {line.message}
             </div>
+            <button on:click={() => {reply_to_line = line; message_input_el.focus()}}>reply</button>
         </div>
         {/if}
     {/each}
@@ -184,10 +193,15 @@
 <div class="typing">
     {render_typing(typing)} &nbsp;
 </div>
-<input bind:value={new_message} on:input={input} on:keypress={(e) => e.keyCode == 13? send_message() : null}>
+<input bind:this={message_input_el} bind:value={new_message} on:input={input} on:keypress={(e) => e.keyCode == 13? send_message() : null}>
 
 <button on:click={mark_read}>mark everything read</button>
 <button on:click={leave_conversation}>leave conversation</button>
+
+{#if reply_to_line != null}
+Replying to {reply_to_line.from.display_name}.
+<button on:click={() => reply_to_line = null}>Cancel reply</button>
+{/if}
 
 <style>
     .chat-window {
@@ -226,6 +240,16 @@
         border-radius: 0.5em;
 
         padding: 0.5em 0.75em;
+    }
+
+    .reply_to_line {
+        border-left: 0.3em solid #444;
+        padding: 0.2em 0.5em;
+        background-color: white;
+        color:#444;
+        white-space:nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .my-message {
