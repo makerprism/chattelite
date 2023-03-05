@@ -113,8 +113,9 @@ impl UpdateBuilder {
 
         println!("query: {}\nargs: {:?}", query, &self.args_debug);
 
-        Ok(sqlx::query_with(&query, self.args)
+        sqlx::query_with(&query, self.args)
             .fetch_one(&mut *transaction)
-            .await?.try_get(0)?)
+            .await?
+            .try_get(0)
     }
 }
