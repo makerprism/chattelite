@@ -2,9 +2,10 @@ module type PaginationSig = sig
   type obj
   type t
 
-  val create : cursor:string -> objs:obj list -> t
+  val create : next:string option -> prev:string option -> objs:obj list -> t
   val objs : t -> obj list
-  val cursor : t -> string
+  val next : t -> string option
+  val prev : t -> string option
 
   val schema :
     ?doc:string -> string -> (Context.t, t option) Graphql_lwt.Schema.typ
@@ -15,21 +16,25 @@ module Make (T : sig
 
   val schema : (Context.t, t option) Graphql_lwt.Schema.typ
 end) : PaginationSig with type obj = T.t = struct
-  type t = { cursor : string; objs : T.t list }
+  type t = { next : string option; prev : string option; objs : T.t list }
   type obj = T.t
 
-  let create ~cursor ~objs = { cursor; objs }
+  let create ~next ~prev ~objs = { next; prev; objs }
   let objs t = t.objs
-  let cursor t = t.cursor
+  let next t = t.next
+  let prev t = t.prev
 
   let schema ?doc name =
     Graphql_lwt.Schema.(
       obj ?doc name
         ~fields:
           [
-            field "cursor" ~typ:(non_null string)
+            field "next" ~typ:string
               ~args:Arg.[]
-              ~resolve:(fun _info (pagination : t) -> cursor pagination);
+              ~resolve:(fun _info (pagination : t) -> next pagination);
+            field "prev" ~typ:string
+              ~args:Arg.[]
+              ~resolve:(fun _info (pagination : t) -> prev pagination);
             field "objs"
               ~typ:(non_null (list (non_null T.schema)))
               ~args:Arg.[]
