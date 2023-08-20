@@ -1,0 +1,6 @@
+(executable
+ (public_name migrations)
+ (name migrations)
+ (libraries api caqti-driver-postgresql)
+ (preprocess
+  (pps lwt_ppx)))

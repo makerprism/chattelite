@@ -1,0 +1,12 @@
+(executable
+ (public_name api)
+ (name main)
+ (libraries api dream caqti-driver-postgresql)
+ (preprocess
+  (pps lwt_ppx ppx_yojson_conv)))
+
+(rule
+ (targets main.ml)
+ (deps main.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))

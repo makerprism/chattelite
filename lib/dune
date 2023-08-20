@@ -1,0 +1,5 @@
+(library
+ (name api)
+ (libraries dream graphql graphql-lwt petrol)
+ (preprocess
+  (pps ppx_rapper)))
