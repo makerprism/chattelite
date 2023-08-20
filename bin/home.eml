@@ -1,0 +1,18 @@
+let render =
+  <html>
+  <body>
+
+  <pre id="output"></pre>
+
+  <script>
+  var output = document.querySelector("#output");
+
+  var events = new EventSource("/push");
+  events.onmessage = function (event) {
+    output.appendChild(
+      document.createTextNode(event.data + "\n"));
+  };
+  </script>
+
+  </body>
+  </html>

@@ -2,26 +2,6 @@ type message_object = {
   i : int;
 } [@@deriving yojson]
 
-let home =
-  <html>
-  <body>
-
-  <pre id="output"></pre>
-
-  <script>
-  var output = document.querySelector("#output");
-
-  var events = new EventSource("/push");
-  events.onmessage = function (event) {
-    output.appendChild(
-      document.createTextNode(event.data + "\n"));
-  };
-  </script>
-
-  </body>
-  </html>
-
-(*
 let server_state =
   ref []
 
@@ -37,7 +17,7 @@ let rec message_loop () =
   incr last_message;
 
   let message = { i = !last_message } |> yojson_of_message_object |> Yojson.Safe.to_string in
-  Dream.log "Generated message %s" message;
+  (*Dream.log "Generated message %s" message;*)
 
   server_state := message::!server_state;
   !notify ();
@@ -67,22 +47,3 @@ let rec forward_messages stream =
     let%lwt () = Dream.write stream text in
     let%lwt () = Dream.flush stream in
     forward_messages stream
-*)
-
-let () =
-  (*Lwt.async message_loop;*)
-
-  Dream.run
-  @@ Dream.logger
-  @@ Dream.sql_pool "postgresql://postgres:test@127.0.0.1:5432/ocaml_api"
-  @@ Dream.origin_referrer_check
-  @@ Dream.router ([
-
-    Dream.get "/" (fun _ -> Dream.html home);
-
-    (*Dream.get "/push" (fun _ ->
-      Dream.stream
-        ~headers:["Content-Type", "text/event-stream"]
-        forward_messages);*)
-
-  ] @ Api.Graphql_api.routes)
