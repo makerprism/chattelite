@@ -26,6 +26,17 @@ type type_declaration =
   | StructUnion of { name : string; variants : struct_ list }
 
 let t name = TypeLiteral (TypeName name)
+
+let u name =
+  match name with
+  | TypeLiteral (TypeName name) -> name
+  | _ -> failwith "u takes a TypeLiteral (TypeName _)"
+
+let alias name t =
+  match name with
+  | TypeLiteral (TypeName name) -> TypeAlias { name; t }
+  | _ -> failwith "name on type alias must by a TypeLiteral (TypeName _)"
+
 let field name t = { field_name = name; field_t = t }
 let struct_ name fields = Struct { struct_name = name; fields }
 let string_enum name options = StringEnum { name; options }

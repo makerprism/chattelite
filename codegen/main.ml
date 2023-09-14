@@ -8,11 +8,12 @@ let t =
         ];
       struct_ "NiceStruct" [ field "id" (TypeLiteral Str) ];
       string_enum "Entity" [ "Post"; "User"; "Message" ];
+      alias T.user_id str;
+      struct_ (u T.user) [ field "display_name" str; field "user_id" T.user_id ];
     ]
 
 let it = []
 let ot = []
-let user_id = Gen_types.Types.str
 
 let endpoints =
   Gen_types.Types.(
@@ -27,9 +28,9 @@ let endpoints =
               {
                 url_params = None;
                 input_body_type =
-                  Fields [ field "display_name" str; field "user_id" user_id ];
+                  Fields [ field "display_name" str; field "user_id" T.user_id ];
                 query_param_type = None;
-                output_body_type = Fields [ field "user_id" user_id ];
+                output_body_type = Fields [ field "user_id" T.user_id ];
                 error_type = None;
               };
           server_req = false;
@@ -55,7 +56,7 @@ let endpoints =
           shape =
             Get
               {
-                url_params = Some [ { name = "user_id"; t = user_id } ];
+                url_params = Some [ { name = "user_id"; t = T.user_id } ];
                 query_param_type = None;
                 output_body_type = Fields [ field "user" (t "User") ];
                 (*error_type = None;*)
@@ -69,7 +70,7 @@ let endpoints =
           shape =
             Delete
               {
-                url_params = Some [ { name = "user_id"; t = user_id } ];
+                url_params = Some [ { name = "user_id"; t = T.user_id } ];
                 output_body_type = None;
                 error_type = None;
               };
