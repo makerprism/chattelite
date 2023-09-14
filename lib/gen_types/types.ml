@@ -27,8 +27,8 @@ type type_declaration =
 
 let t name = TypeLiteral (TypeName name)
 let field name t = { field_name = name; field_t = t }
-let struct_ name fields = { struct_name = name; fields }
+let struct_ name fields = Struct { struct_name = name; fields }
 let string_enum name options = StringEnum { name; options }
 let int_enum name options = IntEnum { name; options }
 let struct_union name variants = StructUnion { name; variants }
-let struct_decl name fields = Struct { struct_name = name; fields }
+let struct_union_variant name fields = { struct_name = name; fields }

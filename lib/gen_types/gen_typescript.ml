@@ -46,11 +46,10 @@ let gen_struct (s : Types.struct_) =
     s.struct_name s.struct_name
     (String.concat ",\n         " (List.map render_struct_field s.fields))
 
-let gen_type_declaration (decl : Types.type_declaration) =
+let gen_type_declaration (decl : Types.type_declaration) ~type_namespace =
   match decl with
   | TypeAlias { name; t } ->
-      Format.sprintf "export type %s = %s" name
-        (render_type t ~type_namespace:"")
+      Format.sprintf "export type %s = %s" name (render_type t ~type_namespace)
   | StructUnion { name; variants } ->
       let variant_names =
         List.map

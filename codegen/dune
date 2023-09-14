@@ -1,3 +1,4 @@
 (executable
  (public_name codegen)
- (name main))
+ (name main)
+ (libraries gen_types gen_endpoints))

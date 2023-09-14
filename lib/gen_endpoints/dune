@@ -1,0 +1,3 @@
+(library
+ (name gen_endpoints)
+ (libraries gen_types str))

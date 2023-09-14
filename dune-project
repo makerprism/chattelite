@@ -25,9 +25,7 @@
   (dream (= "1.0.0~alpha5"))
   (yojson (= "2.0.2"))
   (ppx_yojson_conv (= "v0.15.1"))
-  (lwt_ppx (= "2.1.0"))
-  (graphql (= "0.14.0"))
-  (graphql-lwt (= "0.14.0")))
+  (lwt_ppx (= "2.1.0")))
  (tags
   (topics "to describe" your project)))
 
