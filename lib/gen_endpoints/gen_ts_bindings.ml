@@ -22,7 +22,8 @@ let gen_types ~(t : Gen_types.Types.type_declaration list)
 (* input body type *)
 
 let input_body_type_name ~route_name ~type_namespace =
-  Format.sprintf "%sInput" (type_namespace ^ Gen_types.Utils.to_pascal_case route_name)
+  Format.sprintf "%sInput"
+    (type_namespace ^ Gen_types.Utils.to_pascal_case route_name)
 
 let gen_input_body_type ~route_name (route_params : Types.route_params)
     ~type_namespace =
@@ -37,7 +38,7 @@ let gen_input_body_type ~route_name (route_params : Types.route_params)
         (Gen_types.Types.struct_union
            (input_body_type_name ~type_namespace ~route_name)
            structs)
-  | None -> "{}"
+  | None -> ""
 
 (* query param type *)
 
@@ -54,7 +55,7 @@ let gen_route_params_type ~name (route_params : Types.route_params)
   | Structs structs ->
       gen_type_declaration_for_api_type ~type_namespace
         (Gen_types.Types.struct_union name structs)
-  | None -> "{}"
+  | None -> Format.sprintf "type %s = {}" (type_namespace ^ name)
 
 let output_type_name ~route_name ~type_namespace =
   Format.sprintf "%sOutput"
@@ -65,7 +66,7 @@ let response_type_name ~route_name ~type_namespace =
     (type_namespace ^ Gen_types.Utils.to_pascal_case route_name)
 
 let gen_response_type ~route_name ~type_namespace =
-  Format.sprintf "export type %s = utils.ApiResponse<%s, %s>;\n\n"
+  Format.sprintf "export type %s = utils.ApiResponse<%s, %s>;"
     (response_type_name ~route_name ~type_namespace)
     (output_type_name ~route_name ~type_namespace)
     "ResponseError"
@@ -97,10 +98,18 @@ let route_params (route : Types.route) ~type_namespace =
       params_of_url_params url_params
       @ params_of_query_param_type query_param_type
   | Post { url_params; input_body_type; query_param_type; _ } ->
-    params_of_url_params url_params
-    @ params_of_query_param_type query_param_type
-    @ if input_body_type != None then [{ name = "body"; t = input_body_type_name ~route_name:route.name ~type_namespace}] else []
-  | Delete _ -> failwith "not implemented"
+      params_of_url_params url_params
+      @ params_of_query_param_type query_param_type
+      @
+      if input_body_type != None then
+        [
+          {
+            name = "body";
+            t = input_body_type_name ~route_name:route.name ~type_namespace;
+          };
+        ]
+      else []
+  | Delete { url_params; _ } -> params_of_url_params url_params
 
 let gen_route_function_body (route : Types.route) ~type_namespace =
   let url =
@@ -109,7 +118,12 @@ let gen_route_function_body (route : Types.route) ~type_namespace =
   in
   let url =
     match route.shape with
-    | Get _ -> url ^ "${utils.stringify_query(q)}"
+    | Get { query_param_type; _ } ->
+        if query_param_type != None then url ^ "${utils.stringify_query(q)}"
+        else url
+    | Post { query_param_type; _ } ->
+        if query_param_type != None then url ^ "${utils.stringify_query(q)}"
+        else url
     | _ -> url
   in
   let params =
@@ -128,20 +142,36 @@ type route_result = { types : string; code : string }
 let gen_route_types ~type_namespace (route : Types.route) =
   match route.shape with
   | Get s ->
-      gen_route_params_type
-        ~name:(query_param_type_name ~route_name:route.name ~type_namespace)
-        s.query_param_type ~type_namespace
-      ^ gen_route_params_type
+      let query_t =
+        gen_route_params_type
+          ~name:(query_param_type_name ~route_name:route.name ~type_namespace)
+          s.query_param_type ~type_namespace
+      in
+      let output_t =
+        gen_route_params_type
           ~name:(output_type_name ~route_name:route.name ~type_namespace)
           s.output_body_type ~type_namespace
+      in
+      [ query_t; output_t ]
   | Post s ->
-      gen_route_params_type
-        ~name:(input_body_type_name ~route_name:route.name ~type_namespace)
-        s.input_body_type ~type_namespace
+      let input_t =
+        gen_route_params_type
+          ~name:(input_body_type_name ~route_name:route.name ~type_namespace)
+          s.input_body_type ~type_namespace
+      in
+      let output_t =
+        gen_route_params_type
+          ~name:(output_type_name ~route_name:route.name ~type_namespace)
+          s.output_body_type ~type_namespace
+      in
+      [ input_t; output_t ]
   | Delete s ->
-      gen_route_params_type
-        ~name:(output_type_name ~route_name:route.name ~type_namespace)
-        s.output_body_type ~type_namespace
+      let output_t =
+        gen_route_params_type
+          ~name:(output_type_name ~route_name:route.name ~type_namespace)
+          s.output_body_type ~type_namespace
+      in
+      [ output_t ]
 
 let gen_route ~type_namespace (route : Types.route) =
   let params =
@@ -150,19 +180,20 @@ let gen_route ~type_namespace (route : Types.route) =
       (route_params route ~type_namespace)
   in
 
-  {
-    types =
-      gen_route_types route ~type_namespace
-      ^ gen_response_type ~route_name:route.name ~type_namespace;
-    code =
-      Format.sprintf "export function %s (%s): Promise<%s> { %s }" route.name
-        (String.concat ",\n    " params)
-        (response_type_name ~route_name:route.name ~type_namespace)
-        (gen_route_function_body route ~type_namespace);
-  }
+  let types =
+    gen_route_types route ~type_namespace
+    @ [ gen_response_type ~route_name:route.name ~type_namespace ]
+  in
+  let code =
+    Format.sprintf "export function %s (%s): Promise<%s> { %s }" route.name
+      (String.concat ",\n    " params)
+      (response_type_name ~route_name:route.name ~type_namespace)
+      (gen_route_function_body route ~type_namespace)
+  in
 
-  let gen_routes ~type_namespace (routes: Types.route list) =
-    let types, endpoints = List.map (gen_route ~type_namespace) routes
-    |> List.fold_left (fun (ts, cs) x -> (ts @ [x.types], cs @ [x.code])) ([], [])
-    in
-    String.concat "\n\n" types ^ "\n\n" ^ String.concat "\n\n" endpoints
+  String.concat "\n" types ^ "\n" ^ code
+
+let gen_routes ~type_namespace (routes : Types.route list) =
+  let endpoints = List.map (gen_route ~type_namespace) routes in
+
+  String.concat "\n\n" endpoints

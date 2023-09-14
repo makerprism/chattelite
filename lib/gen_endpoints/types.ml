@@ -41,6 +41,7 @@ type route_shape =
 type route = {
   name : string;
   url : string;
+  docstring : string;
   server_req : bool;
   shape : route_shape;
 }
