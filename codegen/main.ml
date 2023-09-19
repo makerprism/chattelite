@@ -80,7 +80,6 @@ let gen_code () =
   in
   let ts_types_result =
     [ Gen_endpoints.Gen_ts_bindings.gen_types ~type_namespace:"" ~t ~it ~ot ]
-    @ List.map (Gen_types.Gen_ocaml.gen_type_declaration ~type_namespace:"") it
     @ [ "// ENDPOINTS"; ts_bindings ]
   in
   let ocaml_types =

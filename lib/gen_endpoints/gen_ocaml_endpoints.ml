@@ -12,12 +12,12 @@ let gen_input_body_type ~route_name (route_params : Types.route_params)
     ~type_namespace =
   match route_params with
   | Fields fields ->
-      gen_type_declaration_for_api_type ~type_namespace
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]
         (Gen_types.Types.struct_
            (input_body_type_name ~type_namespace ~route_name)
            fields)
   | Structs structs ->
-      gen_type_declaration_for_api_type ~type_namespace
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]
         (Gen_types.Types.struct_union
            (input_body_type_name ~type_namespace ~route_name)
            structs)
@@ -33,10 +33,10 @@ let gen_route_params_type ~name (route_params : Types.route_params)
     ~type_namespace =
   match route_params with
   | Fields fields ->
-      gen_type_declaration_for_api_type ~type_namespace
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]
         (Gen_types.Types.struct_ name fields)
   | Structs structs ->
-      gen_type_declaration_for_api_type ~type_namespace
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]
         (Gen_types.Types.struct_union name structs)
   | None -> ""
 
@@ -244,10 +244,10 @@ let gen_types ~(t : Gen_types.Types.type_declaration list)
      %s(* endpoint types *)\n\
      %s"
     (String.concat "\n\n"
-       (List.map (gen_type_declaration_for_api_type ~type_namespace) t))
+       (List.map (gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"])  t))
     (String.concat "\n\n"
-       (List.map (gen_type_declaration_for_api_type ~type_namespace) it))
+       (List.map (gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]) it))
     (String.concat "\n\n"
-       (List.map (gen_type_declaration_for_api_type ~type_namespace) ot))
+       (List.map (gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]) ot))
     (String.concat "\n\n"
        (List.flatten (List.map (gen_route_types ~type_namespace) routes)))

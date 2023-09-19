@@ -21,13 +21,19 @@ let gen_variant ~prefix (s : Types.struct_) =
   Format.sprintf "%s of {\n  %s\n}\n" (prefix ^ s.struct_name)
     (String.concat ";\n  " (List.map render_struct_field s.fields))
 
-let gen_type_declaration (decl : Types.type_declaration) ~type_namespace =
+
+let deriving = function
+  | [] -> ""
+  | ppxes -> Format.sprintf " [@@@@deriving %s]" (String.concat ", " ppxes)
+  
+let gen_type_declaration (decl : Types.type_declaration) ~type_namespace ~ppxes =
   match decl with
   | TypeAlias { name; t } ->
       Format.sprintf
-        "module %s = struct\n  type t = %s [@@@@deriving yojson]\nend"
+        "module %s = struct\n  type t = %s%s\nend"
         (Utils.to_pascal_case name)
         (render_type t ~type_namespace)
+        (deriving ppxes)
   | StructUnion { name; variants } ->
       let variant_names =
         List.map
@@ -35,17 +41,20 @@ let gen_type_declaration (decl : Types.type_declaration) ~type_namespace =
           variants
       in
       Format.sprintf
-        "module %s = struct\n  type t =\n    | %s [@@@@deriving yojson]\nend"
+        "module %s = struct\n  type t =\n    | %s%s\nend"
         (Utils.to_pascal_case name)
         (String.concat "\n    | " variant_names)
+        (deriving ppxes)
   | Struct s ->
       Format.sprintf
-        "module %s = struct\n  type t = {\n    %s\n} [@@@@deriving yojson]\nend"
+        "module %s = struct\n  type t = {\n    %s\n}%s\nend"
         (Utils.to_pascal_case s.struct_name)
         (String.concat ";\n    " (List.map render_struct_field s.fields))
+        (deriving ppxes)
   | StringEnum { name; options } ->
       Format.sprintf
-        "module %s = struct\n  type t = %s [@@@@deriving yojson]\nend"
+        "module %s = struct\n  type t = %s%s\nend"
         (Utils.to_pascal_case name)
         (String.concat "   | " options)
+        (deriving ppxes)
   | IntEnum { name = _; options = _ } -> failwith "not implemented"
