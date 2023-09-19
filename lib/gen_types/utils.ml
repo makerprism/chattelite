@@ -30,10 +30,14 @@ let to_camel_case str =
 let to_snake_case str =
   let r = ref "" in
   let is_all_uppercase = String.uppercase_ascii str = str in
+  let is_all_lowercase = String.lowercase_ascii str = str in
   for i = 0 to String.length str - 1 do
     let c = String.get str i in
-    if i > 0 && Char.uppercase_ascii c = c && not is_all_uppercase then
-      r := !r ^ "_";
+    if
+      i > 0
+      && Char.uppercase_ascii c = c
+      && (not is_all_uppercase) && not is_all_lowercase
+    then r := !r ^ "_";
     r := !r ^ String.make 1 (Char.lowercase_ascii c)
   done;
   !r

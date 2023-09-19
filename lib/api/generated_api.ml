@@ -41,5 +41,3 @@ let create_user req =
   in
   let* _user = Caqti_lwt.or_fail user_or_error in
   Dream.json "ok"
-
-let routes = [ Dream.get "/users" users; Dream.post "/users" create_user ]

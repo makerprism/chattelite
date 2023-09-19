@@ -12,4 +12,4 @@ let () =
                 ~headers:[ ("Content-Type", "text/event-stream") ]
                 Server_sent_events.forward_messages);
         ]
-       @ Api.Generated_api.routes)
+       @ Generated_endpoints.routes)

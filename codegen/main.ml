@@ -1,13 +1,6 @@
 let t =
   Gen_types.Types.
     [
-      struct_union "Test"
-        [
-          struct_union_variant "Success" [ field "id" (TypeLiteral Str) ];
-          struct_union_variant "Error" [ field "message" (TypeLiteral Str) ];
-        ];
-      struct_ "NiceStruct" [ field "id" (TypeLiteral Str) ];
-      string_enum "Entity" [ "Post"; "User"; "Message" ];
       alias T.user_id str;
       struct_ (u T.user) [ field "display_name" str; field "user_id" T.user_id ];
     ]
@@ -33,7 +26,6 @@ let endpoints =
                 output_body_type = Fields [ field "user_id" T.user_id ];
                 error_type = None;
               };
-          server_req = false;
         };
         {
           name = "users";
@@ -43,11 +35,17 @@ let endpoints =
             Get
               {
                 url_params = None;
-                query_param_type = Fields [ field "name" str ];
-                output_body_type = Fields [ field "users" (vec (t "User")) ];
+                query_param_type =
+                  Fields
+                    [
+                      field "name" (option str);
+                      field "next" (option str);
+                      field "prev" (option str);
+                      field "limit" (option i32);
+                    ];
+                output_body_type = Fields [ field "users" (vec T.user) ];
                 (*error_type = None;*)
               };
-          server_req = false;
         };
         {
           name = "get_user";
@@ -58,10 +56,9 @@ let endpoints =
               {
                 url_params = Some [ { name = "user_id"; t = T.user_id } ];
                 query_param_type = None;
-                output_body_type = Fields [ field "user" (t "User") ];
+                output_body_type = Fields [ field "user" T.user ];
                 (*error_type = None;*)
               };
-          server_req = false;
         };
         {
           name = "delete_user";
@@ -74,19 +71,36 @@ let endpoints =
                 output_body_type = None;
                 error_type = None;
               };
-          server_req = false;
         };
       ])
 
 let gen_code () =
-  let bindings =
+  let ts_bindings =
     Gen_endpoints.Gen_ts_bindings.gen_routes ~type_namespace:"" endpoints
   in
-  let types_result =
+  let ts_types_result =
     [ Gen_endpoints.Gen_ts_bindings.gen_types ~type_namespace:"" ~t ~it ~ot ]
-    @ List.map Gen_types.Gen_ocaml.gen_type_declaration it
-    @ [ "// ENDPOINTS"; bindings ]
+    @ List.map (Gen_types.Gen_ocaml.gen_type_declaration ~type_namespace:"") it
+    @ [ "// ENDPOINTS"; ts_bindings ]
   in
-  print_endline (String.concat "\n\n" types_result)
+  let ocaml_types =
+    Gen_endpoints.Gen_ocaml_endpoints.gen_types ~type_namespace:"" ~t ~it ~ot
+      endpoints
+  in
+  let ocaml_endpoints =
+    Gen_endpoints.Gen_ocaml_endpoints.gen_routes ~type_namespace:"Api_types."
+      endpoints
+  in
+  let oc = open_out "frontend/generated_types.ts" in
+  Printf.fprintf oc "%s\n" (String.concat "\n\n" ts_types_result);
+  close_out oc;
+
+  let oc = open_out "bin/generated_endpoints.ml" in
+  Printf.fprintf oc "%s" ocaml_endpoints;
+  close_out oc;
+
+  let oc = open_out "bin/api_types.ml" in
+  Printf.fprintf oc "%s" ocaml_types;
+  close_out oc
 
 let () = gen_code ()

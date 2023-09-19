@@ -55,7 +55,7 @@ let gen_route_params_type ~name (route_params : Types.route_params)
   | Structs structs ->
       gen_type_declaration_for_api_type ~type_namespace
         (Gen_types.Types.struct_union name structs)
-  | None -> Format.sprintf "type %s = {}" (type_namespace ^ name)
+  | None -> Format.sprintf "export type %s = {}" (type_namespace ^ name)
 
 let output_type_name ~route_name ~type_namespace =
   Format.sprintf "%sOutput"

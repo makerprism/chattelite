@@ -44,6 +44,7 @@ let int_enum name options = IntEnum { name; options }
 let struct_union name variants = StructUnion { name; variants }
 let struct_union_variant name fields = { struct_name = name; fields }
 let str = TypeLiteral Str
+let i32 = TypeLiteral I32
 let nullable t = Nullable t
 let option t = Option t
 let vec t = Vec t
