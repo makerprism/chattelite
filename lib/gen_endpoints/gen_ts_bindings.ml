@@ -142,17 +142,22 @@ type route_result = { types : string; code : string }
 let gen_route_types ~type_namespace (route : Types.route) =
   match route.shape with
   | Get s ->
-      let query_t =
-        gen_route_params_type
-          ~name:(query_param_type_name ~route_name:route.name ~type_namespace)
-          s.query_param_type ~type_namespace
-      in
       let output_t =
         gen_route_params_type
           ~name:(output_type_name ~route_name:route.name ~type_namespace)
           s.output_body_type ~type_namespace
       in
-      [ query_t; output_t ]
+      let query_t =
+        if s.query_param_type != None then
+          [
+            gen_route_params_type
+              ~name:
+                (query_param_type_name ~route_name:route.name ~type_namespace)
+              s.query_param_type ~type_namespace;
+          ]
+        else []
+      in
+      query_t @ [ output_t ]
   | Post s ->
       let input_t =
         gen_route_params_type

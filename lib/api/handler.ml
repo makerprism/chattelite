@@ -9,8 +9,7 @@ let create_user req ({ user_id; display_name } : Types.CreateUserInput.t) =
 
 let get_user _req _user_id =
   Lwt.return
-    Types.GetUserOutput.
-      { user = { display_name = "TODO"; user_id = "TODO" } }
+    Types.GetUserOutput.{ user = { display_name = "TODO"; user_id = "TODO" } }
 
 let users req (query : Types.UsersQuery.t) =
   let* users_or_error =
@@ -25,6 +24,5 @@ let users req (query : Types.UsersQuery.t) =
            Types.User.{ user_id = public_facing_id; display_name })
   in
   Lwt.return Types.UsersOutput.{ users = { objs; next; prev } }
-(*  PaginatedUsers.create ~next ~prev ~objs*)
 
 let delete_user _req _user_id = Lwt.return ()

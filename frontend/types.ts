@@ -48,7 +48,6 @@ export type UsersOutput = {
 export type UsersResponse = utils.ApiResponse<UsersOutput, ResponseError>;
 export function users (q: UsersQuery): Promise<UsersResponse> { return utils.get(`/users${utils.stringify_query(q)}`, q); }
 
-export type GetUserQuery = {}
 export type GetUserOutput = {
     type: "GetUserOutput";
     user: User
