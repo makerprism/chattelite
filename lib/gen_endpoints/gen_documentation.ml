@@ -1,5 +1,5 @@
 let render_type (t : Gen_types.Types.t) =
-  Gen_types.Gen_typescript.render_type t ~type_namespace:""
+  Gen_types.Gen_documentation.render_type t ~type_namespace:""
 
 let gen_endpoint_doc (route : Types.route) =
   let meth, url_params, query_params, input_type, output_type, _error_type =
@@ -75,7 +75,7 @@ let gen_endpoint_doc (route : Types.route) =
   in
   let docs = url_params @ query_params @ input_type @ output_type in
 
-  Format.sprintf "## %s\n\n%s\n\n%s %s\n\n%s" route.name route.docstring meth
+  Format.sprintf "## %s\n\n%s\n\n%s %s\n\n%s" (Gen_types.Gen_documentation.linkable_anchor route.name) route.docstring meth
     route.url
     (String.concat "\n\n" docs)
 
