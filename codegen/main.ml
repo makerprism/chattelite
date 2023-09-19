@@ -1,8 +1,18 @@
+let paginate name obj_t =
+  Gen_types.Types.(
+    struct_ (u name)
+      [
+        field "next" (option str);
+        field "prev" (option str);
+        field "objs" (vec obj_t);
+      ])
+
 let t =
   Gen_types.Types.
     [
       alias T.user_id str;
       struct_ (u T.user) [ field "display_name" str; field "user_id" T.user_id ];
+      paginate T.paginated_users T.user;
     ]
 
 let it = []
@@ -43,7 +53,7 @@ let endpoints =
                       field "prev" (option str);
                       field "limit" (option i32);
                     ];
-                output_body_type = Fields [ field "users" (vec T.user) ];
+                output_body_type = Fields [ field "users" T.paginated_users ];
                 (*error_type = None;*)
               };
         };
@@ -88,17 +98,17 @@ let gen_code () =
   in
   let ocaml_endpoints =
     Gen_endpoints.Gen_ocaml_endpoints.gen_routes ~type_namespace:"Api_types."
-      endpoints
+      ~handler_namespace:"Handler." endpoints
   in
   let oc = open_out "frontend/generated_types.ts" in
   Printf.fprintf oc "%s\n" (String.concat "\n\n" ts_types_result);
   close_out oc;
 
-  let oc = open_out "bin/generated_endpoints.ml" in
+  let oc = open_out "lib/api/generated_endpoints.ml" in
   Printf.fprintf oc "%s" ocaml_endpoints;
   close_out oc;
 
-  let oc = open_out "bin/api_types.ml" in
+  let oc = open_out "lib/api/api_types.ml" in
   Printf.fprintf oc "%s" ocaml_types;
   close_out oc
 

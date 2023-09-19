@@ -38,8 +38,9 @@ let gen_route_params_type ~name (route_params : Types.route_params)
   | Structs structs ->
       gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
         (Gen_types.Types.struct_union name structs)
-  | None -> gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson"]
-    Gen_types.Types.(alias (t name) unit)
+  | None ->
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
+        Gen_types.Types.(alias (t name) unit)
 
 let output_type_name ~route_name ~type_namespace =
   Format.sprintf "%sOutput"
@@ -91,7 +92,8 @@ let handler_params (route : Types.route) ~type_namespace =
   | Delete { url_params; _ } ->
       { name = "req"; t = "Dream.request" } :: params_of_url_params url_params
 
-let gen_endpoint_function_body (route : Types.route) ~type_namespace =
+let gen_endpoint_function_body (route : Types.route) ~type_namespace
+    ~handler_namespace =
   let gen_deserialize_query (query_param_type : Types.route_params) =
     let read_query_fields name t =
       match t with
@@ -107,7 +109,8 @@ let gen_endpoint_function_body (route : Types.route) ~type_namespace =
             name name name
       | TypeLiteral I32 ->
           Format.sprintf
-            "let %s = try Dream.query req \"%s\" |> Option.get |> int_of_string with _ -> raise (FailedToParseQuery \"%s\")"
+            "let %s = try Dream.query req \"%s\" |> Option.get |> \
+             int_of_string with _ -> raise (FailedToParseQuery \"%s\")"
             name name name
       | _ -> failwith "not_implemented"
     in
@@ -157,10 +160,11 @@ let gen_endpoint_function_body (route : Types.route) ~type_namespace =
   String.concat "\n  "
     (body
     @ [
-        Format.sprintf "let* result : %s.t = Handler.%s %s in\n  result |> %s.yojson_of_t |> Yojson.Safe.to_string |> Dream.json"
+        Format.sprintf
+          "let* result : %s.t = %s%s %s in\n\
+          \  result |> %s.yojson_of_t |> Yojson.Safe.to_string |> Dream.json"
           (output_type_name ~route_name:route.name ~type_namespace)
-           route.name
-          (String.concat " " params)
+          handler_namespace route.name (String.concat " " params)
           (output_type_name ~route_name:route.name ~type_namespace);
       ])
 
@@ -205,14 +209,14 @@ let gen_route_types ~type_namespace (route : Types.route) =
       in
       [ output_t ]
 
-let gen_route ~type_namespace (route : Types.route) =
+let gen_route ~type_namespace ~handler_namespace (route : Types.route) =
   let params =
     List.map (fun { name; t } -> Format.sprintf "(%s: %s)" name t) route_params
   in
 
   let code =
     Format.sprintf "let %s %s =\n  %s" route.name (String.concat " " params)
-      (gen_endpoint_function_body route ~type_namespace)
+      (gen_endpoint_function_body route ~type_namespace ~handler_namespace)
   in
 
   code
@@ -226,8 +230,10 @@ let gen_route_declaration (route : Types.route) =
   | Delete _ ->
       Format.sprintf "Dream.delete \"%s\" %s" (url_of_route route) route.name
 
-let gen_routes ~type_namespace (routes : Types.route list) =
-  let endpoints = List.map (gen_route ~type_namespace) routes in
+let gen_routes ~type_namespace ~handler_namespace (routes : Types.route list) =
+  let endpoints =
+    List.map (gen_route ~type_namespace ~handler_namespace) routes
+  in
 
   let route_declarations =
     Format.sprintf "let routes = [\n  %s\n]"

@@ -7,6 +7,13 @@ export type User = {
     user_id: UserId
 }
 
+export type PaginatedUsers = {
+    type: "PaginatedUsers";
+    next?: string,
+    prev?: string,
+    objs: User[]
+}
+
 // API input types
 
 
@@ -36,7 +43,7 @@ export type UsersQuery = {
 }
 export type UsersOutput = {
     type: "UsersOutput";
-    users: User[]
+    users: PaginatedUsers
 }
 export type UsersResponse = utils.ApiResponse<UsersOutput, ResponseError>;
 export function users (q: UsersQuery): Promise<UsersResponse> { return utils.get(`/users${utils.stringify_query(q)}`, q); }

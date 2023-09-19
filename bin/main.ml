@@ -1,7 +1,7 @@
 let error_handler =
   (fun error _debug_dump suggested_response ->
     match error.condition with
-    | `Exn (Generated_endpoints.FailedToParseQuery field) ->
+    | `Exn (Api.Generated_endpoints.FailedToParseQuery field) ->
         Dream.json ~code:400
           (Format.sprintf
              "{ \"message\": \"query parameter '%s' cannot be decoded\" }" field)
@@ -22,4 +22,4 @@ let () =
                 ~headers:[ ("Content-Type", "text/event-stream") ]
                 Server_sent_events.forward_messages);
         ]
-       @ Generated_endpoints.routes)
+       @ Api.Generated_endpoints.routes)
