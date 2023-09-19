@@ -6,6 +6,18 @@
 
   is an alias for String
 
+## <a name="ConversationId">ConversationId</a>
+
+  is an alias for String
+
+## <a name="LineId">LineId</a>
+
+  is an alias for String
+
+## <a name="DateTime">DateTime</a>
+
+  is an alias for String
+
 ## <a name="User">User</a>
 
 is a struct with these fields:
@@ -22,6 +34,84 @@ is a struct with these fields:
 |next|Optional (String)|
 |prev|Optional (String)|
 |objs|Array of ([User](#User))|
+
+## <a name="ParentLine">ParentLine</a>
+
+is a struct with these fields:
+|name|type|
+|-|-|
+|line_id|[LineId](#LineId)|
+|timestamp|[DateTime](#DateTime)|
+|from|[User](#User)|
+|message|String|
+|data|String|
+
+## <a name="Line">Line</a>
+
+is a struct with these fields:
+|name|type|
+|-|-|
+|line_id|[LineId](#LineId)|
+|timestamp|[DateTime](#DateTime)|
+|from|[User](#User)|
+|message|String|
+|data|String|
+|reply_to_line|Nullable ([LineId](#LineId))|
+
+## <a name="Thread">Thread</a>
+
+is a struct with these fields:
+|name|type|
+|-|-|
+|line|[Line](#Line)|
+|replies|Array of ([Line](#Line))|
+
+## <a name="ConversationEvent">ConversationEvent</a>
+
+  is one of these variants:
+ConversationEventNewLine of {
+  |line|[Line](#Line)|
+}
+
+    OR ConversationEventJoin of {
+  |timestamp|[DateTime](#DateTime)|;
+  |from|[User](#User)|
+}
+
+    OR ConversationEventLeave of {
+  |timestamp|[DateTime](#DateTime)|;
+  |from|[User](#User)|
+}
+
+    OR ConversationEventStartTyping of {
+  |timestamp|[DateTime](#DateTime)|;
+  |from|[User](#User)|
+}
+
+    OR ConversationEventEndTyping of {
+  |timestamp|[DateTime](#DateTime)|;
+  |from|[User](#User)|
+}
+
+
+## <a name="Conversation">Conversation</a>
+
+is a struct with these fields:
+|name|type|
+|-|-|
+|conversation_id|[ConversationId](#ConversationId)|
+|timestamp|[DateTime](#DateTime)|
+|number_of_unread_messages|Integer|
+|newest_line|Nullable ([Line](#Line))|
+
+## <a name="PaginatedConversations">PaginatedConversations</a>
+
+is a struct with these fields:
+|name|type|
+|-|-|
+|next|Optional (String)|
+|prev|Optional (String)|
+|objs|Array of ([Conversation](#Conversation))|
 
 # Endpoints
 

@@ -1,3 +1,5 @@
+open T
+
 let endpoints =
   Gen_types.Types.(
     Gen_endpoints.Types.
@@ -33,7 +35,7 @@ let endpoints =
                       field "prev" (option str);
                       field "limit" (option i32);
                     ];
-                output_type = Fields [ field "users" T.paginated_users ];
+                output_type = Fields [ field "users" Ot.paginated_users ];
                 (*error_type = None;*)
               };
         };
@@ -46,7 +48,7 @@ let endpoints =
               {
                 url_params = Some [ { name = "user_id"; t = T.user_id } ];
                 query_param_type = None;
-                output_type = Fields [ field "user" T.user ];
+                output_type = Fields [ field "user" Ot.user ];
                 (*error_type = None;*)
               };
         };

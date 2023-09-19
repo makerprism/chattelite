@@ -3,6 +3,12 @@
 // API input and output types
 export type UserId = string
 
+export type ConversationId = string
+
+export type LineId = string
+
+export type DateTime = string
+
 // API input types
 
 
@@ -18,6 +24,77 @@ export type PaginatedUsers = {
     next?: string,
     prev?: string,
     objs: User[]
+}
+
+export type ParentLine = {
+    type: "ParentLine";
+    line_id: LineId,
+    timestamp: DateTime,
+    from: User,
+    message: string,
+    data: string
+}
+
+export type Line = {
+    type: "Line";
+    line_id: LineId,
+    timestamp: DateTime,
+    from: User,
+    message: string,
+    data: string,
+    reply_to_line: LineId | null
+}
+
+export type Thread = {
+    type: "Thread";
+    line: Line,
+    replies: Line[]
+}
+
+export type ConversationEvent = ConversationEventNewLine | ConversationEventJoin | ConversationEventLeave | ConversationEventStartTyping | ConversationEventEndTyping
+
+export type ConversationEventNewLine = {
+    type: "NewLine";
+    line: Line
+}
+
+export type ConversationEventJoin = {
+    type: "Join";
+    timestamp: DateTime,
+    from: User
+}
+
+export type ConversationEventLeave = {
+    type: "Leave";
+    timestamp: DateTime,
+    from: User
+}
+
+export type ConversationEventStartTyping = {
+    type: "StartTyping";
+    timestamp: DateTime,
+    from: User
+}
+
+export type ConversationEventEndTyping = {
+    type: "EndTyping";
+    timestamp: DateTime,
+    from: User
+}
+
+export type Conversation = {
+    type: "Conversation";
+    conversation_id: ConversationId,
+    timestamp: DateTime,
+    number_of_unread_messages: number,
+    newest_line: Line | null
+}
+
+export type PaginatedConversations = {
+    type: "PaginatedConversations";
+    next?: string,
+    prev?: string,
+    objs: Conversation[]
 }
 
 // ENDPOINTS
