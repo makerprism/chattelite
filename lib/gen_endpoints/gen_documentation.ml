@@ -24,10 +24,11 @@ let gen_endpoint_doc (route : Types.route) =
         [
           "URL params:\n  "
           ^ String.concat "\n  "
-              (List.map
-                 (fun (p : Types.url_param) ->
-                   Format.sprintf "%s : %s" p.name (render_type p.t))
-                 fs);
+              ([ "|name|type|"; "|-|-|" ]
+              @ List.map
+                  (fun (p : Types.url_param) ->
+                    Format.sprintf "|%s|%s|" p.name (render_type p.t))
+                  fs);
         ]
   in
   let query_params =
@@ -37,10 +38,12 @@ let gen_endpoint_doc (route : Types.route) =
         [
           "Query Parameters:\n  "
           ^ String.concat "\n  "
-              (List.map
-                 (fun (p : Gen_types.Types.field) ->
-                   Format.sprintf "%s : %s" p.field_name (render_type p.field_t))
-                 fs);
+              ([ "|name|type|"; "|-|-|" ]
+              @ List.map
+                  (fun (p : Gen_types.Types.field) ->
+                    Format.sprintf "|%s|%s|" p.field_name
+                      (render_type p.field_t))
+                  fs);
         ]
     | _ -> failwith "not implemented"
   in
@@ -51,10 +54,12 @@ let gen_endpoint_doc (route : Types.route) =
         [
           "Input body:\n  "
           ^ String.concat "\n  "
-              (List.map
-                 (fun (p : Gen_types.Types.field) ->
-                   Format.sprintf "%s : %s" p.field_name (render_type p.field_t))
-                 fs);
+              ([ "|name|type|"; "|-|-|" ]
+              @ List.map
+                  (fun (p : Gen_types.Types.field) ->
+                    Format.sprintf "|%s|%s|" p.field_name
+                      (render_type p.field_t))
+                  fs);
         ]
     | Structs _ -> failwith "not implemented"
   in
@@ -66,17 +71,20 @@ let gen_endpoint_doc (route : Types.route) =
         [
           "Response body:\n  "
           ^ String.concat "\n  "
-              (List.map
-                 (fun (p : Gen_types.Types.field) ->
-                   Format.sprintf "%s : %s" p.field_name (render_type p.field_t))
-                 fs);
+              ([ "|name|type|"; "|-|-|" ]
+              @ List.map
+                  (fun (p : Gen_types.Types.field) ->
+                    Format.sprintf "|%s|%s|" p.field_name
+                      (render_type p.field_t))
+                  fs);
         ]
     | Structs _ -> failwith "not implemented"
   in
   let docs = url_params @ query_params @ input_type @ output_type in
 
-  Format.sprintf "## %s\n\n%s\n\n%s %s\n\n%s" (Gen_types.Gen_documentation.linkable_anchor route.name) route.docstring meth
-    route.url
+  Format.sprintf "## %s\n\n%s\n\n%s %s\n\n%s"
+    (Gen_types.Gen_documentation.linkable_anchor route.name)
+    route.docstring meth route.url
     (String.concat "\n\n" docs)
 
 let gen_docs ~t ~it ~ot (routes : Types.route list) =

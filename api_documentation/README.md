@@ -8,16 +8,20 @@
 
 ## <a name="User">User</a>
 
-  is a struct with these fields:
-    display_name: String
-    user_id: [UserId](#UserId)
+is a struct with these fields:
+|name|type|
+|-|-|
+|display_name|String|
+|user_id|[UserId](#UserId)|
 
 ## <a name="PaginatedUsers">PaginatedUsers</a>
 
-  is a struct with these fields:
-    next: Optional (String)
-    prev: Optional (String)
-    objs: Array of ([User](#User))
+is a struct with these fields:
+|name|type|
+|-|-|
+|next|Optional (String)|
+|prev|Optional (String)|
+|objs|Array of ([User](#User))|
 
 # Endpoints
 
@@ -28,11 +32,15 @@ create a new user
 POST /users
 
 Input body:
-  display_name : String
-  user_id : [UserId](#UserId)
+  |name|type|
+  |-|-|
+  |display_name|String|
+  |user_id|[UserId](#UserId)|
 
 Response body:
-  user_id : [UserId](#UserId)
+  |name|type|
+  |-|-|
+  |user_id|[UserId](#UserId)|
 
 ## <a name="users">users</a>
 
@@ -41,13 +49,17 @@ list users
 GET /users
 
 Query Parameters:
-  name : Optional (String)
-  next : Optional (String)
-  prev : Optional (String)
-  limit : Optional (Integer)
+  |name|type|
+  |-|-|
+  |name|Optional (String)|
+  |next|Optional (String)|
+  |prev|Optional (String)|
+  |limit|Optional (Integer)|
 
 Response body:
-  users : [PaginatedUsers](#PaginatedUsers)
+  |name|type|
+  |-|-|
+  |users|[PaginatedUsers](#PaginatedUsers)|
 
 ## <a name="get_user">get_user</a>
 
@@ -56,10 +68,14 @@ get user by id
 GET /user/{user_id}
 
 URL params:
-  user_id : [UserId](#UserId)
+  |name|type|
+  |-|-|
+  |user_id|[UserId](#UserId)|
 
 Response body:
-  user : [User](#User)
+  |name|type|
+  |-|-|
+  |user|[User](#User)|
 
 ## <a name="delete_user">delete_user</a>
 
@@ -68,4 +84,6 @@ delete user by id
 DELETE /user/{user_id}
 
 URL params:
-  user_id : [UserId](#UserId)
+  |name|type|
+  |-|-|
+  |user_id|[UserId](#UserId)|
