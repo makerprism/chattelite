@@ -1,7 +1,17 @@
+let error_handler =
+  (fun error _debug_dump suggested_response ->
+    match error.condition with
+    | `Exn (Generated_endpoints.FailedToParseQuery field) ->
+        Dream.json ~code:400
+          (Format.sprintf
+             "{ \"message\": \"query parameter '%s' cannot be decoded\" }" field)
+    | _ -> Lwt.return suggested_response)
+  |> Dream.error_template
+
 let () =
   Lwt.async Server_sent_events.message_loop;
 
-  Dream.run @@ Dream.logger
+  Dream.run ~error_handler @@ Dream.logger
   @@ Dream.sql_pool "postgresql://postgres:test@127.0.0.1:5432/ocaml_api"
   (*@@ Dream.origin_referrer_check*)
   @@ Dream.router

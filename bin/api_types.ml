@@ -43,7 +43,9 @@ module UsersOutput = struct
 } [@@deriving yojson]
 end
 
-
+module GetUserQuery = struct
+  type t = unit [@@deriving yojson]
+end
 
 module GetUserOutput = struct
   type t = {
@@ -51,3 +53,6 @@ module GetUserOutput = struct
 } [@@deriving yojson]
 end
 
+module DeleteUserOutput = struct
+  type t = unit [@@deriving yojson]
+end

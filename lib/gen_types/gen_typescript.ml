@@ -6,6 +6,7 @@ let rec render_type (t : Types.t) ~type_namespace =
   | TypeLiteral F32 -> "number"
   | TypeLiteral F64 -> "number"
   | TypeLiteral Bool -> "boolean"
+  | TypeLiteral Unit -> "{}"
   | TypeLiteral Json -> "any"
   | TypeLiteral (TypeName n) -> type_namespace ^ n
   | Vec t -> Format.sprintf "%s[]" (render_type t ~type_namespace)

@@ -12,12 +12,12 @@ let gen_input_body_type ~route_name (route_params : Types.route_params)
     ~type_namespace =
   match route_params with
   | Fields fields ->
-      gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
         (Gen_types.Types.struct_
            (input_body_type_name ~type_namespace ~route_name)
            fields)
   | Structs structs ->
-      gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
         (Gen_types.Types.struct_union
            (input_body_type_name ~type_namespace ~route_name)
            structs)
@@ -33,12 +33,13 @@ let gen_route_params_type ~name (route_params : Types.route_params)
     ~type_namespace =
   match route_params with
   | Fields fields ->
-      gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
         (Gen_types.Types.struct_ name fields)
   | Structs structs ->
-      gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]
+      gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
         (Gen_types.Types.struct_union name structs)
-  | None -> ""
+  | None -> gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson"]
+    Gen_types.Types.(alias (t name) unit)
 
 let output_type_name ~route_name ~type_namespace =
   Format.sprintf "%sOutput"
@@ -101,27 +102,29 @@ let gen_endpoint_function_body (route : Types.route) ~type_namespace =
             name
       | Option (TypeLiteral I32) ->
           Format.sprintf
-            "let %s = Dream.query req \"%s\" |> Option.map int_of_string in"
-            name name
+            "let %s = try Dream.query req \"%s\" |> Option.map int_of_string \
+             with _ -> raise (FailedToParseQuery \"%s\") in"
+            name name name
       | TypeLiteral I32 ->
           Format.sprintf
-            "let %s = Dream.query req \"%s\" |> Option.get |> int_of_string"
-            name name
+            "let %s = try Dream.query req \"%s\" |> Option.get |> int_of_string with _ -> raise (FailedToParseQuery \"%s\")"
+            name name name
       | _ -> failwith "not_implemented"
     in
     match query_param_type with
     | None -> []
     | Fields fs ->
-        List.map
-          (fun (f : Gen_types.Types.field) ->
-            read_query_fields f.field_name f.field_t)
-          fs
-        @ [
-            Format.sprintf "let query = %s.{ %s } in"
-              (query_param_type_name ~route_name:route.name ~type_namespace)
-              (String.concat "; "
-                 (List.map (fun (f : Gen_types.Types.field) -> f.field_name) fs));
-          ]
+        [
+          Format.sprintf "let query =\n    %s\n    %s.{ %s }\n  in"
+            (String.concat "\n    "
+               (List.map
+                  (fun (f : Gen_types.Types.field) ->
+                    read_query_fields f.field_name f.field_t)
+                  fs))
+            (query_param_type_name ~route_name:route.name ~type_namespace)
+            (String.concat "; "
+               (List.map (fun (f : Gen_types.Types.field) -> f.field_name) fs));
+        ]
     | Structs _ -> failwith "not_implemented"
   in
   let params_of_url_params (url_params : Types.url_param list option) =
@@ -154,8 +157,11 @@ let gen_endpoint_function_body (route : Types.route) ~type_namespace =
   String.concat "\n  "
     (body
     @ [
-        Format.sprintf "let result = Handler.%s %s in\n  result" route.name
-          (String.concat " " params);
+        Format.sprintf "let* result : %s.t = Handler.%s %s in\n  result |> %s.yojson_of_t |> Yojson.Safe.to_string |> Dream.json"
+          (output_type_name ~route_name:route.name ~type_namespace)
+           route.name
+          (String.concat " " params)
+          (output_type_name ~route_name:route.name ~type_namespace);
       ])
 
 type route_result = { types : string; code : string }
@@ -229,7 +235,9 @@ let gen_routes ~type_namespace (routes : Types.route list) =
   in
 
   String.concat "\n\n"
-    ([ "open Lwt.Syntax" ] @ endpoints @ [ route_declarations ])
+    ([ "open Lwt.Syntax" ]
+    @ [ "exception FailedToParseQuery of string" ]
+    @ endpoints @ [ route_declarations ])
 
 let gen_types ~(t : Gen_types.Types.type_declaration list)
     ~(it : Gen_types.Types.type_declaration list)
@@ -244,10 +252,16 @@ let gen_types ~(t : Gen_types.Types.type_declaration list)
      %s(* endpoint types *)\n\
      %s"
     (String.concat "\n\n"
-       (List.map (gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"])  t))
+       (List.map
+          (gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ])
+          t))
     (String.concat "\n\n"
-       (List.map (gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]) it))
+       (List.map
+          (gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ])
+          it))
     (String.concat "\n\n"
-       (List.map (gen_type_declaration_for_api_type ~type_namespace ~ppxes:["yojson"]) ot))
+       (List.map
+          (gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ])
+          ot))
     (String.concat "\n\n"
        (List.flatten (List.map (gen_route_types ~type_namespace) routes)))
