@@ -1,5 +1,5 @@
 (library
  (name api)
- (libraries dream graphql graphql-lwt petrol)
+ (libraries dream petrol)
  (preprocess
   (pps ppx_rapper ppx_yojson_conv)))
