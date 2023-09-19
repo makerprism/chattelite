@@ -70,34 +70,34 @@ is a struct with these fields:
 
   is one of these variants:
 
-* ConversationEventNewLine
+* `ConversationEventNewLine`
 
 |field_name|type|
 |-|-|
 |line|[Line](#Line)|
 
-* ConversationEventJoin
+* `ConversationEventJoin`
 
 |field_name|type|
 |-|-|
 |timestamp|[DateTime](#DateTime)|
 |from|[User](#User)|
 
-* ConversationEventLeave
+* `ConversationEventLeave`
 
 |field_name|type|
 |-|-|
 |timestamp|[DateTime](#DateTime)|
 |from|[User](#User)|
 
-* ConversationEventStartTyping
+* `ConversationEventStartTyping`
 
 |field_name|type|
 |-|-|
 |timestamp|[DateTime](#DateTime)|
 |from|[User](#User)|
 
-* ConversationEventEndTyping
+* `ConversationEventEndTyping`
 
 |field_name|type|
 |-|-|
