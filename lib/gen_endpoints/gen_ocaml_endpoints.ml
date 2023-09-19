@@ -4,22 +4,22 @@ let gen_type_declaration_for_api_type ~type_namespace
 
 (* input body type *)
 
-let input_body_type_name ~route_name ~type_namespace =
+let input_type_name ~route_name ~type_namespace =
   Format.sprintf "%sInput"
     (type_namespace ^ Gen_types.Utils.to_pascal_case route_name)
 
-let gen_input_body_type ~route_name (route_params : Types.route_params)
+let gen_input_type ~route_name (route_params : Types.route_params)
     ~type_namespace =
   match route_params with
   | Fields fields ->
       gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
         (Gen_types.Types.struct_
-           (input_body_type_name ~type_namespace ~route_name)
+           (input_type_name ~type_namespace ~route_name)
            fields)
   | Structs structs ->
       gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
         (Gen_types.Types.struct_union
-           (input_body_type_name ~type_namespace ~route_name)
+           (input_type_name ~type_namespace ~route_name)
            structs)
   | None -> ""
 
@@ -77,15 +77,15 @@ let handler_params (route : Types.route) ~type_namespace =
   | Get { url_params; query_param_type; _ } ->
       ({ name = "req"; t = "Dream.request" } :: params_of_url_params url_params)
       @ params_of_query_param_type query_param_type
-  | Post { url_params; input_body_type; query_param_type; _ } ->
+  | Post { url_params; input_type; query_param_type; _ } ->
       ({ name = "req"; t = "Dream.request" } :: params_of_url_params url_params)
       @ params_of_query_param_type query_param_type
       @
-      if input_body_type != None then
+      if input_type != None then
         [
           {
             name = "body";
-            t = input_body_type_name ~route_name:route.name ~type_namespace;
+            t = input_type_name ~route_name:route.name ~type_namespace;
           };
         ]
       else []
@@ -143,16 +143,16 @@ let gen_endpoint_function_body (route : Types.route) ~type_namespace
     match route.shape with
     | Get { query_param_type; url_params; _ } ->
         gen_deserialize_query query_param_type @ params_of_url_params url_params
-    | Post { query_param_type; url_params; input_body_type; _ } ->
+    | Post { query_param_type; url_params; input_type; _ } ->
         gen_deserialize_query query_param_type
         @ params_of_url_params url_params
         @
-        if input_body_type != None then
+        if input_type != None then
           [
             "let* body = Dream.body req in";
             Format.sprintf
               "let body = %s.t_of_yojson (Yojson.Safe.from_string body) in"
-              (input_body_type_name ~route_name:route.name ~type_namespace);
+              (input_type_name ~route_name:route.name ~type_namespace);
           ]
         else []
     | Delete { url_params; _ } -> params_of_url_params url_params
@@ -186,26 +186,26 @@ let gen_route_types ~type_namespace (route : Types.route) =
       let output_t =
         gen_route_params_type
           ~name:(output_type_name ~route_name:route.name ~type_namespace)
-          s.output_body_type ~type_namespace
+          s.output_type ~type_namespace
       in
       [ query_t; output_t ]
   | Post s ->
       let input_t =
         gen_route_params_type
-          ~name:(input_body_type_name ~route_name:route.name ~type_namespace)
-          s.input_body_type ~type_namespace
+          ~name:(input_type_name ~route_name:route.name ~type_namespace)
+          s.input_type ~type_namespace
       in
       let output_t =
         gen_route_params_type
           ~name:(output_type_name ~route_name:route.name ~type_namespace)
-          s.output_body_type ~type_namespace
+          s.output_type ~type_namespace
       in
       [ input_t; output_t ]
   | Delete s ->
       let output_t =
         gen_route_params_type
           ~name:(output_type_name ~route_name:route.name ~type_namespace)
-          s.output_body_type ~type_namespace
+          s.output_type ~type_namespace
       in
       [ output_t ]
 

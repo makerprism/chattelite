@@ -7,9 +7,17 @@ let create_user req ({ user_id; display_name } : Types.CreateUserInput.t) =
   let* () = Caqti_lwt.or_fail user_or_error in
   Lwt.return Types.CreateUserOutput.{ user_id }
 
-let get_user _req _user_id =
+let get_user req user_id =
+  let* user_or_error =
+    Dream.sql req (Db.User.get_one ~public_facing_id:user_id)
+  in
+  let* user = Caqti_lwt.or_fail user_or_error in
   Lwt.return
-    Types.GetUserOutput.{ user = { display_name = "TODO"; user_id = "TODO" } }
+    Types.GetUserOutput.
+      {
+        user =
+          { user_id = user.public_facing_id; display_name = user.display_name };
+      }
 
 let users req (query : Types.UsersQuery.t) =
   let* users_or_error =

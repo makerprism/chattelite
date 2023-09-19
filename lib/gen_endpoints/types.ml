@@ -16,20 +16,20 @@ type route_params =
 type get_route = {
   url_params : url_params;
   query_param_type : route_params;
-  output_body_type : route_params;
+  output_type : route_params;
 }
 
 type post_route = {
   url_params : url_params;
   query_param_type : route_params;
-  input_body_type : route_params;
-  output_body_type : route_params;
+  input_type : route_params;
+  output_type : route_params;
   error_type : error_variant list option;
 }
 
 type delete_route = {
   url_params : url_params;
-  output_body_type : route_params;
+  output_type : route_params;
   error_type : error_variant list option;
 }
 
