@@ -43,7 +43,7 @@ let gen_type_documentation (decl : Types.type_declaration) ~type_namespace =
           (fun (variant : Types.struct_) -> gen_variant ~prefix:name variant)
           variants
       in
-      Format.sprintf "## %s\n\n  is one of these variants:\n%s"
+      Format.sprintf "## %s\n\n  is one of these variants:\n\n%s"
         (linkable_anchor (Utils.to_pascal_case name))
         (String.concat "\n" variants)
   | Struct s ->

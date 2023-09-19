@@ -69,6 +69,7 @@ is a struct with these fields:
 ## <a name="ConversationEvent">ConversationEvent</a>
 
   is one of these variants:
+
 * ConversationEventNewLine
 |field_name|type|
 |-|-|
