@@ -19,121 +19,93 @@ end
 
 (* API input types *)
 
-
 (* API output types *)
 module User = struct
-  type t = {
-    display_name: string;
-    user_id: UserId.t
-} [@@deriving yojson]
+  type t = { display_name : string; user_id : UserId.t } [@@deriving yojson]
 end
 
 module PaginatedUsers = struct
-  type t = {
-    next: (string) option;
-    prev: (string) option;
-    objs: (User.t) list
-} [@@deriving yojson]
+  type t = { next : string option; prev : string option; objs : User.t list }
+  [@@deriving yojson]
 end
 
 module ParentLine = struct
   type t = {
-    line_id: LineId.t;
-    timestamp: DateTime.t;
-    from: User.t;
-    message: string;
-    data: string
-} [@@deriving yojson]
+    line_id : LineId.t;
+    timestamp : DateTime.t;
+    from : User.t;
+    message : string;
+    data : string;
+  }
+  [@@deriving yojson]
 end
 
 module Line = struct
   type t = {
-    line_id: LineId.t;
-    timestamp: DateTime.t;
-    from: User.t;
-    message: string;
-    data: string;
-    reply_to_line: (LineId.t) option
-} [@@deriving yojson]
+    line_id : LineId.t;
+    timestamp : DateTime.t;
+    from : User.t;
+    message : string;
+    data : string;
+    reply_to_line : LineId.t option;
+  }
+  [@@deriving yojson]
 end
 
 module Thread = struct
-  type t = {
-    line: Line.t;
-    replies: (Line.t) list
-} [@@deriving yojson]
+  type t = { line : Line.t; replies : Line.t list } [@@deriving yojson]
 end
 
 module ConversationEvent = struct
   type t =
-    | ConversationEventNewLine of {
-  line: Line.t
-}
-
-    | ConversationEventJoin of {
-  timestamp: DateTime.t;
-  from: User.t
-}
-
-    | ConversationEventLeave of {
-  timestamp: DateTime.t;
-  from: User.t
-}
-
-    | ConversationEventStartTyping of {
-  timestamp: DateTime.t;
-  from: User.t
-}
-
-    | ConversationEventEndTyping of {
-  timestamp: DateTime.t;
-  from: User.t
-}
- [@@deriving yojson]
+    | ConversationEventNewLine of { line : Line.t }
+    | ConversationEventJoin of { timestamp : DateTime.t; from : User.t }
+    | ConversationEventLeave of { timestamp : DateTime.t; from : User.t }
+    | ConversationEventStartTyping of { timestamp : DateTime.t; from : User.t }
+    | ConversationEventEndTyping of { timestamp : DateTime.t; from : User.t }
+  [@@deriving yojson]
 end
 
 module Conversation = struct
   type t = {
-    conversation_id: ConversationId.t;
-    timestamp: DateTime.t;
-    number_of_unread_messages: int;
-    newest_line: (Line.t) option
-} [@@deriving yojson]
+    conversation_id : ConversationId.t;
+    timestamp : DateTime.t;
+    number_of_unread_messages : int;
+    newest_line : Line.t option;
+  }
+  [@@deriving yojson]
 end
 
 module PaginatedConversations = struct
   type t = {
-    next: (string) option;
-    prev: (string) option;
-    objs: (Conversation.t) list
-} [@@deriving yojson]
-end(* endpoint types *)
+    next : string option;
+    prev : string option;
+    objs : Conversation.t list;
+  }
+  [@@deriving yojson]
+end
+(* endpoint types *)
+
 module CreateUserInput = struct
-  type t = {
-    display_name: string;
-    user_id: UserId.t
-} [@@deriving yojson]
+  type t = { display_name : string; user_id : UserId.t } [@@deriving yojson]
 end
 
 module CreateUserOutput = struct
-  type t = {
-    user_id: UserId.t
-} [@@deriving yojson]
+  type t = { user_id : UserId.t } [@@deriving yojson]
 end
 
 module UsersQuery = struct
   type t = {
-    name: (string) option;
-    next: (string) option;
-    prev: (string) option;
-    limit: (int) option
-} [@@deriving yojson]
+    name : string option;
+    next : string option;
+    prev : string option;
+    limit : int option;
+  }
+  [@@deriving yojson]
 end
 
 module UsersOutput = struct
-  type t = {
-    users: PaginatedUsers.t
-} [@@deriving yojson]
+  type t = { users : PaginatedUsers.t } [@@deriving yojson]
 end
 
 module GetUserQuery = struct
@@ -141,9 +113,7 @@ module GetUserQuery = struct
 end
 
 module GetUserOutput = struct
-  type t = {
-    user: User.t
-} [@@deriving yojson]
+  type t = { user : User.t } [@@deriving yojson]
 end
 
 module DeleteUserOutput = struct

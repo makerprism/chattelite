@@ -73,22 +73,22 @@ ConversationEventNewLine of {
   |line|[Line](#Line)|
 }
 
-    OR ConversationEventJoin of {
+ConversationEventJoin of {
   |timestamp|[DateTime](#DateTime)|;
   |from|[User](#User)|
 }
 
-    OR ConversationEventLeave of {
+ConversationEventLeave of {
   |timestamp|[DateTime](#DateTime)|;
   |from|[User](#User)|
 }
 
-    OR ConversationEventStartTyping of {
+ConversationEventStartTyping of {
   |timestamp|[DateTime](#DateTime)|;
   |from|[User](#User)|
 }
 
-    OR ConversationEventEndTyping of {
+ConversationEventEndTyping of {
   |timestamp|[DateTime](#DateTime)|;
   |from|[User](#User)|
 }

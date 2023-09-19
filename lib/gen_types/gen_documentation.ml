@@ -44,7 +44,7 @@ let gen_type_documentation (decl : Types.type_declaration) ~type_namespace =
       in
       Format.sprintf "## %s\n\n  is one of these variants:\n%s"
         (linkable_anchor (Utils.to_pascal_case name))
-        (String.concat "\n    OR " variants)
+        (String.concat "\n" variants)
   | Struct s ->
       Format.sprintf "## %s\n\nis a struct with these fields:\n%s"
         (linkable_anchor (Utils.to_pascal_case s.struct_name))
