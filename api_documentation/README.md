@@ -69,29 +69,34 @@ is a struct with these fields:
 ## <a name="ConversationEvent">ConversationEvent</a>
 
   is one of these variants:
-ConversationEventNewLine of {
-  |line|[Line](#Line)|
-}
+* ConversationEventNewLine
+|field_name|type|
+|-|-|
+|line|[Line](#Line)|
 
-ConversationEventJoin of {
-  |timestamp|[DateTime](#DateTime)|;
-  |from|[User](#User)|
-}
+* ConversationEventJoin
+|field_name|type|
+|-|-|
+|timestamp|[DateTime](#DateTime)|
+|from|[User](#User)|
 
-ConversationEventLeave of {
-  |timestamp|[DateTime](#DateTime)|;
-  |from|[User](#User)|
-}
+* ConversationEventLeave
+|field_name|type|
+|-|-|
+|timestamp|[DateTime](#DateTime)|
+|from|[User](#User)|
 
-ConversationEventStartTyping of {
-  |timestamp|[DateTime](#DateTime)|;
-  |from|[User](#User)|
-}
+* ConversationEventStartTyping
+|field_name|type|
+|-|-|
+|timestamp|[DateTime](#DateTime)|
+|from|[User](#User)|
 
-ConversationEventEndTyping of {
-  |timestamp|[DateTime](#DateTime)|;
-  |from|[User](#User)|
-}
+* ConversationEventEndTyping
+|field_name|type|
+|-|-|
+|timestamp|[DateTime](#DateTime)|
+|from|[User](#User)|
 
 
 ## <a name="Conversation">Conversation</a>
