@@ -1,6 +1,10 @@
 // API input and output types
 export type UserId = string
 
+// API input types
+
+
+// API output types
 export type User = {
     type: "User";
     display_name: string,
@@ -13,12 +17,6 @@ export type PaginatedUsers = {
     prev?: string,
     objs: User[]
 }
-
-// API input types
-
-
-// API output types
-
 
 // ENDPOINTS
 
