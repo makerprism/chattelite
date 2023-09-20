@@ -65,7 +65,6 @@ let handler_params (route : Types.route) ~type_namespace =
         { name; t = Gen_types.Gen_ocaml.render_type t ~type_namespace })
       (Option.value ~default:[] url_params)
   in
-
   let params_of_query_param_type (query_param_type : Types.route_params) =
     match query_param_type with
     | None -> []
@@ -198,12 +197,10 @@ let gen_route ~type_namespace ~handler_namespace (route : Types.route) =
   let params =
     List.map (fun { name; t } -> Format.sprintf "(%s: %s)" name t) route_params
   in
-
   let code =
     Format.sprintf "let %s %s =\n  %s" route.name (String.concat " " params)
       (gen_endpoint_function_body route ~type_namespace ~handler_namespace)
   in
-
   code
 
 let gen_route_declaration (route : Types.route) =
