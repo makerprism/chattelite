@@ -9,7 +9,16 @@ let gen_type_declaration_for_api_type ~type_namespace ~ppxes
         (Gen_types.Utils.to_pascal_case name)
   | CursorType name ->
       Format.sprintf
-        "module %s = struct\n  type t = int [@@@@deriving yojson]\n\nend"
+        "module %s = struct\n\
+         type t = int64\n\n\
+         let string_of_t = Int64.to_string\n\n\
+         let t_of_string = Int64.of_string\n\n\
+         let yojson_of_t v = `String (string_of_t v)\n\n\
+        \ \n\
+        \          let t_of_yojson v = match v with\n\
+         | `String s -> t_of_string s\n\
+         | _ -> raise (Invalid_argument \"Could not parse cursor value\") \n\n\
+         end"
         (Gen_types.Utils.to_pascal_case name)
 
 (* input body type *)

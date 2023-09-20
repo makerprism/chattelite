@@ -8,7 +8,7 @@ is an ID type (String)
 
 ## UserCursor
 
-is a Cursor type (Integer)
+is a Cursor type (String)
 
 ## ConversationId
 
@@ -16,7 +16,7 @@ is an ID type (String)
 
 ## ConversationCursor
 
-is a Cursor type (Integer)
+is a Cursor type (String)
 
 ## LineId
 
@@ -161,8 +161,8 @@ Query Parameters:
   |name|type|
   |-|-|
   |name|Optional (String)|
-  |next|Optional (Integer)|
-  |prev|Optional (Integer)|
+  |next|Optional ([UserCursor](#UserCursor))|
+  |prev|Optional ([UserCursor](#UserCursor))|
   |limit|Optional (Integer)|
 
 Response body:

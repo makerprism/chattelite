@@ -6,7 +6,16 @@ module UserId = struct
 end
 
 module UserCursor = struct
-  type t = int [@@deriving yojson]
+  type t = int64
+
+  let string_of_t = Int64.to_string
+  let t_of_string = Int64.of_string
+  let yojson_of_t v = `String (string_of_t v)
+
+  let t_of_yojson v =
+    match v with
+    | `String s -> t_of_string s
+    | _ -> raise (Invalid_argument "Could not parse cursor value")
 end
 
 module ConversationId = struct
@@ -14,7 +23,16 @@ module ConversationId = struct
 end
 
 module ConversationCursor = struct
-  type t = int [@@deriving yojson]
+  type t = int64
+
+  let string_of_t = Int64.to_string
+  let t_of_string = Int64.of_string
+  let yojson_of_t v = `String (string_of_t v)
+
+  let t_of_yojson v =
+    match v with
+    | `String s -> t_of_string s
+    | _ -> raise (Invalid_argument "Could not parse cursor value")
 end
 
 module LineId = struct
@@ -109,8 +127,8 @@ end
 module UsersQuery = struct
   type t = {
     name : string option;
-    next : int option;
-    prev : int option;
+    next : UserCursor.t option;
+    prev : UserCursor.t option;
     limit : int option;
   }
   [@@deriving yojson, query]

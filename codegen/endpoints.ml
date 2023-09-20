@@ -30,8 +30,8 @@ let endpoints =
                 Fields
                   [
                     field "name" (option str);
-                    field "next" (option i63);
-                    field "prev" (option i63);
+                    field "next" (option T.user_cursor);
+                    field "prev" (option T.user_cursor);
                     field "limit" (option i32);
                   ];
               output_type = Fields [ field "users" Ot.paginated_users ];

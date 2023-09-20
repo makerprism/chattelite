@@ -9,6 +9,8 @@ let rec get_type_name (ct : core_type) : string option =
       | Some inner_name -> Some inner_name
       | None -> None)
   | Ptyp_constr ({ txt = Lident name; _ }, []) -> Some name
+  | Ptyp_constr ({ txt = Ldot (Lident module_name, name); _ }, []) ->
+      Some (module_name ^ "." ^ name)
   | _ -> None
 
 let is_option (ct : core_type) : bool =

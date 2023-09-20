@@ -3,11 +3,11 @@
 // API input and output types
 export type UserId = string
 
-export type UserCursor = number
+export type UserCursor = string
 
 export type ConversationId = string
 
-export type ConversationCursor = number
+export type ConversationCursor = string
 
 export type LineId = string
 
@@ -118,8 +118,8 @@ export function create_user (body: CreateUserInput): Promise<CreateUserResponse>
 export type UsersQuery = {
     type: "UsersQuery";
     name?: string,
-    next?: number,
-    prev?: number,
+    next?: UserCursor,
+    prev?: UserCursor,
     limit?: number
 }
 export type UsersOutput = {
