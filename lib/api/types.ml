@@ -80,8 +80,8 @@ module PaginatedConversations = struct
   type t = { next : int option; prev : int option; objs : Conversation.t list }
   [@@deriving yojson]
 end
-(* endpoint types *)
 
+(* endpoint types *)
 module CreateUserInput = struct
   type t = { display_name : string; user_id : UserId.t } [@@deriving yojson]
 end

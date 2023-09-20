@@ -233,25 +233,20 @@ let gen_routes ~type_namespace ~handler_namespace (routes : Types.route list) =
 let gen_types ~(t : Types.type_declaration list)
     ~(it : Types.type_declaration list) ~(ot : Types.type_declaration list)
     ~type_namespace (routes : Types.route list) =
+  let gen_declarations ~ppxes =
+    List.map (gen_type_declaration_for_api_type ~type_namespace ~ppxes)
+  in
   Format.sprintf
     "(* API input and output types *)\n\
      %s\n\n\
      (* API input types *)\n\
      %s\n\n\
      (* API output types *)\n\
-     %s(* endpoint types *)\n\
+     %s\n\n\
+     (* endpoint types *)\n\
      %s"
-    (String.concat "\n\n"
-       (List.map
-          (gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ])
-          t))
-    (String.concat "\n\n"
-       (List.map
-          (gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ])
-          it))
-    (String.concat "\n\n"
-       (List.map
-          (gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ])
-          ot))
+    (String.concat "\n\n" (gen_declarations ~ppxes:[ "yojson" ] t))
+    (String.concat "\n\n" (gen_declarations ~ppxes:[ "yojson" ] it))
+    (String.concat "\n\n" (gen_declarations ~ppxes:[ "yojson" ] ot))
     (String.concat "\n\n"
        (List.flatten (List.map (gen_route_types ~type_namespace) routes)))
