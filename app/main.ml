@@ -2,9 +2,9 @@ let error_handler =
   (fun error _debug_dump suggested_response ->
     match error.condition with
     | `Exn (Api.Endpoints.BadRequest msg) ->
-        Dream.json ~code:400
-          (Format.sprintf
-             "{ \"message\": \"%s\" }" msg)
+        Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
+    | `Exn (Api.Db.BadRequest msg) ->
+        Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
     | _ -> Lwt.return suggested_response)
   |> Dream.error_template
 

@@ -1,6 +1,8 @@
 open Petrol
 open Petrol.Postgres
 
+exception BadRequest of string
+
 let rec last = function [] -> None | [ x ] -> Some x | _ :: tail -> last tail
 let schema = StaticSchema.init ()
 
@@ -45,12 +47,8 @@ module User = struct
         |> List.map (fun (id, (display_name, (public_facing_id, ()))) ->
                { id; display_name; public_facing_id })
       in
-      let prev_cursor =
-        last r |> Option.map (fun (id, _) -> Int64.to_string (Int64.add id 1L))
-      in
-      let next_cursor =
-        List.nth_opt r 0 |> Option.map (fun (id, _) -> Int64.to_string id)
-      in
+      let prev_cursor = last r |> Option.map (fun (id, _) -> Int64.add id 1L) in
+      let next_cursor = List.nth_opt r 0 |> Option.map (fun (id, _) -> id) in
       (items, prev_cursor, next_cursor)
     in
 
@@ -62,18 +60,12 @@ module User = struct
     let q =
       match next with
       | None -> q
-      | Some c ->
-          q
-          |> Query.where
-               Expr.(id_field > vl ~ty:Type.big_int (Int64.of_string c))
+      | Some c -> q |> Query.where Expr.(id_field > vl ~ty:Type.big_int c)
     in
     let q =
       match prev with
       | None -> q
-      | Some c ->
-          q
-          |> Query.where
-               Expr.(id_field < vl ~ty:Type.big_int (Int64.of_string c))
+      | Some c -> q |> Query.where Expr.(id_field < vl ~ty:Type.big_int c)
     in
 
     q |> Request.make_many |> Petrol.collect_list db
@@ -180,18 +172,12 @@ module Conversation = struct
     let q =
       match next with
       | None -> q
-      | Some c ->
-          q
-          |> Query.where
-               Expr.(id_field > vl ~ty:Type.big_int (Int64.of_string c))
+      | Some c -> q |> Query.where Expr.(id_field > vl ~ty:Type.big_int c)
     in
     let q =
       match prev with
       | None -> q
-      | Some c ->
-          q
-          |> Query.where
-               Expr.(id_field < vl ~ty:Type.big_int (Int64.of_string c))
+      | Some c -> q |> Query.where Expr.(id_field < vl ~ty:Type.big_int c)
     in
 
     q |> Request.make_many |> Petrol.collect_list db
@@ -270,18 +256,12 @@ module Conversation = struct
       let q =
         match next with
         | None -> q
-        | Some c ->
-            q
-            |> Query.where
-                 Expr.(id_field > vl ~ty:Type.big_int (Int64.of_string c))
+        | Some c -> q |> Query.where Expr.(id_field > vl ~ty:Type.big_int c)
       in
       let q =
         match prev with
         | None -> q
-        | Some c ->
-            q
-            |> Query.where
-                 Expr.(id_field < vl ~ty:Type.big_int (Int64.of_string c))
+        | Some c -> q |> Query.where Expr.(id_field < vl ~ty:Type.big_int c)
       in
 
       q |> Request.make_many |> Petrol.collect_list db

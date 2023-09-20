@@ -1,6 +1,12 @@
-let gen_type_declaration_for_api_type ~type_namespace
-    (decl : Gen_types.Types.type_declaration) =
-  Gen_types.Gen_ocaml.gen_type_declaration ~type_namespace decl
+let gen_type_declaration_for_api_type ~type_namespace ~ppxes
+    (decl : Types.type_declaration) =
+  match decl with
+  | BasicTypeDecl decl ->
+      Gen_types.Gen_ocaml.gen_type_declaration ~type_namespace decl ~ppxes
+  | IdType name ->
+      Format.sprintf
+        "module %s = struct\n  type t = string [@@@@deriving yojson]\n\nend"
+        (Gen_types.Utils.to_pascal_case name)
 
 (* input body type *)
 
@@ -13,12 +19,10 @@ let gen_input_type ~route_name (route_params : Types.route_params)
   match route_params with
   | Fields fields ->
       gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
-        (Gen_types.Types.struct_
-           (input_type_name ~type_namespace ~route_name)
-           fields)
+        (Types.struct_ (input_type_name ~type_namespace ~route_name) fields)
   | Structs structs ->
       gen_type_declaration_for_api_type ~type_namespace ~ppxes:[ "yojson" ]
-        (Gen_types.Types.struct_union
+        (Types.struct_union
            (input_type_name ~type_namespace ~route_name)
            structs)
   | None -> ""
@@ -34,13 +38,13 @@ let gen_route_params_type ~name (route_params : Types.route_params)
   match route_params with
   | Fields fields ->
       gen_type_declaration_for_api_type ~type_namespace ~ppxes
-        (Gen_types.Types.struct_ name fields)
+        (Types.struct_ name fields)
   | Structs structs ->
       gen_type_declaration_for_api_type ~type_namespace ~ppxes
-        (Gen_types.Types.struct_union name structs)
+        (Types.struct_union name structs)
   | None ->
       gen_type_declaration_for_api_type ~type_namespace ~ppxes
-        Gen_types.Types.(alias (t name) unit)
+        Types.(alias (t name) unit)
 
 let output_type_name ~route_name ~type_namespace =
   Format.sprintf "%sOutput"
@@ -99,7 +103,12 @@ let gen_endpoint_function_body (route : Types.route) ~type_namespace
     | None -> []
     | Fields _ ->
         [
-          Format.sprintf "let query =\n    match %s.parse_query req with\n    | Ok q -> q\n    | Error msg -> raise (BadRequest msg)\n  in"
+          Format.sprintf
+            "let query =\n\
+            \    match %s.parse_query req with\n\
+            \    | Ok q -> q\n\
+            \    | Error msg -> raise (BadRequest msg)\n\
+            \  in"
             (query_param_type_name ~route_name:route.name ~type_namespace);
         ]
     | Structs _ -> failwith "not_implemented"
@@ -154,34 +163,34 @@ let gen_route_types ~type_namespace (route : Types.route) =
   | Get s ->
       let query_t =
         if s.query_param_type != None then
-        gen_route_params_type
-          ~name:(query_param_type_name ~route_name:route.name ~type_namespace)
-          s.query_param_type ~type_namespace ~ppxes:["yojson"; "query"]
+          gen_route_params_type
+            ~name:(query_param_type_name ~route_name:route.name ~type_namespace)
+            s.query_param_type ~type_namespace ~ppxes:[ "yojson"; "query" ]
         else ""
       in
       let output_t =
         gen_route_params_type
           ~name:(output_type_name ~route_name:route.name ~type_namespace)
-          s.output_type ~type_namespace ~ppxes:["yojson"]
+          s.output_type ~type_namespace ~ppxes:[ "yojson" ]
       in
       [ query_t; output_t ]
   | Post s ->
       let input_t =
         gen_route_params_type
           ~name:(input_type_name ~route_name:route.name ~type_namespace)
-          s.input_type ~type_namespace ~ppxes:["yojson"]
+          s.input_type ~type_namespace ~ppxes:[ "yojson" ]
       in
       let output_t =
         gen_route_params_type
           ~name:(output_type_name ~route_name:route.name ~type_namespace)
-          s.output_type ~type_namespace ~ppxes:["yojson"]
+          s.output_type ~type_namespace ~ppxes:[ "yojson" ]
       in
       [ input_t; output_t ]
   | Delete s ->
       let output_t =
         gen_route_params_type
           ~name:(output_type_name ~route_name:route.name ~type_namespace)
-          s.output_type ~type_namespace ~ppxes:["yojson"]
+          s.output_type ~type_namespace ~ppxes:[ "yojson" ]
       in
       [ output_t ]
 
@@ -221,10 +230,9 @@ let gen_routes ~type_namespace ~handler_namespace (routes : Types.route list) =
     @ [ "exception BadRequest of string" ]
     @ endpoints @ [ route_declarations ])
 
-let gen_types ~(t : Gen_types.Types.type_declaration list)
-    ~(it : Gen_types.Types.type_declaration list)
-    ~(ot : Gen_types.Types.type_declaration list) ~type_namespace
-    (routes : Types.route list) =
+let gen_types ~(t : Types.type_declaration list)
+    ~(it : Types.type_declaration list) ~(ot : Types.type_declaration list)
+    ~type_namespace (routes : Types.route list) =
   Format.sprintf
     "(* API input and output types *)\n\
      %s\n\n\

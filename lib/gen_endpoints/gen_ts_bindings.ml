@@ -1,12 +1,15 @@
 (* TODO: NONE OF THIS WORKS BECAUSE the yojson pxx does not generate the same structure as Rust's serde did*)
 
 let gen_type_declaration_for_api_type ~type_namespace
-    (decl : Gen_types.Types.type_declaration) =
-  Gen_types.Gen_typescript.gen_type_declaration ~type_namespace decl
+    (decl : Types.type_declaration) =
+  match decl with
+  | BasicTypeDecl decl ->
+      Gen_types.Gen_typescript.gen_type_declaration ~type_namespace decl
+  | IdType name -> type_namespace ^ Gen_types.Utils.to_pascal_case name
 
-let gen_types ~(t : Gen_types.Types.type_declaration list)
-    ~(it : Gen_types.Types.type_declaration list)
-    ~(ot : Gen_types.Types.type_declaration list) ~type_namespace =
+let gen_types ~(t : Types.type_declaration list)
+    ~(it : Types.type_declaration list) ~(ot : Types.type_declaration list)
+    ~type_namespace =
   Format.sprintf
     "// API input and output types\n\
      %s\n\n\
@@ -32,12 +35,10 @@ let gen_input_type ~route_name (route_params : Types.route_params)
   match route_params with
   | Fields fields ->
       gen_type_declaration_for_api_type ~type_namespace
-        (Gen_types.Types.struct_
-           (input_type_name ~type_namespace ~route_name)
-           fields)
+        (Types.struct_ (input_type_name ~type_namespace ~route_name) fields)
   | Structs structs ->
       gen_type_declaration_for_api_type ~type_namespace
-        (Gen_types.Types.struct_union
+        (Types.struct_union
            (input_type_name ~type_namespace ~route_name)
            structs)
   | None -> ""
@@ -53,10 +54,10 @@ let gen_route_params_type ~name (route_params : Types.route_params)
   match route_params with
   | Fields fields ->
       gen_type_declaration_for_api_type ~type_namespace
-        (Gen_types.Types.struct_ name fields)
+        (Types.struct_ name fields)
   | Structs structs ->
       gen_type_declaration_for_api_type ~type_namespace
-        (Gen_types.Types.struct_union name structs)
+        (Types.struct_union name structs)
   | None -> Format.sprintf "export type %s = {}" (type_namespace ^ name)
 
 let output_type_name ~route_name ~type_namespace =

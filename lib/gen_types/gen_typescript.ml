@@ -2,6 +2,7 @@ let rec render_type (t : Types.t) ~type_namespace =
   match t with
   | TypeLiteral Str -> "string"
   | TypeLiteral I32 -> "number"
+  | TypeLiteral I63 -> "number"
   | TypeLiteral U32 -> "number"
   | TypeLiteral F32 -> "number"
   | TypeLiteral F64 -> "number"

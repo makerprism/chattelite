@@ -3,6 +3,7 @@ let rec render_type (t : Types.t) ~type_namespace =
   | TypeLiteral Str -> "String"
   | TypeLiteral I32 -> "Integer"
   | TypeLiteral U32 -> "Integer"
+  | TypeLiteral I63 -> "Integer"
   | TypeLiteral F32 -> "Float32"
   | TypeLiteral F64 -> "Float64"
   | TypeLiteral Bool -> "Boolearn"

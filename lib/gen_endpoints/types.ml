@@ -1,3 +1,23 @@
+(* type declarations *)
+
+include Gen_types.Types.TypeDeclarations
+
+type type_declaration =
+  | BasicTypeDecl of Gen_types.Types.type_declaration
+  | IdType of string
+(*  | Cursor of *)
+
+let id_type name = IdType name
+let struct_ n f = BasicTypeDecl (Gen_types.Types.struct_ n f)
+let alias n t = BasicTypeDecl (Gen_types.Types.alias n t)
+
+let string_enum n options =
+  BasicTypeDecl (Gen_types.Types.string_enum n options)
+
+let int_enum n options = BasicTypeDecl (Gen_types.Types.int_enum n options)
+let struct_union n v = BasicTypeDecl (Gen_types.Types.struct_union n v)
+
+(* route types *)
 type method_ = Get | Post | Delete
 type url_param = { name : string; t : Gen_types.Types.t }
 type url_params = url_param list option

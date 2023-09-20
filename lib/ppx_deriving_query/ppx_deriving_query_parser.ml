@@ -4,39 +4,37 @@ open Ast_builder.Default
 
 let rec get_type_name (ct : core_type) : string option =
   match ct.ptyp_desc with
-  | Ptyp_constr ({ txt = Lident "option"; _ }, [arg_type]) ->
-    (match get_type_name arg_type with
-      | Some inner_name -> Some (inner_name)
+  | Ptyp_constr ({ txt = Lident "option"; _ }, [ arg_type ]) -> (
+      match get_type_name arg_type with
+      | Some inner_name -> Some inner_name
       | None -> None)
-  | Ptyp_constr ({ txt = Lident name; _ }, []) ->
-    Some name
+  | Ptyp_constr ({ txt = Lident name; _ }, []) -> Some name
   | _ -> None
 
 let is_option (ct : core_type) : bool =
-match ct.ptyp_desc with
-| Ptyp_constr ({ txt = Lident "option"; _ }, _) -> true
-  | _ -> false 
+  match ct.ptyp_desc with
+  | Ptyp_constr ({ txt = Lident "option"; _ }, _) -> true
+  | _ -> false
 
-let gen_decode_expr ~loc (ct: core_type) : expression =
+let gen_decode_expr ~loc (ct : core_type) : expression =
   match get_type_name ct with
   | None -> failwith "type name not found"
   | Some name ->
-    if name <> "string" then (
-    if is_option ct then
-      [%expr Option.map [%e evar ~loc (name ^ "_of_string")]]
-    else 
-      [%expr Option.map [%e evar ~loc (name ^ "_of_string")] |> Option.get ]
-    )
-    else [%expr (fun id -> id)]
+      if name <> "string" then
+        if is_option ct then
+          [%expr Option.map [%e evar ~loc (name ^ "_of_string")]]
+        else
+          [%expr Option.map [%e evar ~loc (name ^ "_of_string")] |> Option.get]
+      else [%expr fun id -> id]
 
 let query_parser_impl acc (ld : label_declaration) =
   let loc = ld.pld_loc in
   [%expr
     let ([%p ppat_var ~loc ld.pld_name] : [%t ld.pld_type]) =
       try
-        Dream.query req [%e estring ~loc ld.pld_name.txt ] |> [%e gen_decode_expr ~loc ld.pld_type]
-      with _ -> 
-        raise (Invalid_argument [%e estring ~loc ld.pld_name.txt ])
+        Dream.query req [%e estring ~loc ld.pld_name.txt]
+        |> [%e gen_decode_expr ~loc ld.pld_type]
+      with _ -> raise (Invalid_argument [%e estring ~loc ld.pld_name.txt])
     in
     [%e acc]]
 
@@ -58,17 +56,18 @@ let generate_impl ~ctxt (_rec_flag, type_declarations) =
           [%str
             let parse_query req =
               try
-                Ok ([%e
-                List.fold_left fields
-                  ~init:
-                    (pexp_record ~loc
-                       ( List.map fields ~f:(fun (ld : label_declaration) ->
-                             ({loc; txt = lident ld.pld_name.txt}, evar ~loc ld.pld_name.txt)) )
-                             None)
-                  ~f:query_parser_impl])
+                Ok
+                  [%e
+                    List.fold_left fields
+                      ~init:
+                        (pexp_record ~loc
+                           (List.map fields ~f:(fun (ld : label_declaration) ->
+                                ( { loc; txt = lident ld.pld_name.txt },
+                                  evar ~loc ld.pld_name.txt )))
+                           None)
+                      ~f:query_parser_impl]
               with Invalid_argument field_name ->
-                Error ("failed to decode '" ^ field_name ^ "' from query")
-          ])
+                Error ("failed to decode '" ^ field_name ^ "' from query")])
   |> List.concat
 
 let generate_intf ~ctxt (_rec_flag, type_declarations) =
@@ -86,7 +85,12 @@ let generate_intf ~ctxt (_rec_flag, type_declarations) =
           in
           [ Ast_builder.Default.psig_extension ~loc ext [] ]
       | { ptype_kind = Ptype_record _; ptype_name; _ } ->
-          [%sig: val parse_query : Dream.request -> ([%t (ptyp_constr ~loc { loc; txt = lident ptype_name.txt } [])], string) result ])
+          [%sig:
+            val parse_query :
+              Dream.request ->
+              ( [%t ptyp_constr ~loc { loc; txt = lident ptype_name.txt } []],
+                string )
+              result])
   |> List.concat
 
 let impl_generator = Deriving.Generator.V2.make_noarg generate_impl

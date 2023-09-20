@@ -4,34 +4,38 @@ open Lwt.Syntax
 
 exception BadRequest of string
 
-let create_user (req: Dream.request) =
+let create_user (req : Dream.request) =
   let* body = Dream.body req in
   let body = Types.CreateUserInput.t_of_yojson (Yojson.Safe.from_string body) in
-  let* result : Types.CreateUserOutput.t = Handler.create_user req body in
-  result |> Types.CreateUserOutput.yojson_of_t |> Yojson.Safe.to_string |> Dream.json
+  let* (result : Types.CreateUserOutput.t) = Handler.create_user req body in
+  result |> Types.CreateUserOutput.yojson_of_t |> Yojson.Safe.to_string
+  |> Dream.json
 
-let users (req: Dream.request) =
+let users (req : Dream.request) =
   let query =
     match Types.UsersQuery.parse_query req with
     | Ok q -> q
     | Error msg -> raise (BadRequest msg)
   in
-  let* result : Types.UsersOutput.t = Handler.users req query in
+  let* (result : Types.UsersOutput.t) = Handler.users req query in
   result |> Types.UsersOutput.yojson_of_t |> Yojson.Safe.to_string |> Dream.json
 
-let get_user (req: Dream.request) =
+let get_user (req : Dream.request) =
   let user_id = Dream.param req "user_id" in
-  let* result : Types.GetUserOutput.t = Handler.get_user req user_id in
-  result |> Types.GetUserOutput.yojson_of_t |> Yojson.Safe.to_string |> Dream.json
+  let* (result : Types.GetUserOutput.t) = Handler.get_user req user_id in
+  result |> Types.GetUserOutput.yojson_of_t |> Yojson.Safe.to_string
+  |> Dream.json
 
-let delete_user (req: Dream.request) =
+let delete_user (req : Dream.request) =
   let user_id = Dream.param req "user_id" in
-  let* result : Types.DeleteUserOutput.t = Handler.delete_user req user_id in
-  result |> Types.DeleteUserOutput.yojson_of_t |> Yojson.Safe.to_string |> Dream.json
+  let* (result : Types.DeleteUserOutput.t) = Handler.delete_user req user_id in
+  result |> Types.DeleteUserOutput.yojson_of_t |> Yojson.Safe.to_string
+  |> Dream.json
 
-let routes = [
-  Dream.post "/users" create_user;
-  Dream.get "/users" users;
-  Dream.get "/user/:user_id" get_user;
-  Dream.delete "/user/:user_id" delete_user
-]
+let routes =
+  [
+    Dream.post "/users" create_user;
+    Dream.get "/users" users;
+    Dream.get "/user/:user_id" get_user;
+    Dream.delete "/user/:user_id" delete_user;
+  ]

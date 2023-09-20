@@ -2,17 +2,17 @@
 
 # Types
 
-## <a name="UserId">UserId</a>
+## UserId
 
-  is an alias for String
+is an ID type
 
-## <a name="ConversationId">ConversationId</a>
+## ConversationId
 
-  is an alias for String
+is an ID type
 
-## <a name="LineId">LineId</a>
+## LineId
 
-  is an alias for String
+is an ID type
 
 ## <a name="DateTime">DateTime</a>
 
@@ -31,8 +31,8 @@ is a struct with these fields:
 is a struct with these fields:
 |name|type|
 |-|-|
-|next|Optional (String)|
-|prev|Optional (String)|
+|next|Optional (Integer)|
+|prev|Optional (Integer)|
 |objs|Array of ([User](#User))|
 
 ## <a name="ParentLine">ParentLine</a>
@@ -120,8 +120,8 @@ is a struct with these fields:
 is a struct with these fields:
 |name|type|
 |-|-|
-|next|Optional (String)|
-|prev|Optional (String)|
+|next|Optional (Integer)|
+|prev|Optional (Integer)|
 |objs|Array of ([Conversation](#Conversation))|
 
 # Endpoints
@@ -153,8 +153,8 @@ Query Parameters:
   |name|type|
   |-|-|
   |name|Optional (String)|
-  |next|Optional (String)|
-  |prev|Optional (String)|
+  |next|Optional (Integer)|
+  |prev|Optional (Integer)|
   |limit|Optional (Integer)|
 
 Response body:

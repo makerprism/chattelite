@@ -22,7 +22,9 @@ let get_user req user_id =
 let users req (query : Types.UsersQuery.t) =
   let* users_or_error =
     Dream.sql req
-      (Db.User.get_many ~next:query.next ~prev:query.prev
+      (Db.User.get_many
+         ~next:(query.next |> Option.map Int64.of_int)
+         ~prev:(query.prev |> Option.map Int64.of_int)
          ~limit:(Option.value ~default:20 query.limit))
   in
   let* users, next, prev = Caqti_lwt.or_fail users_or_error in
@@ -31,6 +33,15 @@ let users req (query : Types.UsersQuery.t) =
     |> List.map (fun Db.User.{ id = _; public_facing_id; display_name } ->
            Types.User.{ user_id = public_facing_id; display_name })
   in
-  Lwt.return Types.UsersOutput.{ users = { objs; next; prev } }
+  Lwt.return
+    Types.UsersOutput.
+      {
+        users =
+          {
+            objs;
+            next = next |> Option.map Int64.to_int;
+            prev = prev |> Option.map Int64.to_int;
+          };
+      }
 
 let delete_user _req _user_id = Lwt.return ()

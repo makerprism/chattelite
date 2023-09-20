@@ -87,17 +87,18 @@ let gen_endpoint_doc (route : Types.route) =
     route.docstring meth route.url
     (String.concat "\n\n" docs)
 
+let gen_type_documentation (t : Types.type_declaration) ~type_namespace =
+  match t with
+  | BasicTypeDecl t ->
+      Gen_types.Gen_documentation.gen_type_documentation ~type_namespace t
+  | IdType t ->
+      Format.sprintf "## %s\n\nis an ID type" (Gen_types.Utils.to_pascal_case t)
+
 let gen_docs ~t ~it ~ot (routes : Types.route list) =
   String.concat "\n\n"
     ([ "# Types" ]
-    @ List.map
-        (Gen_types.Gen_documentation.gen_type_documentation ~type_namespace:"")
-        t
-    @ List.map
-        (Gen_types.Gen_documentation.gen_type_documentation ~type_namespace:"")
-        it
-    @ List.map
-        (Gen_types.Gen_documentation.gen_type_documentation ~type_namespace:"")
-        ot
+    @ List.map (gen_type_documentation ~type_namespace:"") t
+    @ List.map (gen_type_documentation ~type_namespace:"") it
+    @ List.map (gen_type_documentation ~type_namespace:"") ot
     @ [ "# Endpoints" ]
     @ List.map gen_endpoint_doc routes)

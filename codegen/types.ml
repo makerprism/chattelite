@@ -1,27 +1,27 @@
 open T
 
 let paginate name obj_t =
-  Gen_types.Types.(
+  Gen_endpoints.Types.(
     struct_ (u name)
       [
-        field "next" (option str);
-        field "prev" (option str);
+        field "next" (option i63);
+        field "prev" (option i63);
         field "objs" (vec obj_t);
       ])
 
 let t =
-  Gen_types.Types.
+  Gen_endpoints.Types.
     [
-      alias T.user_id str;
-      alias T.conversation_id str;
-      alias T.line_id str;
+      id_type (u T.user_id);
+      id_type (u T.conversation_id);
+      id_type (u T.line_id);
       alias T.date_time str;
     ]
 
 let it = []
 
 let ot =
-  Gen_types.Types.
+  Gen_endpoints.Types.
     [
       struct_ (u Ot.user)
         [ field "display_name" str; field "user_id" T.user_id ];
