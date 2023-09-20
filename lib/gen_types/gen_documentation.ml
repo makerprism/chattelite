@@ -20,11 +20,6 @@ let render_struct_field (f : Types.field) =
   Format.sprintf "|%s|%s|" f.field_name
     (render_type f.field_t ~type_namespace:"")
 
-let gen_variant ~prefix (s : Types.struct_) =
-  Format.sprintf "* `%s`\n\n%s\n" (prefix ^ s.struct_name)
-    (String.concat "\n"
-       ([ "|field_name|type|"; "|-|-|" ] @ List.map render_struct_field s.fields))
-
 let deriving = function
   | [] -> ""
   | ppxes -> Format.sprintf " [@@@@deriving %s]" (String.concat ", " ppxes)
@@ -38,6 +33,12 @@ let gen_type_documentation (decl : Types.type_declaration) ~type_namespace =
         (linkable_anchor (Utils.to_pascal_case name))
         (render_type t ~type_namespace)
   | StructUnion { name; variants } ->
+      let gen_variant ~prefix (s : Types.struct_) =
+        Format.sprintf "* `%s`\n\n%s\n" (prefix ^ s.struct_name)
+          (String.concat "\n"
+             ([ "|field_name|type|"; "|-|-|" ]
+             @ List.map render_struct_field s.fields))
+      in
       let variants =
         List.map
           (fun (variant : Types.struct_) -> gen_variant ~prefix:name variant)

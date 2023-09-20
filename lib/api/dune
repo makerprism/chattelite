@@ -1,5 +1,9 @@
+(env
+  (dev
+    (flags (:standard -dsource))))
+
 (library
  (name api)
  (libraries dream petrol)
  (preprocess
-  (pps ppx_rapper ppx_yojson_conv)))
+  (pps ppx_rapper ppx_yojson_conv ppx_deriving_query)))
