@@ -5,6 +5,6 @@
 
 (library
  (name api)
- (libraries dream petrol)
+ (libraries dream db)
  (preprocess
-  (pps ppx_rapper ppx_yojson_conv ppx_deriving_query)))
+  (pps ppx_yojson_conv ppx_deriving_query)))

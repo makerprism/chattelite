@@ -3,7 +3,7 @@ let error_handler =
     match error.condition with
     | `Exn (Api.Endpoints.BadRequest msg) ->
         Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
-    | `Exn (Api.Db.BadRequest msg) ->
+    | `Exn (Db.Db_schema.BadRequest msg) ->
         Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
     | _ -> Lwt.return suggested_response)
   |> Dream.error_template
