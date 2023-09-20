@@ -4,15 +4,23 @@
 
 ## UserId
 
-is an ID type
+is an ID type (String)
+
+## UserCursor
+
+is a Cursor type (Integer)
 
 ## ConversationId
 
-is an ID type
+is an ID type (String)
+
+## ConversationCursor
+
+is a Cursor type (Integer)
 
 ## LineId
 
-is an ID type
+is an ID type (String)
 
 ## <a name="DateTime">DateTime</a>
 
@@ -31,8 +39,8 @@ is a struct with these fields:
 is a struct with these fields:
 |name|type|
 |-|-|
-|next|Optional (Integer)|
-|prev|Optional (Integer)|
+|next|Optional ([UserCursor](#UserCursor))|
+|prev|Optional ([UserCursor](#UserCursor))|
 |objs|Array of ([User](#User))|
 
 ## <a name="ParentLine">ParentLine</a>
@@ -120,8 +128,8 @@ is a struct with these fields:
 is a struct with these fields:
 |name|type|
 |-|-|
-|next|Optional (Integer)|
-|prev|Optional (Integer)|
+|next|Optional ([ConversationCursor](#ConversationCursor))|
+|prev|Optional ([ConversationCursor](#ConversationCursor))|
 |objs|Array of ([Conversation](#Conversation))|
 
 # Endpoints

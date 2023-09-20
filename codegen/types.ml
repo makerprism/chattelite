@@ -1,11 +1,11 @@
 open T
 
-let paginate name obj_t =
+let paginate name obj_t cursor_t =
   Gen_endpoints.Types.(
     struct_ (u name)
       [
-        field "next" (option i63);
-        field "prev" (option i63);
+        field "next" (option cursor_t);
+        field "prev" (option cursor_t);
         field "objs" (vec obj_t);
       ])
 
@@ -13,7 +13,9 @@ let t =
   Gen_endpoints.Types.
     [
       id_type (u T.user_id);
+      cursor_type (u T.user_cursor);
       id_type (u T.conversation_id);
+      cursor_type (u T.conversation_cursor);
       id_type (u T.line_id);
       alias T.date_time str;
     ]
@@ -25,7 +27,7 @@ let ot =
     [
       struct_ (u Ot.user)
         [ field "display_name" str; field "user_id" T.user_id ];
-      paginate Ot.paginated_users Ot.user;
+      paginate Ot.paginated_users Ot.user T.user_cursor;
       struct_ (u Ot.parent_line)
         [
           field "line_id" T.line_id;
@@ -66,5 +68,5 @@ let ot =
           field "number_of_unread_messages" i32;
           field "newest_line" (nullable Ot.line);
         ];
-      paginate Ot.paginated_conversations Ot.conversation;
+      paginate Ot.paginated_conversations Ot.conversation T.conversation_cursor;
     ]

@@ -7,6 +7,10 @@ let gen_type_declaration_for_api_type ~type_namespace ~ppxes
       Format.sprintf
         "module %s = struct\n  type t = string [@@@@deriving yojson]\n\nend"
         (Gen_types.Utils.to_pascal_case name)
+  | CursorType name ->
+      Format.sprintf
+        "module %s = struct\n  type t = int [@@@@deriving yojson]\n\nend"
+        (Gen_types.Utils.to_pascal_case name)
 
 (* input body type *)
 

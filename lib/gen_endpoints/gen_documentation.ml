@@ -91,8 +91,12 @@ let gen_type_documentation (t : Types.type_declaration) ~type_namespace =
   match t with
   | BasicTypeDecl t ->
       Gen_types.Gen_documentation.gen_type_documentation ~type_namespace t
-  | IdType t ->
-      Format.sprintf "## %s\n\nis an ID type" (Gen_types.Utils.to_pascal_case t)
+  | IdType name ->
+      Format.sprintf "## %s\n\nis an ID type (String)"
+        (Gen_types.Utils.to_pascal_case name)
+  | CursorType name ->
+      Format.sprintf "## %s\n\nis a Cursor type (Integer)"
+        (Gen_types.Utils.to_pascal_case name)
 
 let gen_docs ~t ~it ~ot (routes : Types.route list) =
   String.concat "\n\n"

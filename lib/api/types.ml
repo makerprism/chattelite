@@ -5,8 +5,16 @@ module UserId = struct
   type t = string [@@deriving yojson]
 end
 
+module UserCursor = struct
+  type t = int [@@deriving yojson]
+end
+
 module ConversationId = struct
   type t = string [@@deriving yojson]
+end
+
+module ConversationCursor = struct
+  type t = int [@@deriving yojson]
 end
 
 module LineId = struct
@@ -25,7 +33,11 @@ module User = struct
 end
 
 module PaginatedUsers = struct
-  type t = { next : int option; prev : int option; objs : User.t list }
+  type t = {
+    next : UserCursor.t option;
+    prev : UserCursor.t option;
+    objs : User.t list;
+  }
   [@@deriving yojson]
 end
 
@@ -77,7 +89,11 @@ module Conversation = struct
 end
 
 module PaginatedConversations = struct
-  type t = { next : int option; prev : int option; objs : Conversation.t list }
+  type t = {
+    next : ConversationCursor.t option;
+    prev : ConversationCursor.t option;
+    objs : Conversation.t list;
+  }
   [@@deriving yojson]
 end
 

@@ -3,6 +3,7 @@
 type type_declaration =
   | BasicTypeDecl of Gen_types.Types.type_declaration
   | IdType of string
+  | CursorType of string
 (*  | Cursor of *)
 
 (* Generic types from Gen_types *)
@@ -21,6 +22,7 @@ let struct_union n v = BasicTypeDecl (Gen_types.Types.struct_union n v)
 (* Types specific to this API *)
 
 let id_type name = IdType name
+let cursor_type name = CursorType name
 
 (* route types *)
 type method_ = Get | Post | Delete

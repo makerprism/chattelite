@@ -5,7 +5,14 @@ let gen_type_declaration_for_api_type ~type_namespace
   match decl with
   | BasicTypeDecl decl ->
       Gen_types.Gen_typescript.gen_type_declaration ~type_namespace decl
-  | IdType name -> type_namespace ^ Gen_types.Utils.to_pascal_case name
+  | IdType name ->
+      Gen_types.(
+        Gen_typescript.gen_type_declaration ~type_namespace
+          Types.(alias (t name) str))
+  | CursorType name ->
+      Gen_types.(
+        Gen_typescript.gen_type_declaration ~type_namespace
+          Types.(alias (t name) i63))
 
 let gen_types ~(t : Types.type_declaration list)
     ~(it : Types.type_declaration list) ~(ot : Types.type_declaration list)

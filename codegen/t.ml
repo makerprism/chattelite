@@ -3,7 +3,9 @@ open Gen_types.Types
 module T = struct
   let date_time = t "DateTime"
   let user_id = t "UserId"
+  let user_cursor = t "UserCursor"
   let conversation_id = t "ConversationId"
+  let conversation_cursor = t "ConversationCursor"
   let line_id = t "LineId"
 end
 
