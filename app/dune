@@ -1,7 +1,7 @@
 (executable
  (public_name api)
  (name main)
- (libraries api dream caqti-driver-postgresql)
+ (libraries api dream caqti-driver-postgresql jwto)
  (preprocess
   (pps lwt_ppx ppx_yojson_conv)))
 

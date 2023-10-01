@@ -24,6 +24,10 @@ module Client = struct
     Lwt.return T.ConversationsOutput.{ conversations = { objs; next; prev } }
 
   (*    Server_sent_events.broadcast_message (T.ConversationEvent.ConversationEventJoin { from = { Conversation_id; display_name }; timestamp= "TODO"}); *)
+
+  (*
+   curl -H "X-Access-Token: TODO:API_KEY" http://localhost:8080/_/users
+  *)
 end
 
 module Server = struct
@@ -72,6 +76,6 @@ module Server = struct
 
   let delete_user _req _user_id = failwith "not implemented" (* Lwt.return ()*)
 
-  let generate_client_jwt _req ({user_id = _}: T.GenerateClientJwtInput.t) =
+  let generate_client_jwt _req ({ user_id = _ } : T.GenerateClientJwtInput.t) =
     failwith "not implemented"
 end

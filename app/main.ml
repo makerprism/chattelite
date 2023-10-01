@@ -16,12 +16,15 @@ let () =
   @@ Dream.sql_pool "postgresql://postgres:test@127.0.0.1:5432/ocaml_api"
   (*@@ Dream.origin_referrer_check*)
   @@ Dream.router
-       ([
-          Dream.get "/" (fun _ -> Dream.html Home.render);
-          Dream.get "/push" (fun _ ->
-              Dream.stream
-                ~headers:[ ("Content-Type", "text/event-stream") ]
-                Api.Server_sent_events.forward_messages);
-        ]
-       @ Api.Generated_server_endpoints.routes
-       @ Api.Generated_client_endpoints.routes)
+       [
+         Dream.get "/" (fun _ -> Dream.html Home.render);
+         Dream.get "/push" (fun _ ->
+             Dream.stream
+               ~headers:[ ("Content-Type", "text/event-stream") ]
+               Api.Server_sent_events.forward_messages);
+         Dream.scope ""
+           [ Auth.check_server_api_key ]
+           Api.Generated_server_endpoints.routes;
+         Dream.scope "" [ Auth.check_client_jwt ]
+           Api.Generated_client_endpoints.routes;
+       ]
