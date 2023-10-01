@@ -6,14 +6,15 @@ let insert ~public_facing_id:a ~display_name:n
     ((module DB : Caqti_lwt.CONNECTION) as db) =
   let q =
     P.Query.insert ~table:users_table
-      ~values:Pg.Expr.[ display_name_field := s n; public_facing_id_field := s a ]
+      ~values:
+        Pg.Expr.[ display_name_field := s n; public_facing_id_field := s a ]
   in
   DB.with_transaction (fun () -> q |> Pg.Request.make_zero |> Petrol.exec db)
 
 let get_one ~public_facing_id db =
   let q =
     P.Query.select ~from:users_table
-    Pg.Expr.[ id_field; display_name_field; public_facing_id_field ]
+      Pg.Expr.[ id_field; display_name_field; public_facing_id_field ]
     |> P.Query.limit (Pg.Expr.i 1)
     |> P.Query.where Pg.Expr.(s public_facing_id = public_facing_id_field)
   in
@@ -37,7 +38,7 @@ let get_many ~next ~prev ~limit db =
 
   let q =
     P.Query.select ~from:users_table
-    Pg.Expr.[ id_field; display_name_field; public_facing_id_field ]
+      Pg.Expr.[ id_field; display_name_field; public_facing_id_field ]
     |> P.Query.limit (Pg.Expr.i limit)
   in
   let q =
