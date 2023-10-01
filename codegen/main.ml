@@ -51,7 +51,8 @@ let () =
     ~endpoints:Server_endpoints.endpoints
     ~types_output_path:"lib/api/generated_server_types.ml"
     ~endpoints_output_path:"lib/api/generated_server_endpoints.ml"
-    ~type_namespace:"Generated_server_types." ~handler_namespace:"Handlers.Server.";
+    ~type_namespace:"Generated_server_types."
+    ~handler_namespace:"Handlers.Server.";
 
   gen_documentation ~t:Server_types.t ~it:Server_types.it ~ot:Server_types.ot
     ~endpoints:Server_endpoints.endpoints
@@ -62,7 +63,8 @@ let () =
     ~endpoints:Client_endpoints.endpoints
     ~types_output_path:"lib/api/generated_client_types.ml"
     ~endpoints_output_path:"lib/api/generated_client_endpoints.ml"
-    ~type_namespace:"Generated_client_types." ~handler_namespace:"Handlers.Client.";
+    ~type_namespace:"Generated_client_types."
+    ~handler_namespace:"Handlers.Client.";
 
   gen_documentation ~t:Client_types.t ~it:Client_types.it ~ot:Client_types.ot
     ~endpoints:Client_endpoints.endpoints
