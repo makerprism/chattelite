@@ -25,6 +25,7 @@
   (dream (>= "1.0.0~alpha5"))
   (yojson (>= "2.0.2"))
   (jwto (>= "0.4.0"))
+  (toml (>= "7.1.0"))
   (ppx_yojson_conv (>= "v0.15.1"))
   (lwt_ppx (>= "2.1.0")))
  (tags

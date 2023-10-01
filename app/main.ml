@@ -11,6 +11,7 @@ let error_handler =
   |> Dream.error_template
 
 let () =
+  let config = Config.load_config "./config.json" in
   (*Lwt.async Server_sent_events.message_loop;*)
   Dream.run ~error_handler @@ Dream.logger
   @@ Dream.sql_pool "postgresql://postgres:test@127.0.0.1:5432/ocaml_api"
@@ -23,8 +24,9 @@ let () =
                ~headers:[ ("Content-Type", "text/event-stream") ]
                Api.Server_sent_events.forward_messages);
          Dream.scope ""
-           [ Auth.check_server_api_key ]
+           [ Auth.check_server_api_key ~api_key:config.api_key ]
            Api.Generated_server_endpoints.routes;
-         Dream.scope "" [ Auth.check_client_jwt ]
+         Dream.scope ""
+           [ Auth.check_client_jwt ~jwt_secret:config.client_jwt_secret ]
            Api.Generated_client_endpoints.routes;
        ]
