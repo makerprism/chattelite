@@ -1,4 +1,5 @@
 {
     "api_key": "34oyti3hn54oayun53oyhua53y35ey",
-    "client_jwt_secret": "24q6th408yh350yq35rinyqpi3nyh3"
+    "client_jwt_secret": "24q6th408yh350yq35rinyqpi3nyh3",
+    "database_url": "postgresql://postgres:test@127.0.0.1:5432/ocaml_api"
 }

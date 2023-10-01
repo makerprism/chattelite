@@ -1,4 +1,8 @@
-type config = { api_key : string; client_jwt_secret : string }
+type config = {
+  api_key : string;
+  client_jwt_secret : string;
+  database_url : string;
+}
 [@@deriving yojson]
 
 let load_config filename =
