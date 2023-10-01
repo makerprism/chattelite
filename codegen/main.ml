@@ -47,32 +47,34 @@ let gen_documentation ~t ~it ~ot ~endpoints ~output_path =
 
 let () =
   (* app side *)
-  gen_ocaml_endpoints ~t:App_types.t ~it:App_types.it ~ot:App_types.ot
-    ~endpoints:App_endpoints.endpoints ~types_output_path:"lib/api/app_types.ml"
-    ~endpoints_output_path:"lib/api/app_endpoints.ml"
-    ~type_namespace:"App_types." ~handler_namespace:"App_handlers.";
+  gen_ocaml_endpoints ~t:Server_types.t ~it:Server_types.it ~ot:Server_types.ot
+    ~endpoints:Server_endpoints.endpoints
+    ~types_output_path:"lib/api/server_types.ml"
+    ~endpoints_output_path:"lib/api/server_endpoints.ml"
+    ~type_namespace:"Server_types." ~handler_namespace:"Handlers.Server.";
 
-  gen_documentation ~t:App_types.t ~it:App_types.it ~ot:App_types.ot
-    ~endpoints:App_endpoints.endpoints
-    ~output_path:"api_documentation/app/README.md";
-
-  gen_typescript_bindings ~t:App_types.t ~it:App_types.it ~ot:App_types.ot
-    ~endpoints:App_endpoints.endpoints ~type_namespace:""
-    ~types_output_path:"typescript_bindings/app/types.ts"
-    ~endpoints_output_path:"typescript_bindings/app/bindings.ts";
+  gen_documentation ~t:Server_types.t ~it:Server_types.it ~ot:Server_types.ot
+    ~endpoints:Server_endpoints.endpoints
+    ~output_path:"api_documentation/server/README.md";
 
   (* client side*)
   gen_ocaml_endpoints ~t:Client_types.t ~it:Client_types.it ~ot:Client_types.ot
     ~endpoints:Client_endpoints.endpoints
     ~types_output_path:"lib/api/client_types.ml"
     ~endpoints_output_path:"lib/api/client_endpoints.ml"
-    ~type_namespace:"Client_types." ~handler_namespace:"Client_handlers.";
+    ~type_namespace:"Client_types." ~handler_namespace:"Handlers.Client.";
 
   gen_documentation ~t:Client_types.t ~it:Client_types.it ~ot:Client_types.ot
     ~endpoints:Client_endpoints.endpoints
     ~output_path:"api_documentation/client/README.md";
 
-  gen_typescript_bindings ~t:App_types.t ~it:App_types.it ~ot:App_types.ot
-    ~endpoints:App_endpoints.endpoints ~type_namespace:""
-    ~types_output_path:"typescript_bindings/client/types.ts"
-    ~endpoints_output_path:"typescript_bindings/client/bindings.ts"
+  (* TypeScript sdk *)
+  gen_typescript_bindings ~t:Server_types.t ~it:Server_types.it
+    ~ot:Server_types.ot ~endpoints:Server_endpoints.endpoints ~type_namespace:""
+    ~types_output_path:"sdks/TypeScript/server/src/generated/types.ts"
+    ~endpoints_output_path:"sdks/TypeScript/server/src/generated/endpoints.ts";
+
+  gen_typescript_bindings ~t:Server_types.t ~it:Server_types.it
+    ~ot:Server_types.ot ~endpoints:Server_endpoints.endpoints ~type_namespace:""
+    ~types_output_path:"sdks/TypeScript/client/src/generated/types.ts"
+    ~endpoints_output_path:"sdks/TypeScript/client/src/generated/endpoints.ts"

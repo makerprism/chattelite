@@ -1,7 +1,7 @@
 let error_handler =
   (fun error _debug_dump suggested_response ->
     match error.condition with
-    | `Exn (Api.App_endpoints.BadRequest msg) ->
+    | `Exn (Api.Server_endpoints.BadRequest msg) ->
         Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
     | `Exn (Api.Client_endpoints.BadRequest msg) ->
         Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
@@ -23,4 +23,4 @@ let () =
                 ~headers:[ ("Content-Type", "text/event-stream") ]
                 Api.Server_sent_events.forward_messages);
         ]
-       @ Api.App_endpoints.routes @ Api.Client_endpoints.routes)
+       @ Api.Server_endpoints.routes @ Api.Client_endpoints.routes)

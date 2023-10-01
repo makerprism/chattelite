@@ -11,7 +11,7 @@ let conversations (req : Dream.request) =
     | Error msg -> raise (BadRequest msg)
   in
   let* (result : Client_types.ConversationsOutput.t) =
-    Client_handlers.conversations req query
+    Handlers.Client.conversations req query
   in
   result |> Client_types.ConversationsOutput.yojson_of_t
   |> Yojson.Safe.to_string |> Dream.json

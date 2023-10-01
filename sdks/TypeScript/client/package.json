@@ -1,0 +1,20 @@
+{
+  "name": "chattelite-client",
+  "version": "0.1.0",
+  "description": "",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc && node esbuild.config.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.16.12",
+    "typescript": "^4.9.4",
+    "esbuild-node-externals": "^1.6.0"
+  },
+  "dependencies": {
+    "event-source-with-headers": "file:../lib/event-source-with-headers"
+  }
+}
