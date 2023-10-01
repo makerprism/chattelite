@@ -7,3 +7,5 @@ let load_config filename =
     json_data |> config_of_yojson
   with Yojson.Json_error e ->
     failwith (Format.sprintf "error parsing JSON: %s\n" e)
+
+let config : config = load_config "./config.json"

@@ -26,7 +26,7 @@ module Client = struct
   (*    Server_sent_events.broadcast_message (T.ConversationEvent.ConversationEventJoin { from = { Conversation_id; display_name }; timestamp= "TODO"}); *)
 
   (*
-   curl -H "X-Access-Token: TODO:API_KEY" http://localhost:8080/_/users
+   curl -H "X-Access-Token: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoic2FiaW5lIn0.st_VZPdJx3BHvVCY2oWplin4oz6BNWhn-hoAaTVCwbU" http://localhost:8080/conversations
   *)
 end
 
@@ -76,6 +76,17 @@ module Server = struct
 
   let delete_user _req _user_id = failwith "not implemented" (* Lwt.return ()*)
 
-  let generate_client_jwt _req ({ user_id = _ } : T.GenerateClientJwtInput.t) =
-    failwith "not implemented"
+  let generate_client_jwt _req ({ user_id } : T.GenerateClientJwtInput.t) =
+    let payload = [ ("user_id", user_id) ] in
+    match Jwto.encode Jwto.HS256 Config.config.client_jwt_secret payload with
+    | Ok jwt -> Lwt.return T.GenerateClientJwtOutput.{ jwt }
+    | Error message -> failwith ("not implemented : " ^ message)
+
+  (*
+      curl -X POST \
+     -H "Content-Type: application/json" \
+     -H "X-Access-Token: 34oyti3hn54oayun53oyhua53y35ey" \
+     -d '{"user_id":"sabine"}' \
+     http://localhost:8080/_/gen-client-jwt
+         *)
 end

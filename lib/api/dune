@@ -1,5 +1,5 @@
 (library
  (name api)
- (libraries dream db yojson)
+ (libraries dream db yojson jwto)
  (preprocess
   (pps ppx_yojson_conv ppx_deriving_query)))
