@@ -19,14 +19,14 @@ let () =
   @@ Dream.router
        [
          Dream.get "/" (fun _ -> Dream.html Home.render);
-         Dream.get "/push" (fun _ ->
-             Dream.stream
-               ~headers:[ ("Content-Type", "text/event-stream") ]
-               Api.Server_sent_events.forward_messages);
          Dream.scope ""
            [ Auth.check_server_api_key ~api_key:config.api_key ]
            Api.Generated_server_endpoints.routes;
          Dream.scope ""
            [ Auth.check_client_jwt ~jwt_secret:config.client_jwt_secret ]
            Api.Generated_client_endpoints.routes;
+         Dream.get "/push" (fun _ ->
+             Dream.stream
+               ~headers:[ ("Content-Type", "text/event-stream") ]
+               Api.Server_sent_events.forward_messages);
        ]
