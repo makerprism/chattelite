@@ -5,7 +5,7 @@ include Db_schema.Conversation
 let insert ~(data : string) ((module DB : Caqti_lwt.CONNECTION) as db) =
   let now = Ptime_clock.now () in
   let q =
-    Query.insert ~table:conversations_table
+    Query.insert ~table
       ~values:
         Expr.
           [
@@ -18,7 +18,7 @@ let insert ~(data : string) ((module DB : Caqti_lwt.CONNECTION) as db) =
 
 let get_one ~id db =
   let q =
-    Query.select ~from:conversations_table
+    Query.select ~from:table
       Expr.[ id_field; created_at_field; updated_at_field; data_field ]
     |> Query.limit (Expr.i 1)
     |> Query.where Expr.(id = id_field)
@@ -42,7 +42,7 @@ let get_many ~next ~prev ~limit db =
   in
 
   let q =
-    Query.select ~from:conversations_table
+    Query.select ~from:table
       Expr.[ id_field; created_at_field; updated_at_field; data_field ]
     |> Query.limit (Expr.i limit)
   in
@@ -61,13 +61,13 @@ let get_many ~next ~prev ~limit db =
   |> Lwt_result.map process_results
 
 module Participant = struct
-  include Participant
+  include Db_schema.Participant
 
   let insert ~conversation_id ~user_id
       ((module DB : Caqti_lwt.CONNECTION) as db) =
     let now = Ptime_clock.now () in
     let q =
-      Query.insert ~table:participants_table
+      Query.insert ~table
         ~values:
           Expr.
             [
@@ -101,7 +101,7 @@ module Participant = struct
     in
 
     let q =
-      Query.select ~from:participants_table Expr.[ user_id_field ]
+      Query.select ~from:table Expr.[ user_id_field ]
       |> Query.where
            Expr.(conversation_id_field = vl ~ty:Type.big_int conversation_id)
       |> Query.limit (Expr.i limit)

@@ -12,7 +12,7 @@ let deleted_col = Schema.(field "deleted" ~ty:Type.bool)
 let schema = Petrol.StaticSchema.init ()
 
 module User = struct
-  let ( users_table,
+  let ( table,
         Expr.
           [
             id_field;
@@ -38,8 +38,7 @@ module User = struct
 end
 
 module Conversation = struct
-  let ( conversations_table,
-        Expr.[ id_field; created_at_field; updated_at_field; data_field ] ) =
+  let table, Expr.[ id_field; created_at_field; updated_at_field; data_field ] =
     StaticSchema.declare_table schema ~name:"conversation"
       Schema.
         [
@@ -56,32 +55,105 @@ module Conversation = struct
     updated_at : Ptime.t;
     data : string;
   }
+end
 
-  module Participant = struct
-    let ( participants_table,
-          Expr.
-            [
-              conversation_id_field;
-              user_id_field;
-              created_at_field;
-              updated_at_field;
-            ] ) =
-      StaticSchema.declare_table schema ~name:"conversation_participant"
-        ~constraints:
-          Schema.[ table_primary_key [ "conversation_id"; "user_id" ] ]
-        Schema.
+module Participant = struct
+  let ( table,
+        Expr.
           [
-            field "conversation_id" ~ty:Type.big_int;
-            field "user_id" ~ty:Type.big_int;
-            created_at_col;
-            updated_at_col;
-          ]
+            conversation_id_field;
+            user_id_field;
+            created_at_field;
+            updated_at_field;
+            lines_seen_until_field;
+          ] ) =
+    StaticSchema.declare_table schema ~name:"conversation_participant"
+      ~constraints:Schema.[ table_primary_key [ "user_id"; "conversation_id" ] ]
+      Schema.
+        [
+          field
+            ~constraints:
+              [
+                foreign_key ~table:Conversation.table
+                  ~columns:Expr.[ Conversation.id_field ]
+                  ();
+              ]
+            "conversation_id" ~ty:Type.big_int;
+          field
+            ~constraints:
+              [
+                foreign_key ~table:User.table ~columns:Expr.[ User.id_field ] ();
+              ]
+            "user_id" ~ty:Type.big_int;
+          created_at_col;
+          updated_at_col;
+          field "lines_seen_until" ~ty:Type.date;
+        ]
 
-    type t = {
-      conversation_id : int64;
-      user_id : int64;
-      created_at : Ptime.t;
-      updated_at : Ptime.t;
-    }
-  end
+  type t = {
+    conversation_id : int64;
+    user_id : int64;
+    created_at : Ptime.t;
+    updated_at : Ptime.t;
+  }
+end
+
+module Line = struct
+  let ( table,
+        Expr.
+          [
+            id_field;
+            created_at_field;
+            updated_at_field;
+            deleted_field;
+            conversation_id_field;
+            thread_line_id_field;
+            reply_to_line_id_field;
+            sender_user_id_field;
+            message_field;
+            data_field;
+          ] ) =
+    StaticSchema.declare_table schema ~name:"line"
+      Schema.
+        [
+          auto_increment_primary_key_col;
+          created_at_col;
+          updated_at_col;
+          deleted_col;
+          field
+            ~constraints:
+              [
+                foreign_key ~table:Conversation.table
+                  ~columns:Expr.[ Conversation.id_field ]
+                  ();
+              ]
+            "conversation_id" ~ty:Type.big_int;
+          field
+            (*~constraints:
+              [
+                foreign_key ~table ~columns:Expr.[ Line.id_field ] ();
+              ]*)
+            "thread_line_id" ~ty:Type.big_int;
+          field
+            (*~constraints:
+              [
+                foreign_key ~table ~columns:Expr.[ Line.id_field ] ();
+              ]*)
+            "reply_to_line_id" ~ty:Type.big_int;
+          field
+            ~constraints:
+              [
+                foreign_key ~table:User.table ~columns:Expr.[ User.id_field ] ();
+              ]
+            "sender_user_id" ~ty:Type.big_int;
+          field "message" ~ty:Type.text;
+          field "data" ~ty:Type.text;
+        ]
+
+  type t = {
+    conversation_id : int64;
+    user_id : int64;
+    created_at : Ptime.t;
+    updated_at : Ptime.t;
+  }
 end
