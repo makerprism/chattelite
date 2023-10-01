@@ -70,5 +70,8 @@ module Server = struct
     in
     Lwt.return T.UsersOutput.{ users = { objs; next; prev } }
 
-  let delete_user _req _user_id = Lwt.return ()
+  let delete_user _req _user_id = failwith "not implemented" (* Lwt.return ()*)
+
+  let generate_client_jwt _req ({user_id = _}: T.GenerateClientJwtInput.t) =
+    failwith "not implemented"
 end

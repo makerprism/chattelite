@@ -44,10 +44,23 @@ let delete_user (req : Dream.request) =
   result |> Generated_server_types.DeleteUserOutput.yojson_of_t
   |> Yojson.Safe.to_string |> Dream.json
 
+let generate_client_jwt (req : Dream.request) =
+  let* body = Dream.body req in
+  let body =
+    Generated_server_types.GenerateClientJwtInput.t_of_yojson
+      (Yojson.Safe.from_string body)
+  in
+  let* (result : Generated_server_types.GenerateClientJwtOutput.t) =
+    Handlers.Server.generate_client_jwt req body
+  in
+  result |> Generated_server_types.GenerateClientJwtOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
+
 let routes =
   [
     Dream.post "/_/users" create_user;
     Dream.get "/_/users" users;
     Dream.get "/_/user/:user_id" get_user;
     Dream.delete "/_/user/:user_id" delete_user;
+    Dream.post "/_/gen-client-jwt" generate_client_jwt;
   ]

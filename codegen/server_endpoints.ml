@@ -63,4 +63,19 @@ let endpoints =
               error_type = None;
             };
       };
+      {
+        name = "generate_client_jwt";
+        url = "/_/gen-client-jwt";
+        docstring =
+          "generate a JWT that authenticated the user with given [user_id]";
+        shape =
+          Post
+            {
+              url_params = None;
+              query_param_type = None;
+              input_type = Fields [ field "user_id" str ];
+              output_type = Fields [ field "jwt" str ];
+              error_type = None;
+            };
+      };
     ]

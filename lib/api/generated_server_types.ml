@@ -145,3 +145,11 @@ end
 module DeleteUserOutput = struct
   type t = unit [@@deriving yojson]
 end
+
+module GenerateClientJwtInput = struct
+  type t = { user_id : string } [@@deriving yojson]
+end
+
+module GenerateClientJwtOutput = struct
+  type t = { jwt : string } [@@deriving yojson]
+end

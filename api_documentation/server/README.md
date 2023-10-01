@@ -196,3 +196,19 @@ URL params:
   |name|type|
   |-|-|
   |user_id|[UserId](#UserId)|
+
+## <a name="generate_client_jwt">generate_client_jwt</a>
+
+generate a JWT that authenticated the user with given [user_id]
+
+POST /_/gen-client-jwt
+
+Input body:
+  |name|type|
+  |-|-|
+  |user_id|String|
+
+Response body:
+  |name|type|
+  |-|-|
+  |jwt|String|
