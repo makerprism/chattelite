@@ -9,6 +9,13 @@ let auto_increment_primary_key_col =
 let created_at_col = Schema.(field "created_at" ~ty:Type.date)
 let updated_at_col = Schema.(field "updated_at" ~ty:Type.date)
 let deleted_col = Schema.(field "deleted" ~ty:Type.bool)
+
+let foreign_key_col ~table ~column name =
+  Schema.(
+    field
+      ~constraints:[ foreign_key ~table ~columns:Expr.[ column ] () ]
+      name ~ty:Type.big_int)
+
 let schema = Petrol.StaticSchema.init ()
 
 module User = struct
@@ -71,20 +78,9 @@ module Participant = struct
       ~constraints:Schema.[ table_primary_key [ "user_id"; "conversation_id" ] ]
       Schema.
         [
-          field
-            ~constraints:
-              [
-                foreign_key ~table:Conversation.table
-                  ~columns:Expr.[ Conversation.id_field ]
-                  ();
-              ]
-            "conversation_id" ~ty:Type.big_int;
-          field
-            ~constraints:
-              [
-                foreign_key ~table:User.table ~columns:Expr.[ User.id_field ] ();
-              ]
-            "user_id" ~ty:Type.big_int;
+          foreign_key_col ~table:Conversation.table
+            ~column:Conversation.id_field "conversation_id";
+          foreign_key_col ~table:User.table ~column:User.id_field "user_id";
           created_at_col;
           updated_at_col;
           field "lines_seen_until" ~ty:Type.date;
@@ -120,14 +116,8 @@ module Line = struct
           created_at_col;
           updated_at_col;
           deleted_col;
-          field
-            ~constraints:
-              [
-                foreign_key ~table:Conversation.table
-                  ~columns:Expr.[ Conversation.id_field ]
-                  ();
-              ]
-            "conversation_id" ~ty:Type.big_int;
+          foreign_key_col ~table:Conversation.table
+            ~column:Conversation.id_field "conversation_id";
           field
             (*~constraints:
               [
@@ -140,12 +130,8 @@ module Line = struct
                 foreign_key ~table ~columns:Expr.[ Line.id_field ] ();
               ]*)
             "reply_to_line_id" ~ty:Type.big_int;
-          field
-            ~constraints:
-              [
-                foreign_key ~table:User.table ~columns:Expr.[ User.id_field ] ();
-              ]
-            "sender_user_id" ~ty:Type.big_int;
+          foreign_key_col ~table:User.table ~column:User.id_field
+            "sender_user_id";
           field "message" ~ty:Type.text;
           field "data" ~ty:Type.text;
         ]
