@@ -1,10 +1,5 @@
-(env
- (dev
-  (flags
-   (:standard -dsource))))
-
 (library
  (name api)
- (libraries dream db)
+ (libraries dream db yojson)
  (preprocess
   (pps ppx_yojson_conv ppx_deriving_query)))

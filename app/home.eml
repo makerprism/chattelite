@@ -9,8 +9,8 @@ let render =
 
   var events = new EventSource("/push");
   events.onmessage = function (event) {
-    output.appendChild(
-      document.createTextNode(event.data + "\n"));
+    console.log(event.data);
+    output.innerHTML = event.data + "\n";
   };
   </script>
 

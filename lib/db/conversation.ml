@@ -35,12 +35,9 @@ let get_many ~next ~prev ~limit db =
              { id; created_at; updated_at; data })
     in
     let prev_cursor =
-      Utils.last r
-      |> Option.map (fun (id, _) -> Int64.to_string (Int64.add id 1L))
+      Utils.last r |> Option.map (fun (id, _) -> Int64.add id 1L)
     in
-    let next_cursor =
-      List.nth_opt r 0 |> Option.map (fun (id, _) -> Int64.to_string id)
-    in
+    let next_cursor = List.nth_opt r 0 |> Option.map (fun (id, _) -> id) in
     (items, prev_cursor, next_cursor)
   in
 
