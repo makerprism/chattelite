@@ -16,12 +16,14 @@ opam exec -- dune exec migrations
 opam exec -- dune exec api
 ```
 
+## Configuration
+
 need to set up a database connection string for PostgreSQL in `config.json`:
 
 ```
 {
-    "api_key": "YOU_MUST_SET_THIS",
-    "client_jwt_secret": "YOU_MUST_SET_THIS",
+    "api_key": "YOU_MUST_CHANGE_THIS",
+    "client_jwt_secret": "YOU_MUST_CHANGE_THIS",
     "database_url": "postgresql://postgres:test@127.0.0.1:5432/ocaml_api"
 }
 ```

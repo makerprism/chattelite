@@ -3,15 +3,32 @@ open Petrol.Postgres
 
 exception BadRequest of string
 
+let auto_increment_primary_key_col =
+  Schema.(field ~constraints:[ primary_key () ] "id" ~ty:Type.big_serial)
+
+let created_at_col = Schema.(field "created_at" ~ty:Type.date)
+let updated_at_col = Schema.(field "updated_at" ~ty:Type.date)
+let deleted_col = Schema.(field "deleted" ~ty:Type.bool)
 let schema = Petrol.StaticSchema.init ()
 
 module User = struct
-  let users_table, Expr.[ id_field; public_facing_id_field; display_name_field ]
-      =
+  let ( users_table,
+        Expr.
+          [
+            id_field;
+            created_at_field;
+            updated_at_field;
+            deleted_field;
+            public_facing_id_field;
+            display_name_field;
+          ] ) =
     StaticSchema.declare_table schema ~name:"users"
       Schema.
         [
-          field ~constraints:[ primary_key () ] "id" ~ty:Type.big_serial;
+          auto_increment_primary_key_col;
+          created_at_col;
+          updated_at_col;
+          deleted_col;
           field "public_facing_id" ~constraints:[ unique () ] ~ty:Type.text;
           field "display_name" ~ty:Type.text;
           (*field "data" ~ty:Type.json*)
@@ -26,9 +43,9 @@ module Conversation = struct
     StaticSchema.declare_table schema ~name:"conversation"
       Schema.
         [
-          field ~constraints:[ primary_key () ] "id" ~ty:Type.big_serial;
-          field "created_at" ~ty:Type.date;
-          field "updated_at" ~ty:Type.date;
+          auto_increment_primary_key_col;
+          created_at_col;
+          updated_at_col;
           field "data" ~ty:Type.text;
           (*field "data" ~ty:Type.json*)
         ]
@@ -56,8 +73,8 @@ module Conversation = struct
           [
             field "conversation_id" ~ty:Type.big_int;
             field "user_id" ~ty:Type.big_int;
-            field "created_at" ~ty:Type.date;
-            field "updated_at" ~ty:Type.date;
+            created_at_col;
+            updated_at_col;
           ]
 
     type t = {
