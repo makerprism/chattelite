@@ -7,41 +7,42 @@ exception BadRequest of string
 let create_user (req : Dream.request) =
   let* body = Dream.body req in
   let body =
-    Server_types.CreateUserInput.t_of_yojson (Yojson.Safe.from_string body)
+    Generated_server_types.CreateUserInput.t_of_yojson
+      (Yojson.Safe.from_string body)
   in
-  let* (result : Server_types.CreateUserOutput.t) =
+  let* (result : Generated_server_types.CreateUserOutput.t) =
     Handlers.Server.create_user req body
   in
-  result |> Server_types.CreateUserOutput.yojson_of_t |> Yojson.Safe.to_string
-  |> Dream.json
+  result |> Generated_server_types.CreateUserOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
 
 let users (req : Dream.request) =
   let query =
-    match Server_types.UsersQuery.parse_query req with
+    match Generated_server_types.UsersQuery.parse_query req with
     | Ok q -> q
     | Error msg -> raise (BadRequest msg)
   in
-  let* (result : Server_types.UsersOutput.t) =
+  let* (result : Generated_server_types.UsersOutput.t) =
     Handlers.Server.users req query
   in
-  result |> Server_types.UsersOutput.yojson_of_t |> Yojson.Safe.to_string
-  |> Dream.json
+  result |> Generated_server_types.UsersOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
 
 let get_user (req : Dream.request) =
   let user_id = Dream.param req "user_id" in
-  let* (result : Server_types.GetUserOutput.t) =
+  let* (result : Generated_server_types.GetUserOutput.t) =
     Handlers.Server.get_user req user_id
   in
-  result |> Server_types.GetUserOutput.yojson_of_t |> Yojson.Safe.to_string
-  |> Dream.json
+  result |> Generated_server_types.GetUserOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
 
 let delete_user (req : Dream.request) =
   let user_id = Dream.param req "user_id" in
-  let* (result : Server_types.DeleteUserOutput.t) =
+  let* (result : Generated_server_types.DeleteUserOutput.t) =
     Handlers.Server.delete_user req user_id
   in
-  result |> Server_types.DeleteUserOutput.yojson_of_t |> Yojson.Safe.to_string
-  |> Dream.json
+  result |> Generated_server_types.DeleteUserOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
 
 let routes =
   [

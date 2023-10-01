@@ -1,17 +1,17 @@
 open Lwt.Syntax
 
 module Client = struct
-  let conversations req (query : Client_types.ConversationsQuery.t) =
+  let conversations req (query : Generated_client_types.ConversationsQuery.t) =
     let* conversations_or_error =
       Dream.sql req
         (Db.Conversation.get_many ~next:query.next ~prev:query.prev
            ~limit:(Option.value ~default:20 query.limit))
     in
     let* conversations, next, prev = Caqti_lwt.or_fail conversations_or_error in
-    let objs : Client_types.Conversation.t list =
+    let objs : Generated_client_types.Conversation.t list =
       conversations
       |> List.map (fun Db.Conversation.{ id; _ } ->
-             Client_types.Conversation.
+             Generated_client_types.Conversation.
                {
                  conversation_id = Int64.to_string id;
                  timestamp = "TODO";
@@ -20,24 +20,25 @@ module Client = struct
                })
     in
     Lwt.return
-      Client_types.ConversationsOutput.{ conversations = { objs; next; prev } }
+      Generated_client_types.ConversationsOutput.
+        { conversations = { objs; next; prev } }
 
-  (*    Server_sent_events.broadcast_message (Server_types.ConversationEvent.ConversationEventJoin { from = { Conversation_id; display_name }; timestamp= "TODO"}); *)
+  (*    Server_sent_events.broadcast_message (Generated_server_types.ConversationEvent.ConversationEventJoin { from = { Conversation_id; display_name }; timestamp= "TODO"}); *)
 end
 
 module Server = struct
   let create_user req
-      ({ user_id; display_name } : Server_types.CreateUserInput.t) =
+      ({ user_id; display_name } : Generated_server_types.CreateUserInput.t) =
     let* user_or_error =
       Dream.sql req (Db.User.insert ~public_facing_id:user_id ~display_name)
     in
     let* () = Caqti_lwt.or_fail user_or_error in
-    Lwt.return Server_types.CreateUserOutput.{ user_id }
+    Lwt.return Generated_server_types.CreateUserOutput.{ user_id }
 
   (* curl -X POST -H "Content-Type: application/json" -d '{"user_id":"sabine", "display_name": "sabine"}' http://localhost:8080/users
   *)
 
-  (*    Server_sent_events.broadcast_message (Server_types.ConversationEvent.ConversationEventJoin { from = { user_id; display_name }; timestamp= "TODO"}); *)
+  (*    Server_sent_events.broadcast_message (Generated_server_types.ConversationEvent.ConversationEventJoin { from = { user_id; display_name }; timestamp= "TODO"}); *)
 
   let get_user req user_id =
     let* user_or_error =
@@ -45,7 +46,7 @@ module Server = struct
     in
     let* user = Caqti_lwt.or_fail user_or_error in
     Lwt.return
-      Server_types.GetUserOutput.
+      Generated_server_types.GetUserOutput.
         {
           user =
             {
@@ -54,19 +55,21 @@ module Server = struct
             };
         }
 
-  let users req (query : Server_types.UsersQuery.t) =
+  let users req (query : Generated_server_types.UsersQuery.t) =
     let* users_or_error =
       Dream.sql req
         (Db.User.get_many ~next:query.next ~prev:query.prev
            ~limit:(Option.value ~default:20 query.limit))
     in
     let* users, next, prev = Caqti_lwt.or_fail users_or_error in
-    let objs : Server_types.User.t list =
+    let objs : Generated_server_types.User.t list =
       users
       |> List.map (fun Db.User.{ id = _; public_facing_id; display_name } ->
-             Server_types.User.{ user_id = public_facing_id; display_name })
+             Generated_server_types.User.
+               { user_id = public_facing_id; display_name })
     in
-    Lwt.return Server_types.UsersOutput.{ users = { objs; next; prev } }
+    Lwt.return
+      Generated_server_types.UsersOutput.{ users = { objs; next; prev } }
 
   let delete_user _req _user_id = Lwt.return ()
 end

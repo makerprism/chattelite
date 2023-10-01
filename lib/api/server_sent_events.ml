@@ -1,8 +1,8 @@
 let waiting_connections = ref []
 
-let broadcast_message (message : Client_types.ConversationEvent.t) =
+let broadcast_message (message : Generated_client_types.ConversationEvent.t) =
   let message =
-    message |> Client_types.ConversationEvent.yojson_of_t
+    message |> Generated_client_types.ConversationEvent.yojson_of_t
     |> Yojson.Safe.to_string
   in
 

@@ -6,14 +6,14 @@ exception BadRequest of string
 
 let conversations (req : Dream.request) =
   let query =
-    match Client_types.ConversationsQuery.parse_query req with
+    match Generated_client_types.ConversationsQuery.parse_query req with
     | Ok q -> q
     | Error msg -> raise (BadRequest msg)
   in
-  let* (result : Client_types.ConversationsOutput.t) =
+  let* (result : Generated_client_types.ConversationsOutput.t) =
     Handlers.Client.conversations req query
   in
-  result |> Client_types.ConversationsOutput.yojson_of_t
+  result |> Generated_client_types.ConversationsOutput.yojson_of_t
   |> Yojson.Safe.to_string |> Dream.json
 
 let routes = [ Dream.get "/conversations" conversations ]
