@@ -3,16 +3,14 @@
 
 BIG WARNING: THIS IS HIGHLY EXPERIMENTAL, DON'T USE THIS - yes, learn from it, mess with it, build something from this, whatever you want, but don't assume that it works!
 
+Also, I may be rewriting this to OCaml.
+
 
 If you have ever wanted to add in-app chat to you application or site, you might have tried one or more chat API providers (e.g. Vonage/Nexmo, PubNub, Ably, etc.).
 
 This is a basic prototype of a chat-"microservice" (create/delete users, create conversations, sending text messages, join/leave events, as well as a typing indicator within conversation). It
 can be self-hosted (will be installable in the future as a .deb package or compiled from source), and
 comes with typed API-bindings / SDKs (WIP TypeScript bindings, Go upcoming).
-
-Looking for:
-1. potential users, to get feedback and to gauge interest in specific features
-2. people who would be interested in contributing to a young multi-language codebase (the API is written in Rust, code-generation is done using TypeScript, and client bindings are currently in Go and TypeScript, but will potentially include more languages if I end up needing it or someone contributes).
 
 Goals:
 1. work out-of-the box with minimal configuration (install .deb package and set up database)
