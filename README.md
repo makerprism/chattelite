@@ -1,7 +1,7 @@
 # chattelite - self-hostable chat API with strictly-typed SDKs (where possible)
 
 
-BIG WARNING: THIS IS HIGHLY EXPERIMENTAL, DON'T USE THIS - yes, learn from it, mess with is, build something from this, whatever you want, but don't assume that it works!
+BIG WARNING: THIS IS HIGHLY EXPERIMENTAL, DON'T USE THIS - yes, learn from it, mess with it, build something from this, whatever you want, but don't assume that it works!
 
 
 If you have ever wanted to add in-app chat to you application or site, you might have tried one or more chat API providers (e.g. Vonage/Nexmo, PubNub, Ably, etc.).
