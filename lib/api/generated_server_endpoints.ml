@@ -46,8 +46,8 @@ let delete_user (req : Dream.request) =
 
 let routes =
   [
-    Dream.post "/users" create_user;
-    Dream.get "/users" users;
-    Dream.get "/user/:user_id" get_user;
-    Dream.delete "/user/:user_id" delete_user;
+    Dream.post "/_/users" create_user;
+    Dream.get "/_/users" users;
+    Dream.get "/_/user/:user_id" get_user;
+    Dream.delete "/_/user/:user_id" delete_user;
   ]

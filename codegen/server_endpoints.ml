@@ -5,7 +5,7 @@ let endpoints =
     [
       {
         name = "create_user";
-        url = "/users";
+        url = "/_/users";
         docstring = "create a new user";
         shape =
           Post
@@ -20,7 +20,7 @@ let endpoints =
       };
       {
         name = "users";
-        url = "/users";
+        url = "/_/users";
         docstring = "list users";
         shape =
           Get
@@ -40,7 +40,7 @@ let endpoints =
       };
       {
         name = "get_user";
-        url = "/user/{user_id}";
+        url = "/_/user/{user_id}";
         docstring = "get user by id";
         shape =
           Get
@@ -53,7 +53,7 @@ let endpoints =
       };
       {
         name = "delete_user";
-        url = "/user/{user_id}";
+        url = "/_/user/{user_id}";
         docstring = "delete user by id";
         shape =
           Delete

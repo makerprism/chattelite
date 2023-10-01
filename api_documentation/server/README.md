@@ -138,7 +138,7 @@ is a struct with these fields:
 
 create a new user
 
-POST /users
+POST /_/users
 
 Input body:
   |name|type|
@@ -155,7 +155,7 @@ Response body:
 
 list users
 
-GET /users
+GET /_/users
 
 Query Parameters:
   |name|type|
@@ -174,7 +174,7 @@ Response body:
 
 get user by id
 
-GET /user/{user_id}
+GET /_/user/{user_id}
 
 URL params:
   |name|type|
@@ -190,7 +190,7 @@ Response body:
 
 delete user by id
 
-DELETE /user/{user_id}
+DELETE /_/user/{user_id}
 
 URL params:
   |name|type|
