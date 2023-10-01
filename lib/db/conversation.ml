@@ -61,30 +61,7 @@ let get_many ~next ~prev ~limit db =
   |> Lwt_result.map process_results
 
 module Participant = struct
-  let ( participants_table,
-        Expr.
-          [
-            conversation_id_field;
-            user_id_field;
-            created_at_field;
-            updated_at_field;
-          ] ) =
-    StaticSchema.declare_table Db_schema.schema ~name:"conversation_participant"
-      ~constraints:Schema.[ table_primary_key [ "conversation_id"; "user_id" ] ]
-      Schema.
-        [
-          field "conversation_id" ~ty:Type.big_int;
-          field "user_id" ~ty:Type.big_int;
-          field "created_at" ~ty:Type.date;
-          field "updated_at" ~ty:Type.date;
-        ]
-
-  type t = {
-    conversation_id : int64;
-    user_id : int64;
-    created_at : Ptime.t;
-    updated_at : Ptime.t;
-  }
+  include Participant
 
   let insert ~conversation_id ~user_id
       ((module DB : Caqti_lwt.CONNECTION) as db) =
