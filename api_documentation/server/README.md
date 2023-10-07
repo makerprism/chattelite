@@ -206,9 +206,74 @@ POST /_/gen-client-jwt
 Input body:
   |name|type|
   |-|-|
-  |user_id|String|
+  |user_id|[UserId](#UserId)|
 
 Response body:
   |name|type|
   |-|-|
   |jwt|String|
+
+## <a name="create_conversation">create_conversation</a>
+
+create a new conversation
+
+POST /_/converations
+
+Input body:
+  |name|type|
+  |-|-|
+  |user_ids|Array of ([UserId](#UserId))|
+  |data|String|
+
+Response body:
+  |name|type|
+  |-|-|
+  |conversation_id|[ConversationId](#ConversationId)|
+
+## <a name="update_converstaion">update_converstaion</a>
+
+update data on a conversation
+
+POST /_/converation/{conversation_id}
+
+URL params:
+  |name|type|
+  |-|-|
+  |conversation_id|[ConversationId](#ConversationId)|
+
+Input body:
+  |name|type|
+  |-|-|
+  |data|String|
+
+## <a name="add_users_to_conversation">add_users_to_conversation</a>
+
+add users to an existing conversation
+
+POST /_/converation/{conversation_id}/add-users
+
+URL params:
+  |name|type|
+  |-|-|
+  |conversation_id|[ConversationId](#ConversationId)|
+
+Input body:
+  |name|type|
+  |-|-|
+  |user_ids|Array of ([UserId](#UserId))|
+
+## <a name="remove_users_from_conversation">remove_users_from_conversation</a>
+
+remove users from a conversation
+
+POST /_/converation/{conversation_id}/remove-users
+
+URL params:
+  |name|type|
+  |-|-|
+  |conversation_id|[ConversationId](#ConversationId)|
+
+Input body:
+  |name|type|
+  |-|-|
+  |user_ids|Array of ([UserId](#UserId))|

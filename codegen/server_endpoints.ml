@@ -73,8 +73,68 @@ let endpoints =
             {
               url_params = None;
               query_param_type = None;
-              input_type = Fields [ field "user_id" str ];
+              input_type = Fields [ field "user_id" T.user_id ];
               output_type = Fields [ field "jwt" str ];
+              error_type = None;
+            };
+      };
+      {
+        name = "create_conversation";
+        url = "/_/converations";
+        docstring = "create a new conversation";
+        shape =
+          Post
+            {
+              url_params = None;
+              input_type =
+                Fields [ field "user_ids" (vec T.user_id); field "data" str ];
+              query_param_type = None;
+              output_type = Fields [ field "conversation_id" T.conversation_id ];
+              error_type = None;
+            };
+      };
+      {
+        name = "update_converstaion";
+        url = "/_/converation/{conversation_id}";
+        docstring = "update data on a conversation";
+        shape =
+          Post
+            {
+              url_params =
+                Some [ { name = "conversation_id"; t = T.conversation_id } ];
+              input_type = Fields [ field "data" str ];
+              query_param_type = None;
+              output_type = None;
+              error_type = None;
+            };
+      };
+      {
+        name = "add_users_to_conversation";
+        url = "/_/converation/{conversation_id}/add-users";
+        docstring = "add users to an existing conversation";
+        shape =
+          Post
+            {
+              url_params =
+                Some [ { name = "conversation_id"; t = T.conversation_id } ];
+              input_type = Fields [ field "user_ids" (vec T.user_id) ];
+              query_param_type = None;
+              output_type = None;
+              error_type = None;
+            };
+      };
+      {
+        name = "remove_users_from_conversation";
+        url = "/_/converation/{conversation_id}/remove-users";
+        docstring = "remove users from a conversation";
+        shape =
+          Post
+            {
+              url_params =
+                Some [ { name = "conversation_id"; t = T.conversation_id } ];
+              input_type = Fields [ field "user_ids" (vec T.user_id) ];
+              query_param_type = None;
+              output_type = None;
               error_type = None;
             };
       };

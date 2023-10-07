@@ -100,4 +100,19 @@ module Server = struct
 
   (* TODO: conversation endpoints, when user joins conversation, send message:
      Server_sent_events.broadcast_message (T.ConversationEvent.ConversationEventJoin { from = { user_id; display_name }; timestamp= "TODO"}); *)
+
+  let create_conversation req
+      (T.CreateConversationInput.{ data; _ } : T.CreateConversationInput.t) =
+    let* _conversation_id = run_db req (Db.Conversation.insert ~data) in
+    failwith "not_implemented"
+  (*Lwt.return T.CreateConversationOutput.{ conversation_id }*)
+
+  let update_converstaion _req _conversation_id _body =
+    failwith "not_implemented"
+
+  let add_users_to_conversation _req _conversation_id _body =
+    failwith "not_implemented"
+
+  let remove_users_from_conversation _req _conversation_id _body =
+    failwith "not_implemented"
 end

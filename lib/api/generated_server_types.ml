@@ -147,9 +147,41 @@ module DeleteUserOutput = struct
 end
 
 module GenerateClientJwtInput = struct
-  type t = { user_id : string } [@@deriving yojson]
+  type t = { user_id : UserId.t } [@@deriving yojson]
 end
 
 module GenerateClientJwtOutput = struct
   type t = { jwt : string } [@@deriving yojson]
+end
+
+module CreateConversationInput = struct
+  type t = { user_ids : UserId.t list; data : string } [@@deriving yojson]
+end
+
+module CreateConversationOutput = struct
+  type t = { conversation_id : ConversationId.t } [@@deriving yojson]
+end
+
+module UpdateConverstaionInput = struct
+  type t = { data : string } [@@deriving yojson]
+end
+
+module UpdateConverstaionOutput = struct
+  type t = unit [@@deriving yojson]
+end
+
+module AddUsersToConversationInput = struct
+  type t = { user_ids : UserId.t list } [@@deriving yojson]
+end
+
+module AddUsersToConversationOutput = struct
+  type t = unit [@@deriving yojson]
+end
+
+module RemoveUsersFromConversationInput = struct
+  type t = { user_ids : UserId.t list } [@@deriving yojson]
+end
+
+module RemoveUsersFromConversationOutput = struct
+  type t = unit [@@deriving yojson]
 end

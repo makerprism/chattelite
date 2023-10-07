@@ -56,6 +56,57 @@ let generate_client_jwt (req : Dream.request) =
   result |> Generated_server_types.GenerateClientJwtOutput.yojson_of_t
   |> Yojson.Safe.to_string |> Dream.json
 
+let create_conversation (req : Dream.request) =
+  let* body = Dream.body req in
+  let body =
+    Generated_server_types.CreateConversationInput.t_of_yojson
+      (Yojson.Safe.from_string body)
+  in
+  let* (result : Generated_server_types.CreateConversationOutput.t) =
+    Handlers.Server.create_conversation req body
+  in
+  result |> Generated_server_types.CreateConversationOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
+
+let update_converstaion (req : Dream.request) =
+  let conversation_id = Dream.param req "conversation_id" in
+  let* body = Dream.body req in
+  let body =
+    Generated_server_types.UpdateConverstaionInput.t_of_yojson
+      (Yojson.Safe.from_string body)
+  in
+  let* (result : Generated_server_types.UpdateConverstaionOutput.t) =
+    Handlers.Server.update_converstaion req conversation_id body
+  in
+  result |> Generated_server_types.UpdateConverstaionOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
+
+let add_users_to_conversation (req : Dream.request) =
+  let conversation_id = Dream.param req "conversation_id" in
+  let* body = Dream.body req in
+  let body =
+    Generated_server_types.AddUsersToConversationInput.t_of_yojson
+      (Yojson.Safe.from_string body)
+  in
+  let* (result : Generated_server_types.AddUsersToConversationOutput.t) =
+    Handlers.Server.add_users_to_conversation req conversation_id body
+  in
+  result |> Generated_server_types.AddUsersToConversationOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
+
+let remove_users_from_conversation (req : Dream.request) =
+  let conversation_id = Dream.param req "conversation_id" in
+  let* body = Dream.body req in
+  let body =
+    Generated_server_types.RemoveUsersFromConversationInput.t_of_yojson
+      (Yojson.Safe.from_string body)
+  in
+  let* (result : Generated_server_types.RemoveUsersFromConversationOutput.t) =
+    Handlers.Server.remove_users_from_conversation req conversation_id body
+  in
+  result |> Generated_server_types.RemoveUsersFromConversationOutput.yojson_of_t
+  |> Yojson.Safe.to_string |> Dream.json
+
 let routes =
   [
     Dream.post "/_/users" create_user;
@@ -63,4 +114,10 @@ let routes =
     Dream.get "/_/user/:user_id" get_user;
     Dream.delete "/_/user/:user_id" delete_user;
     Dream.post "/_/gen-client-jwt" generate_client_jwt;
+    Dream.post "/_/converations" create_conversation;
+    Dream.post "/_/converation/:conversation_id" update_converstaion;
+    Dream.post "/_/converation/:conversation_id/add-users"
+      add_users_to_conversation;
+    Dream.post "/_/converation/:conversation_id/remove-users"
+      remove_users_from_conversation;
   ]
