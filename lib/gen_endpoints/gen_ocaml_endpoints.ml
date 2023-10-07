@@ -116,12 +116,11 @@ let gen_endpoint_function_body (route : Types.route) ~type_namespace
     | Fields _ ->
         [
           Format.sprintf
-            "let query =\n\
-            \    match %s.parse_query req with\n\
-            \    | Ok q -> q\n\
-            \    | Error msg -> raise (BadRequest msg)\n\
-            \  in"
-            (query_param_type_name ~route_name:route.name ~type_namespace);
+            "match %s.parse_query req with\n\
+            \  | Error msg -> %sbad_request msg\n\
+            \  | Ok query -> \n"
+            (query_param_type_name ~route_name:route.name ~type_namespace)
+            handler_namespace;
         ]
     | Structs _ -> failwith "not_implemented"
   in
@@ -156,8 +155,11 @@ let gen_endpoint_function_body (route : Types.route) ~type_namespace
     (body
     @ [
         Format.sprintf
-          "let* result : %s.t = %s%s %s in\n\
-          \  result |> %s.yojson_of_t |> Yojson.Safe.to_string |> Dream.json"
+          "let* result : (%s.t, Dream.response Lwt.t) result = %s%s %s in\n\
+          \  match result with\n\
+          \    | Ok result -> result |> %s.yojson_of_t |> \
+           Yojson.Safe.to_string |> Dream.json\n\
+          \    | Error response -> response"
           (output_type_name ~route_name:route.name ~type_namespace)
           handler_namespace route.name (String.concat " " params)
           (output_type_name ~route_name:route.name ~type_namespace);
@@ -236,9 +238,7 @@ let gen_routes ~type_namespace ~handler_namespace (routes : Types.route list) =
   in
 
   String.concat "\n\n"
-    ([ "open Lwt.Syntax" ]
-    @ [ "exception BadRequest of string" ]
-    @ endpoints @ [ route_declarations ])
+    ([ "open Lwt.Syntax" ] @ endpoints @ [ route_declarations ])
 
 let gen_types ~(t : Types.type_declaration list)
     ~(it : Types.type_declaration list) ~(ot : Types.type_declaration list)

@@ -1,19 +1,3 @@
-let error_handler =
-  (fun error _debug_dump suggested_response ->
-    match error.condition with
-    | `Exn (Api.Generated_server_endpoints.BadRequest msg) ->
-        Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
-    | `Exn (Api.Generated_client_endpoints.BadRequest msg) ->
-        Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
-    | `Exn (Db.Db_schema.BadRequest msg) ->
-        Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
-    | `Exn (Api.Handlers.BadRequest msg) ->
-        Dream.json ~code:400 (Format.sprintf "{ \"message\": \"%s\" }" msg)
-    | `Exn (Api.Handlers.InternalError msg) ->
-        Dream.json ~code:500 (Format.sprintf "{ \"message\": \"%s\" }" msg)
-    | _ -> Lwt.return suggested_response)
-  |> Dream.error_template
-
 let () =
   let server_routes =
     [
@@ -37,7 +21,7 @@ let () =
     ]
   in
 
-  Dream.run ~error_handler @@ Dream.logger
+  Dream.run @@ Dream.logger
   @@ Dream.sql_pool Api.Config.config.database_url
   (*@@ Dream.origin_referrer_check*)
   @@ Dream.router

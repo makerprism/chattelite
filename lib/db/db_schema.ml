@@ -1,8 +1,6 @@
 open Petrol
 open Petrol.Postgres
 
-exception BadRequest of string
-
 let auto_increment_primary_key_col =
   Schema.(field ~constraints:[ primary_key () ] "id" ~ty:Type.big_serial)
 

@@ -2,18 +2,20 @@
 
 open Lwt.Syntax
 
-exception BadRequest of string
-
 let conversations (req : Dream.request) =
-  let query =
-    match Generated_client_types.ConversationsQuery.parse_query req with
-    | Ok q -> q
-    | Error msg -> raise (BadRequest msg)
-  in
-  let* (result : Generated_client_types.ConversationsOutput.t) =
-    Handlers.Client.conversations req query
-  in
-  result |> Generated_client_types.ConversationsOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match Generated_client_types.ConversationsQuery.parse_query req with
+  | Error msg -> Handlers.Client.bad_request msg
+  | Ok query -> (
+      let* (result :
+             ( Generated_client_types.ConversationsOutput.t,
+               Dream.response Lwt.t )
+             result) =
+        Handlers.Client.conversations req query
+      in
+      match result with
+      | Ok result ->
+          result |> Generated_client_types.ConversationsOutput.yojson_of_t
+          |> Yojson.Safe.to_string |> Dream.json
+      | Error response -> response)
 
 let routes = [ Dream.get "/conversations" conversations ]

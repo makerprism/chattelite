@@ -2,47 +2,65 @@
 
 open Lwt.Syntax
 
-exception BadRequest of string
-
 let create_user (req : Dream.request) =
   let* body = Dream.body req in
   let body =
     Generated_server_types.CreateUserInput.t_of_yojson
       (Yojson.Safe.from_string body)
   in
-  let* (result : Generated_server_types.CreateUserOutput.t) =
+  let* (result :
+         ( Generated_server_types.CreateUserOutput.t,
+           Dream.response Lwt.t )
+         result) =
     Handlers.Server.create_user req body
   in
-  result |> Generated_server_types.CreateUserOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match result with
+  | Ok result ->
+      result |> Generated_server_types.CreateUserOutput.yojson_of_t
+      |> Yojson.Safe.to_string |> Dream.json
+  | Error response -> response
 
 let users (req : Dream.request) =
-  let query =
-    match Generated_server_types.UsersQuery.parse_query req with
-    | Ok q -> q
-    | Error msg -> raise (BadRequest msg)
-  in
-  let* (result : Generated_server_types.UsersOutput.t) =
-    Handlers.Server.users req query
-  in
-  result |> Generated_server_types.UsersOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match Generated_server_types.UsersQuery.parse_query req with
+  | Error msg -> Handlers.Server.bad_request msg
+  | Ok query -> (
+      let* (result :
+             (Generated_server_types.UsersOutput.t, Dream.response Lwt.t) result)
+          =
+        Handlers.Server.users req query
+      in
+      match result with
+      | Ok result ->
+          result |> Generated_server_types.UsersOutput.yojson_of_t
+          |> Yojson.Safe.to_string |> Dream.json
+      | Error response -> response)
 
 let get_user (req : Dream.request) =
   let user_id = Dream.param req "user_id" in
-  let* (result : Generated_server_types.GetUserOutput.t) =
+  let* (result :
+         (Generated_server_types.GetUserOutput.t, Dream.response Lwt.t) result)
+      =
     Handlers.Server.get_user req user_id
   in
-  result |> Generated_server_types.GetUserOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match result with
+  | Ok result ->
+      result |> Generated_server_types.GetUserOutput.yojson_of_t
+      |> Yojson.Safe.to_string |> Dream.json
+  | Error response -> response
 
 let delete_user (req : Dream.request) =
   let user_id = Dream.param req "user_id" in
-  let* (result : Generated_server_types.DeleteUserOutput.t) =
+  let* (result :
+         ( Generated_server_types.DeleteUserOutput.t,
+           Dream.response Lwt.t )
+         result) =
     Handlers.Server.delete_user req user_id
   in
-  result |> Generated_server_types.DeleteUserOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match result with
+  | Ok result ->
+      result |> Generated_server_types.DeleteUserOutput.yojson_of_t
+      |> Yojson.Safe.to_string |> Dream.json
+  | Error response -> response
 
 let generate_client_jwt (req : Dream.request) =
   let* body = Dream.body req in
@@ -50,11 +68,17 @@ let generate_client_jwt (req : Dream.request) =
     Generated_server_types.GenerateClientJwtInput.t_of_yojson
       (Yojson.Safe.from_string body)
   in
-  let* (result : Generated_server_types.GenerateClientJwtOutput.t) =
+  let* (result :
+         ( Generated_server_types.GenerateClientJwtOutput.t,
+           Dream.response Lwt.t )
+         result) =
     Handlers.Server.generate_client_jwt req body
   in
-  result |> Generated_server_types.GenerateClientJwtOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match result with
+  | Ok result ->
+      result |> Generated_server_types.GenerateClientJwtOutput.yojson_of_t
+      |> Yojson.Safe.to_string |> Dream.json
+  | Error response -> response
 
 let create_conversation (req : Dream.request) =
   let* body = Dream.body req in
@@ -62,11 +86,17 @@ let create_conversation (req : Dream.request) =
     Generated_server_types.CreateConversationInput.t_of_yojson
       (Yojson.Safe.from_string body)
   in
-  let* (result : Generated_server_types.CreateConversationOutput.t) =
+  let* (result :
+         ( Generated_server_types.CreateConversationOutput.t,
+           Dream.response Lwt.t )
+         result) =
     Handlers.Server.create_conversation req body
   in
-  result |> Generated_server_types.CreateConversationOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match result with
+  | Ok result ->
+      result |> Generated_server_types.CreateConversationOutput.yojson_of_t
+      |> Yojson.Safe.to_string |> Dream.json
+  | Error response -> response
 
 let update_converstaion (req : Dream.request) =
   let conversation_id = Dream.param req "conversation_id" in
@@ -75,11 +105,17 @@ let update_converstaion (req : Dream.request) =
     Generated_server_types.UpdateConverstaionInput.t_of_yojson
       (Yojson.Safe.from_string body)
   in
-  let* (result : Generated_server_types.UpdateConverstaionOutput.t) =
+  let* (result :
+         ( Generated_server_types.UpdateConverstaionOutput.t,
+           Dream.response Lwt.t )
+         result) =
     Handlers.Server.update_converstaion req conversation_id body
   in
-  result |> Generated_server_types.UpdateConverstaionOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match result with
+  | Ok result ->
+      result |> Generated_server_types.UpdateConverstaionOutput.yojson_of_t
+      |> Yojson.Safe.to_string |> Dream.json
+  | Error response -> response
 
 let add_users_to_conversation (req : Dream.request) =
   let conversation_id = Dream.param req "conversation_id" in
@@ -88,11 +124,17 @@ let add_users_to_conversation (req : Dream.request) =
     Generated_server_types.AddUsersToConversationInput.t_of_yojson
       (Yojson.Safe.from_string body)
   in
-  let* (result : Generated_server_types.AddUsersToConversationOutput.t) =
+  let* (result :
+         ( Generated_server_types.AddUsersToConversationOutput.t,
+           Dream.response Lwt.t )
+         result) =
     Handlers.Server.add_users_to_conversation req conversation_id body
   in
-  result |> Generated_server_types.AddUsersToConversationOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match result with
+  | Ok result ->
+      result |> Generated_server_types.AddUsersToConversationOutput.yojson_of_t
+      |> Yojson.Safe.to_string |> Dream.json
+  | Error response -> response
 
 let remove_users_from_conversation (req : Dream.request) =
   let conversation_id = Dream.param req "conversation_id" in
@@ -101,11 +143,18 @@ let remove_users_from_conversation (req : Dream.request) =
     Generated_server_types.RemoveUsersFromConversationInput.t_of_yojson
       (Yojson.Safe.from_string body)
   in
-  let* (result : Generated_server_types.RemoveUsersFromConversationOutput.t) =
+  let* (result :
+         ( Generated_server_types.RemoveUsersFromConversationOutput.t,
+           Dream.response Lwt.t )
+         result) =
     Handlers.Server.remove_users_from_conversation req conversation_id body
   in
-  result |> Generated_server_types.RemoveUsersFromConversationOutput.yojson_of_t
-  |> Yojson.Safe.to_string |> Dream.json
+  match result with
+  | Ok result ->
+      result
+      |> Generated_server_types.RemoveUsersFromConversationOutput.yojson_of_t
+      |> Yojson.Safe.to_string |> Dream.json
+  | Error response -> response
 
 let routes =
   [
