@@ -36,6 +36,16 @@ let can_encode_and_decode () =
     "can encode and decode" true
     (test_claim = (Result.get_ok decoded).claims)
 
+let wrong_signature_fails () =
+  let jwt = TestJwt.encode ~secret:"secret" test_claim in
+  let decoded =
+    TestJwt.decode ~secret:"secret" ~jwt:(Result.get_ok jwt ^ "nope")
+  in
+  Alcotest.(check string)
+    "wrong signature fails to decode" "JWT signature is invalid!"
+    (Result.get_error decoded)
+
 let () =
   can_encode ();
-  can_encode_and_decode ()
+  can_encode_and_decode ();
+  wrong_signature_fails ()

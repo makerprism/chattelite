@@ -66,10 +66,9 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
     Base64.encode ~pad:false ~alphabet:Base64.uri_safe_alphabet str
 
   let decode_base64 str =
-    let r = Base64.decode ~pad:false ~alphabet:Base64.uri_safe_alphabet str in
-    match r with
-    | Ok s -> s
-    | Error _ -> failwith (Printf.sprintf "Error decoding\n  %s" str)
+    match Base64.decode ~pad:false ~alphabet:Base64.uri_safe_alphabet str with
+    | Ok s -> Ok s
+    | Error (`Msg e) -> Error e
 
   let encode ?(header = Header.default ()) ~secret claims =
     let base64_header =
@@ -97,11 +96,15 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
   let decode ~secret ~jwt =
     let and_then f v = Result.bind v f in
     let get_signature ~header ~base64_header ~base64_claims ~base64_signature =
-      let signature = base64_signature |> decode_base64 in
-      let unsigned_token = base64_header ^ "." ^ base64_claims in
-      let check_signature = Header.algorithm header ~secret unsigned_token in
-      if signature = check_signature then Ok signature
-      else Error "Signatures don't match"
+      match base64_signature |> decode_base64 with
+      | Ok signature ->
+          let unsigned_token = base64_header ^ "." ^ base64_claims in
+          let check_signature =
+            Header.algorithm header ~secret unsigned_token
+          in
+          if signature = check_signature then Ok signature
+          else Error "JWT signature is invalid!"
+      | Error e -> Error e
     in
 
     (match jwt |> String.split_on_char '.' with
@@ -109,15 +112,22 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
     | _ -> Error "Couldn't split JWT")
     |> and_then (fun (base64_header, base64_claims, base64_signature) ->
            let header =
-             base64_header |> decode_base64 |> Yojson.Safe.from_string
-             |> Header.t_of_yojson
+             base64_header |> decode_base64
+             |> Result.map Yojson.Safe.from_string
+             |> Result.map Header.t_of_yojson
            in
-           let claims =
-             base64_claims |> decode_base64 |> Yojson.Safe.from_string
-             |> Claims.t_of_yojson
-           in
-           get_signature ~header ~base64_header ~base64_claims ~base64_signature
-           |> Result.map (fun signature -> { header; claims; signature }))
+           header
+           |> and_then (fun header ->
+                  let claims =
+                    base64_claims |> decode_base64
+                    |> Result.map Yojson.Safe.from_string
+                    |> Result.map Claims.t_of_yojson
+                  in
+                  claims |> Result.map (fun claims -> (header, claims)))
+           |> and_then (fun (header, claims) ->
+                  get_signature ~header ~base64_header ~base64_claims
+                    ~base64_signature
+                  |> Result.map (fun signature -> { header; claims; signature })))
 
   let decode_and_check ~secret ~jwt =
     let check ~jwt = Claims.check jwt.claims in
