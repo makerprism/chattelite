@@ -107,27 +107,26 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
       | Error e -> Error e
     in
 
-    (match jwt |> String.split_on_char '.' with
-    | [ h; c; s ] -> Ok (h, c, s)
-    | _ -> Error "Couldn't split JWT")
-    |> and_then (fun (base64_header, base64_claims, base64_signature) ->
-           let header =
-             base64_header |> decode_base64
-             |> Result.map Yojson.Safe.from_string
-             |> Result.map Header.t_of_yojson
-           in
-           header
-           |> and_then (fun header ->
-                  let claims =
-                    base64_claims |> decode_base64
-                    |> Result.map Yojson.Safe.from_string
-                    |> Result.map Claims.t_of_yojson
-                  in
-                  claims |> Result.map (fun claims -> (header, claims)))
-           |> and_then (fun (header, claims) ->
-                  get_signature ~header ~base64_header ~base64_claims
-                    ~base64_signature
-                  |> Result.map (fun signature -> { header; claims; signature })))
+    match jwt |> String.split_on_char '.' with
+    | [ base64_header; base64_claims; base64_signature ] ->
+        let header =
+          base64_header |> decode_base64
+          |> Result.map Yojson.Safe.from_string
+          |> Result.map Header.t_of_yojson
+        in
+        header
+        |> and_then (fun header ->
+               let claims =
+                 base64_claims |> decode_base64
+                 |> Result.map Yojson.Safe.from_string
+                 |> Result.map Claims.t_of_yojson
+               in
+               claims |> Result.map (fun claims -> (header, claims)))
+        |> and_then (fun (header, claims) ->
+               get_signature ~header ~base64_header ~base64_claims
+                 ~base64_signature
+               |> Result.map (fun signature -> { header; claims; signature }))
+    | _ -> Error "Couldn't split JWT"
 
   let decode_and_check ~secret ~jwt =
     let check ~jwt = Claims.check jwt.claims in
