@@ -1,5 +1,5 @@
 module DefaultHeader : sig
-  type algorithm = HS256 | HS512 | None [@@deriving yojson]
+  type algorithm = HS256 | HS384 | HS512 [@@deriving yojson]
   type typ = JWT [@@deriving yojson]
   type t = { algorithm : algorithm; typ : typ } [@@deriving yojson]
 
@@ -16,6 +16,8 @@ module type JwtSig = sig
 
   module Claims : sig
     type t
+
+    val check : t -> (unit, string) result
   end
 
   type t = { header : Header.t; claims : Claims.t; signature : string }
@@ -24,6 +26,7 @@ module type JwtSig = sig
     ?header:Header.t -> secret:string -> Claims.t -> (string, string) result
 
   val decode : secret:string -> jwt:string -> (t, string) result
+  val decode_and_check : secret:string -> jwt:string -> (t, string) result
 end
 
 module Make (Header : sig
@@ -36,7 +39,9 @@ module Make (Header : sig
 end) (Claims : sig
   type t
 
-  (* FIXME: add checking of claims and add checking of RFC claims like exp *)
+  val check : t -> (unit, string) result
+
+  (* FIXME: add forced checking of RFC claims like exp *)
 
   val yojson_of_t : t -> Yojson.Safe.t
   val t_of_yojson : Yojson.Safe.t -> t

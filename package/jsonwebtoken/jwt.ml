@@ -1,5 +1,5 @@
 module DefaultHeader = struct
-  type algorithm = HS256 | HS512 | None [@@deriving yojson]
+  type algorithm = HS256 | HS384 | HS512 [@@deriving yojson]
   type typ = JWT [@@deriving yojson]
   type t = { algorithm : algorithm; typ : typ } [@@deriving yojson]
 
@@ -7,13 +7,16 @@ module DefaultHeader = struct
     match v.algorithm with
     | HS256 ->
         fun str ->
-          Digestif.SHA256.hmac_string ~key:secret str
-          |> Digestif.SHA256.to_raw_string
+          Digestif.SHA3_256.hmac_string ~key:secret str
+          |> Digestif.SHA3_256.to_raw_string
+    | HS384 ->
+        fun str ->
+          Digestif.SHA3_384.hmac_string ~key:secret str
+          |> Digestif.SHA3_384.to_raw_string
     | HS512 ->
         fun str ->
-          Digestif.SHA512.hmac_string ~key:secret str
-          |> Digestif.SHA512.to_raw_string
-    | _ -> failwith "not implemented"
+          Digestif.SHA3_512.hmac_string ~key:secret str
+          |> Digestif.SHA3_512.to_raw_string
 
   let default () = { algorithm = HS512; typ = JWT }
 end
@@ -27,6 +30,8 @@ module type JwtSig = sig
 
   module Claims : sig
     type t
+
+    val check : t -> (unit, string) result
   end
 
   type t = { header : Header.t; claims : Claims.t; signature : string }
@@ -35,7 +40,7 @@ module type JwtSig = sig
     ?header:Header.t -> secret:string -> Claims.t -> (string, string) result
 
   val decode : secret:string -> jwt:string -> (t, string) result
-  (*val is_valid : secret:string -> jwt:string -> bool*)
+  val decode_and_check : secret:string -> jwt:string -> (t, string) result
 end
 
 module Make (Header : sig
@@ -48,6 +53,7 @@ module Make (Header : sig
 end) (Claims : sig
   type t
 
+  val check : t -> (unit, string) result
   val yojson_of_t : t -> Yojson.Safe.t
   val t_of_yojson : Yojson.Safe.t -> t
 end) : JwtSig with module Header = Header and module Claims = Claims = struct
@@ -89,31 +95,37 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
     Ok (unsigned_token ^ "." ^ signature)
 
   let decode ~secret ~jwt =
-    let base64_header, base64_claims, base64_signature =
-      match jwt |> String.split_on_char '.' with
-      | [ h; c; s ] -> (h, c, s)
-      | _ -> failwith "couldn't split jwt"
-    in
-    let header =
-      base64_header |> decode_base64 |> Yojson.Safe.from_string
-      |> Header.t_of_yojson
-    in
-    let claims =
-      base64_claims |> decode_base64 |> Yojson.Safe.from_string
-      |> Claims.t_of_yojson
-    in
-    let get_signature base64_header base64_claims base64_signature =
+    let and_then f v = Result.bind v f in
+    let get_signature ~header ~base64_header ~base64_claims ~base64_signature =
       let signature = base64_signature |> decode_base64 in
       let unsigned_token = base64_header ^ "." ^ base64_claims in
       let check_signature = Header.algorithm header ~secret unsigned_token in
       if signature = check_signature then Ok signature
       else Error "Signatures don't match"
     in
-    match get_signature base64_header base64_claims base64_signature with
-    | Ok signature -> Ok { header; claims; signature }
-    | Error e -> Error e
 
-  (*let is_valid ~secret:_ ~jwt:_ = failwith "not implemented"*)
+    (match jwt |> String.split_on_char '.' with
+    | [ h; c; s ] -> Ok (h, c, s)
+    | _ -> Error "Couldn't split JWT")
+    |> and_then (fun (base64_header, base64_claims, base64_signature) ->
+           let header =
+             base64_header |> decode_base64 |> Yojson.Safe.from_string
+             |> Header.t_of_yojson
+           in
+           let claims =
+             base64_claims |> decode_base64 |> Yojson.Safe.from_string
+             |> Claims.t_of_yojson
+           in
+           get_signature ~header ~base64_header ~base64_claims ~base64_signature
+           |> Result.map (fun signature -> { header; claims; signature }))
+
+  let decode_and_check ~secret ~jwt =
+    let check ~jwt = Claims.check jwt.claims in
+
+    let decoded_jwt = decode ~secret ~jwt in
+    Result.bind decoded_jwt (fun jwt ->
+        let r = check ~jwt in
+        r |> Result.map (fun _ -> jwt))
 end
 
 (* TODO: use mirage-crypto *)
