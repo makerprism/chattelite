@@ -92,8 +92,8 @@ module Server = struct
   let delete_user _req _user_id = failwith "not implemented" (* Lwt.return ()*)
 
   let generate_client_jwt _req ({ user_id } : T.GenerateClientJwtInput.t) =
-    let payload = [ ("user_id", user_id) ] in
-    match Jwto.encode Jwto.HS256 Config.config.client_jwt_secret payload with
+    let payload = Auth.JwtClaims.{ public_facing_id = user_id } in
+    match Auth.Jwt.encode ~secret:Config.config.client_jwt_secret payload with
     | Ok jwt -> Lwt.return (Ok T.GenerateClientJwtOutput.{ jwt })
     | Error message ->
         Lwt.return (Error (internal_error ("Failed to encode JWT" ^ message)))

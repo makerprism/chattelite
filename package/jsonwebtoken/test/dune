@@ -1,0 +1,5 @@
+(test
+ (name test)
+ (libraries alcotest jsonwebtoken)
+ (preprocess
+  (pps ppx_yojson_conv)))
