@@ -1,5 +1,6 @@
 module JwtClaims = struct
-  type t = { public_facing_id : string } [@@deriving yojson]
+  type t = { public_facing_id : string; exp : Jwt.NumericTime.t }
+  [@@deriving yojson]
 
   let check _ = Ok () (* FIXME: proper checks*)
 end
@@ -19,7 +20,7 @@ let check_client_jwt ~jwt_secret : Dream.middleware =
   let jwt = Dream.header req "X-Access-Token" in
   match jwt with
   | Some jwt -> (
-      match Jwt.decode ~secret:jwt_secret ~jwt with
+      match Jwt.decode ~secret:jwt_secret jwt with
       | Ok jwt ->
           let public_facing_id = jwt.claims.JwtClaims.public_facing_id in
 

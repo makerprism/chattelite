@@ -1,5 +1,5 @@
 (test
  (name test)
- (libraries alcotest jsonwebtoken)
+ (libraries alcotest jsonwebtoken ptime.clock.os)
  (preprocess
   (pps ppx_yojson_conv)))

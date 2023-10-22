@@ -7,7 +7,14 @@ module DefaultHeader : sig
   val default : unit -> t
 end
 
-module type JwtSig = sig
+module NumericTime : sig
+  type t = Ptime.t
+
+  val yojson_of_t : t -> Yojson.Safe.t
+  val t_of_yojson : Yojson.Safe.t -> t
+end
+
+module type Sig = sig
   module Header : sig
     type t
 
@@ -25,8 +32,7 @@ module type JwtSig = sig
   val encode :
     ?header:Header.t -> secret:string -> Claims.t -> (string, string) result
 
-  val decode : secret:string -> jwt:string -> (t, string) result
-  val decode_and_check : secret:string -> jwt:string -> (t, string) result
+  val decode : ?unchecked:bool -> secret:string -> string -> (t, string) result
 end
 
 module Make (Header : sig
@@ -40,9 +46,6 @@ end) (Claims : sig
   type t
 
   val check : t -> (unit, string) result
-
-  (* FIXME: add forced checking of RFC claims like exp *)
-
   val yojson_of_t : t -> Yojson.Safe.t
   val t_of_yojson : Yojson.Safe.t -> t
-end) : JwtSig with module Header = Header and module Claims = Claims
+end) : Sig with module Header = Header and module Claims = Claims

@@ -92,7 +92,13 @@ module Server = struct
   let delete_user _req _user_id = failwith "not implemented" (* Lwt.return ()*)
 
   let generate_client_jwt _req ({ user_id } : T.GenerateClientJwtInput.t) =
-    let payload = Auth.JwtClaims.{ public_facing_id = user_id } in
+    let payload =
+      Auth.JwtClaims.
+        {
+          public_facing_id = user_id;
+          exp = Ptime.of_float_s @@ (Unix.time () +. 300.0) |> Option.get;
+        }
+    in
     match Auth.Jwt.encode ~secret:Config.config.client_jwt_secret payload with
     | Ok jwt -> Lwt.return (Ok T.GenerateClientJwtOutput.{ jwt })
     | Error message ->
