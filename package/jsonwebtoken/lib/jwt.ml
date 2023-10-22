@@ -56,22 +56,23 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
   let encode ?(header = Header.default ()) ~secret claims =
     let<? base64_header =
       Header.yojson_of_t header |> Yojson.Safe.to_string |> encode_base64
-      |> Result.map_error (fun _ -> "Failed to encode base64 header")
+      |> Result.map_error (fun _ -> "Failed to encode base64 header!")
     in
     let<? base64_claims =
       claims |> Claims.yojson_of_t |> Yojson.Safe.to_string |> encode_base64
-      |> Result.map_error (fun _ -> "Failed to encode base64 claims")
+      |> Result.map_error (fun _ -> "Failed to encode base64 claims!")
     in
     let unsigned_token = base64_header ^ "." ^ base64_claims in
     let<? signature =
       Header.algorithm header ~secret unsigned_token
       |> encode_base64
-      |> Result.map_error (fun _ -> "Failed to encode base64 signature")
+      |> Result.map_error (fun _ -> "Failed to encode base64 signature!")
     in
     Ok (unsigned_token ^ "." ^ signature)
 
   let decode ~secret ~jwt =
-    let get_signature ~header ~base64_header ~base64_claims ~base64_signature =
+    let check_and_get_signature ~header ~base64_header ~base64_claims
+        ~base64_signature =
       let<? signature = base64_signature |> decode_base64 in
       let unsigned_token = base64_header ^ "." ^ base64_claims in
       let check_signature = Header.algorithm header ~secret unsigned_token in
@@ -86,14 +87,17 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
           try Ok (string_header |> Yojson.Safe.from_string |> Header.t_of_yojson)
           with Yojson.Json_error e -> Error e
         in
+        let<? signature =
+          check_and_get_signature ~header ~base64_header ~base64_claims
+            ~base64_signature
+        in
         let<? string_claims = base64_claims |> decode_base64 in
         let<? claims =
           try Ok (string_claims |> Yojson.Safe.from_string |> Claims.t_of_yojson)
           with Yojson.Json_error e -> Error e
         in
-        get_signature ~header ~base64_header ~base64_claims ~base64_signature
-        |> Result.map (fun signature -> { header; claims; signature })
-    | _ -> Error "Couldn't split JWT"
+        Ok { header; claims; signature }
+    | _ -> Error "Couldn't split JWT into header, claims, and signature!"
 
   let decode_and_check ~secret ~jwt =
     let check ~jwt = Claims.check jwt.claims in
