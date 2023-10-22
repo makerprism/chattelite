@@ -53,6 +53,11 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
     | Ok s -> Ok s
     | Error (`Msg e) -> Error e
 
+  let yojson_of_base64_string base64_str =
+    let<? str = base64_str |> decode_base64 in
+    try Ok (str |> Yojson.Safe.from_string)
+    with Yojson.Json_error e -> Error e
+
   let encode ?(header = Header.default ()) ~secret claims =
     let<? base64_header =
       Header.yojson_of_t header |> Yojson.Safe.to_string |> encode_base64
@@ -82,18 +87,18 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
 
     match jwt |> String.split_on_char '.' with
     | [ base64_header; base64_claims; base64_signature ] ->
-        let<? string_header = base64_header |> decode_base64 in
+        let<? yojson_header = yojson_of_base64_string base64_header in
         let<? header =
-          try Ok (string_header |> Yojson.Safe.from_string |> Header.t_of_yojson)
+          try Ok (yojson_header |> Header.t_of_yojson)
           with Yojson.Json_error e -> Error e
         in
         let<? signature =
           check_and_get_signature ~header ~base64_header ~base64_claims
             ~base64_signature
         in
-        let<? string_claims = base64_claims |> decode_base64 in
+        let<? yojson_claims = yojson_of_base64_string base64_claims in
         let<? claims =
-          try Ok (string_claims |> Yojson.Safe.from_string |> Claims.t_of_yojson)
+          try Ok (yojson_claims |> Claims.t_of_yojson)
           with Yojson.Json_error e -> Error e
         in
         Ok { header; claims; signature }
