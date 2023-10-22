@@ -2,15 +2,25 @@ open Ppxlib
 module List = ListLabels
 open Ast_builder.Default
 
+let module_name txt =
+  let rec module_name' acc txt =
+    match txt with
+    | Lident name -> Some (if acc = "" then name else name ^ "." ^ acc)
+    | Ldot (txt', name) ->
+        Option.map
+          (fun mod_name -> mod_name ^ "." ^ name)
+          (module_name' acc txt')
+    | _ -> None
+  in
+  module_name' "" txt
+
 let rec get_type_name (ct : core_type) : string option =
   match ct.ptyp_desc with
   | Ptyp_constr ({ txt = Lident "option"; _ }, [ arg_type ]) -> (
       match get_type_name arg_type with
       | Some inner_name -> Some inner_name
       | None -> None)
-  | Ptyp_constr ({ txt = Lident name; _ }, []) -> Some name
-  | Ptyp_constr ({ txt = Ldot (Lident module_name, name); _ }, []) ->
-      Some (module_name ^ "." ^ name)
+  | Ptyp_constr ({ txt; _ }, []) -> module_name txt
   | _ -> None
 
 let is_option (ct : core_type) : bool =
