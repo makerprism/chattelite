@@ -72,28 +72,24 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
 
   let decode ~secret ~jwt =
     let get_signature ~header ~base64_header ~base64_claims ~base64_signature =
-      match base64_signature |> decode_base64 with
-      | Ok signature ->
-          let unsigned_token = base64_header ^ "." ^ base64_claims in
-          let check_signature =
-            Header.algorithm header ~secret unsigned_token
-          in
-          if signature = check_signature then Ok signature
-          else Error "JWT signature is invalid!"
-      | Error e -> Error e
+      let<? signature = base64_signature |> decode_base64 in
+      let unsigned_token = base64_header ^ "." ^ base64_claims in
+      let check_signature = Header.algorithm header ~secret unsigned_token in
+      if signature = check_signature then Ok signature
+      else Error "JWT signature is invalid!"
     in
 
     match jwt |> String.split_on_char '.' with
     | [ base64_header; base64_claims; base64_signature ] ->
+        let<? string_header = base64_header |> decode_base64 in
         let<? header =
-          base64_header |> decode_base64
-          |> Result.map Yojson.Safe.from_string
-          |> Result.map Header.t_of_yojson
+          try Ok (string_header |> Yojson.Safe.from_string |> Header.t_of_yojson)
+          with Yojson.Json_error e -> Error e
         in
+        let<? string_claims = base64_claims |> decode_base64 in
         let<? claims =
-          base64_claims |> decode_base64
-          |> Result.map Yojson.Safe.from_string
-          |> Result.map Claims.t_of_yojson
+          try Ok (string_claims |> Yojson.Safe.from_string |> Claims.t_of_yojson)
+          with Yojson.Json_error e -> Error e
         in
         get_signature ~header ~base64_header ~base64_claims ~base64_signature
         |> Result.map (fun signature -> { header; claims; signature })
