@@ -136,5 +136,3 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
         let r = check ~jwt in
         r |> Result.map (fun _ -> jwt))
 end
-
-(* TODO: use mirage-crypto *)
