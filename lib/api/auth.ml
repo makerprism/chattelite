@@ -1,5 +1,7 @@
 module JwtClaims = struct
   type t = { public_facing_id : string } [@@deriving yojson]
+
+  let check _ = Ok () (* FIXME: proper checks*)
 end
 
 type client_session = {

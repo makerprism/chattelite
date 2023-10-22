@@ -1,24 +1,5 @@
 module DefaultHeader = struct
-  type algorithm = HS256 | HS384 | HS512 [@@deriving yojson]
-  type typ = JWT [@@deriving yojson]
-  type t = { algorithm : algorithm; typ : typ } [@@deriving yojson]
-
-  let algorithm v ~secret =
-    match v.algorithm with
-    | HS256 ->
-        fun str ->
-          Digestif.SHA3_256.hmac_string ~key:secret str
-          |> Digestif.SHA3_256.to_raw_string
-    | HS384 ->
-        fun str ->
-          Digestif.SHA3_384.hmac_string ~key:secret str
-          |> Digestif.SHA3_384.to_raw_string
-    | HS512 ->
-        fun str ->
-          Digestif.SHA3_512.hmac_string ~key:secret str
-          |> Digestif.SHA3_512.to_raw_string
-
-  let default () = { algorithm = HS512; typ = JWT }
+  include Default_header
 end
 
 module type JwtSig = sig
@@ -62,6 +43,8 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
 
   type t = { header : Header.t; claims : Claims.t; signature : string }
 
+  let ( let<? ) result = Result.bind result
+
   let encode_base64 str =
     Base64.encode ~pad:false ~alphabet:Base64.uri_safe_alphabet str
 
@@ -71,30 +54,23 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
     | Error (`Msg e) -> Error e
 
   let encode ?(header = Header.default ()) ~secret claims =
-    let base64_header =
-      match
-        Header.yojson_of_t header |> Yojson.Safe.to_string |> encode_base64
-      with
-      | Ok h -> h
-      | Error _ -> failwith "Error base64 encoding header"
+    let<? base64_header =
+      Header.yojson_of_t header |> Yojson.Safe.to_string |> encode_base64
+      |> Result.map_error (fun _ -> "Failed to encode base64 header")
     in
-    let base64_claims =
-      match
-        claims |> Claims.yojson_of_t |> Yojson.Safe.to_string |> encode_base64
-      with
-      | Ok h -> h
-      | Error _ -> failwith "Error base64 encoding claims"
+    let<? base64_claims =
+      claims |> Claims.yojson_of_t |> Yojson.Safe.to_string |> encode_base64
+      |> Result.map_error (fun _ -> "Failed to encode base64 claims")
     in
     let unsigned_token = base64_header ^ "." ^ base64_claims in
-    let signature =
-      match Header.algorithm header ~secret unsigned_token |> encode_base64 with
-      | Ok h -> h
-      | Error _ -> failwith "Error base64 encoding signature"
+    let<? signature =
+      Header.algorithm header ~secret unsigned_token
+      |> encode_base64
+      |> Result.map_error (fun _ -> "Failed to encode base64 signature")
     in
     Ok (unsigned_token ^ "." ^ signature)
 
   let decode ~secret ~jwt =
-    let and_then f v = Result.bind v f in
     let get_signature ~header ~base64_header ~base64_claims ~base64_signature =
       match base64_signature |> decode_base64 with
       | Ok signature ->
@@ -109,30 +85,24 @@ end) : JwtSig with module Header = Header and module Claims = Claims = struct
 
     match jwt |> String.split_on_char '.' with
     | [ base64_header; base64_claims; base64_signature ] ->
-        let header =
+        let<? header =
           base64_header |> decode_base64
           |> Result.map Yojson.Safe.from_string
           |> Result.map Header.t_of_yojson
         in
-        header
-        |> and_then (fun header ->
-               let claims =
-                 base64_claims |> decode_base64
-                 |> Result.map Yojson.Safe.from_string
-                 |> Result.map Claims.t_of_yojson
-               in
-               claims |> Result.map (fun claims -> (header, claims)))
-        |> and_then (fun (header, claims) ->
-               get_signature ~header ~base64_header ~base64_claims
-                 ~base64_signature
-               |> Result.map (fun signature -> { header; claims; signature }))
+        let<? claims =
+          base64_claims |> decode_base64
+          |> Result.map Yojson.Safe.from_string
+          |> Result.map Claims.t_of_yojson
+        in
+        get_signature ~header ~base64_header ~base64_claims ~base64_signature
+        |> Result.map (fun signature -> { header; claims; signature })
     | _ -> Error "Couldn't split JWT"
 
   let decode_and_check ~secret ~jwt =
     let check ~jwt = Claims.check jwt.claims in
 
-    let decoded_jwt = decode ~secret ~jwt in
-    Result.bind decoded_jwt (fun jwt ->
-        let r = check ~jwt in
-        r |> Result.map (fun _ -> jwt))
+    let<? decoded_jwt = decode ~secret ~jwt in
+    let<? _ = check ~jwt:decoded_jwt in
+    Ok decoded_jwt
 end

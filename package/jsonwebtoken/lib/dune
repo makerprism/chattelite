@@ -2,6 +2,6 @@
  (name jsonwebtoken)
  (wrapped false)
  (libraries yojson base64 digestif)
- (modules jwt)
+ (modules jwt default_header)
  (preprocess
   (pps ppx_yojson_conv)))
