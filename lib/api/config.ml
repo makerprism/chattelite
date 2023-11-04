@@ -1,3 +1,5 @@
+open Ppx_yojson_conv_lib.Yojson_conv
+
 type config = {
   api_key : string;
   client_jwt_secret : string;

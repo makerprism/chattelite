@@ -1,4 +1,6 @@
 module JwtClaims = struct
+  open Ppx_yojson_conv_lib.Yojson_conv
+
   type t = { public_facing_id : string; exp : Jwt.NumericTime.t }
   [@@deriving yojson]
 

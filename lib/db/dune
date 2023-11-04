@@ -1,5 +1,3 @@
 (library
  (name db)
- (libraries petrol ptime ptime.clock.os)
- (preprocess
-  (pps ppx_rapper)))
+ (libraries petrol ptime ptime.clock.os))

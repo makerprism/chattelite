@@ -3,7 +3,7 @@
 WIP rewriting the project in the main branch to OCaml
 
 ```
-opam switch create . 5.0.0 --no-install
+opam switch create . 5.1.0 --no-install
 
 opam install . --deps-only
 
