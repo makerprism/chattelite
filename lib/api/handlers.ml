@@ -39,7 +39,7 @@ module Client = struct
   (*    Server_sent_events.broadcast_message (T.ConversationEvent.ConversationEventJoin { from = { Conversation_id; display_name }; timestamp= "TODO"}); *)
 
   (*
-   curl -H "X-Access-Token: eyJhbGciOiJIUzI1NiJ9.YOU_MUST_SET_THIS.st_VZPdJx3BHvVCY2oWplin4oz6BNWhn-hoAaTVCwbU" http://localhost:8080/conversations
+   curl -H "X-Access-Token: eyJhbGdvcml0aG0iOlsiSFM1MTIiXSwidHlwIjpbIkpXVCJdfQ.eyJwdWJsaWNfZmFjaW5nX2lkIjoiYWJjIiwiZXhwIjoxNjk5MTIyNzIyfQ.686Qpquj6vHamv7IntSU0kGKPUIQQPuVBQ1WkgtOK8oTb9Oiw6RSwnktur6U_L5tGNn3um4GiDVudb6DszHlWg" http://localhost:8080/conversations
   *)
 end
 
@@ -88,6 +88,10 @@ module Server = struct
              T.User.{ user_id = public_facing_id; display_name })
     in
     Lwt.return (Ok T.UsersOutput.{ users = { objs; next; prev } })
+
+  (* curl -X GET \                                                                                                                                                                         -H "Content-Type: application/json" \
+     -H "X-Access-Token: YOU_MUST_SET_THIS" \
+     http://localhost:8080/_/users *)
 
   let delete_user _req _user_id = failwith "not implemented" (* Lwt.return ()*)
 

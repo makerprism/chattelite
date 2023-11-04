@@ -15,6 +15,11 @@ let user_field : client_session Dream.field = Dream.new_field ()
 
 module Jwt = Jwt.Make (Jwt.DefaultHeader) (JwtClaims)
 
+let run_db req query =
+  let open Lwt.Syntax in
+  let* result_or_error = Dream.sql req query in
+  Caqti_lwt.or_fail result_or_error
+
 let check_client_jwt ~jwt_secret : Dream.middleware =
  fun h req ->
   let jwt = Dream.header req "X-Access-Token" in
@@ -22,13 +27,15 @@ let check_client_jwt ~jwt_secret : Dream.middleware =
   | Some jwt -> (
       match Jwt.decode ~secret:jwt_secret jwt with
       | Ok jwt ->
+          let open Lwt.Syntax in
           let public_facing_id = jwt.claims.JwtClaims.public_facing_id in
-
-          (*let id = List.find_map (fun (field, value) -> if field = "id" then Some (Int64.of_string value) else None) payload |> Option.get in*)
-          (*let display_name = List.find_map (fun (field, value) -> if field = "display_name" then Some ( value) else None) payload |> Option.get in*)
-          (* FIXME: load id, display_name from database / cache *)
+          let* user = run_db req (Db.User.get_one ~public_facing_id) in
           Dream.set_field req user_field
-            { id = -999L; public_facing_id; display_name = "TODO" };
+            {
+              id = user.id;
+              public_facing_id = user.public_facing_id;
+              display_name = user.display_name;
+            };
           h req
       | Error message ->
           Lwt.return
