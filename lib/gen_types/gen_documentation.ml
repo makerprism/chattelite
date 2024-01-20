@@ -1,12 +1,12 @@
 let rec render_type (t : Types.t) ~type_namespace =
   match t with
   | TypeLiteral Str -> "String"
-  | TypeLiteral I32 -> "Integer"
-  | TypeLiteral U32 -> "Integer"
-  | TypeLiteral I63 -> "Integer"
-  | TypeLiteral F32 -> "Float32"
-  | TypeLiteral F64 -> "Float64"
-  | TypeLiteral Bool -> "Boolearn"
+  | TypeLiteral I32 -> "32-bit Integer"
+  | TypeLiteral U32 -> "32-bit Unsigned Integer"
+  | TypeLiteral I63 -> "64-bit Integer"
+  | TypeLiteral F32 -> "32-bit Float"
+  | TypeLiteral F64 -> "64-bit Float"
+  | TypeLiteral Bool -> "Boolean"
   | TypeLiteral Unit -> "Unit"
   | TypeLiteral Json -> failwith "not implemented"
   | TypeLiteral (TypeName n) ->
